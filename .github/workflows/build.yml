@@ -23,7 +23,7 @@ jobs:
           submodules: recursive
 
       - name: Build
-        run: hugo --minify
+        run: hugo
 
       - name: Upload Artifacts to GitHub
         uses: actions/upload-artifact@v4
