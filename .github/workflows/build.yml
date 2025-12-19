@@ -19,12 +19,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Build
-        run: hugo
+        run: hugo --minify
 
       - name: Upload Artifacts to GitHub
         uses: actions/upload-artifact@v4
         with:
-          name: hugo-ui
-          path: public
+          name: join-www
+          path: public/
