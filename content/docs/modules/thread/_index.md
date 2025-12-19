@@ -1,6 +1,7 @@
 ---
 title: "Thread"
 weight: 5
+bookCollapseSection: true
 ---
 
 # Thread
@@ -8,8 +9,6 @@ weight: 5
 The **Thread** module provides multithreading primitives and synchronization mechanisms built on POSIX threads (pthread).
 
 ---
-
-## Components
 
 ### Condition
 

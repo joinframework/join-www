@@ -1,6 +1,7 @@
 ---
 title: "Core"
 weight: 1
+bookCollapseSection: true
 ---
 
 # Core
@@ -8,8 +9,6 @@ weight: 1
 The **Core** module provides the fundamental building blocks and utilities used across the Join framework.
 
 ---
-
-## Components
 
 ### Cache
 

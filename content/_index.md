@@ -1,6 +1,5 @@
 ---
 title: "Join Framework"
-description: "A lightweight C++ network framework library"
 ---
 
 # Welcome to Join Framework

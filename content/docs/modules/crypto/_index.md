@@ -1,6 +1,7 @@
 ---
 title: "Crypto"
 weight: 2
+bookCollapseSection: true
 ---
 
 # Crypto
@@ -8,8 +9,6 @@ weight: 2
 The **Crypto** module provides cryptographic operations and security features built on OpenSSL.
 
 ---
-
-## Components
 
 ### Base64
 

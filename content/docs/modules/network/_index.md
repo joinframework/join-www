@@ -1,6 +1,7 @@
 ---
 title: "Network"
 weight: 3
+bookCollapseSection: true
 ---
 
 # Network
@@ -8,8 +9,6 @@ weight: 3
 The **Network** module provides comprehensive networking capabilities for building networked applications, from low-level sockets to high-level HTTP and SMTP protocols.
 
 ---
-
-## Components
 
 ### Acceptor
 

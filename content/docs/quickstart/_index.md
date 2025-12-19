@@ -1,6 +1,5 @@
 ---
 title: "Quick Start"
-description: "Get started with Join framework in minutes"
 weight: 1
 ---
 

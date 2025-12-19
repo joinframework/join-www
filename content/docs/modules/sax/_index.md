@@ -1,6 +1,7 @@
 ---
 title: "Sax"
 weight: 4
+bookCollapseSection: true
 ---
 
 # Sax
@@ -8,8 +9,6 @@ weight: 4
 The **Sax** module provides high-performance data serialization using SAX-style event-driven parsing for JSON and MessagePack formats.
 
 ---
-
-## Components
 
 ### DiyFp / Dtoa
 
