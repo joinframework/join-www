@@ -2,3 +2,8 @@ baseURL = "http://joinframework.net/"
 languageCode = "en-us"
 title = "Join Framework"
 theme = "hugo-book"
+
+[minify]
+  disableHTML = true
+  disableJS = false
+  disableCSS = false
