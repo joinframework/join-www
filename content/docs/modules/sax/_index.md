@@ -1,24 +1,30 @@
 ---
-title: "Sax"
+title: "SAX"
 weight: 4
 bookCollapseSection: true
 ---
 
-# Sax
+# SAX
 
-The **Sax** module provides high-performance data serialization using SAX-style event-driven parsing for JSON and MessagePack formats.
+The **SAX** module provides high-performance data serialization using SAX-style event-driven parsing for JSON and MessagePack formats.
 
 ---
 
-### DiyFp / Dtoa
+### SAX
 
-Optimized double-to-string conversion using Grisu2 algorithm.
+SAX-style event-driven parsing interface.
+
+**Classes:**
+
+* **SaxHandler** - Pure virtual interface for SAX events
+* **StreamWriter** - Abstract base for serializers
+* **StreamReader** - Abstract base for deserializers
 
 **Features:**
 
-* Fast floating-point to string conversion
-* Hand-made floating-point arithmetic
-* Optimized for performance
+* Event-driven architecture (setNull, setBool, setInt, startArray, etc.)
+* Stack-based parsing with depth limit (19 levels)
+* Multiple input stream support
 
 ---
 
@@ -41,7 +47,7 @@ JSON parsing and serialization with multiple modes.
 
 ---
 
-### Pack
+### MessagePack
 
 MessagePack binary format parsing and serialization.
 
@@ -55,24 +61,6 @@ MessagePack binary format parsing and serialization.
 * Compact binary serialization
 * Stream-based interface
 * Full MessagePack specification support
-
----
-
-### SAX
-
-SAX-style event-driven parsing interface.
-
-**Classes:**
-
-* **SaxHandler** - Pure virtual interface for SAX events
-* **StreamWriter** - Abstract base for serializers
-* **StreamReader** - Abstract base for deserializers
-
-**Features:**
-
-* Event-driven architecture (setNull, setBool, setInt, startArray, etc.)
-* Stack-based parsing with depth limit (19 levels)
-* Multiple input stream support
 
 ---
 
