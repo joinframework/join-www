@@ -10,20 +10,49 @@ The **Thread** module provides multithreading primitives and synchronization mec
 
 ---
 
-### Condition
+### Thread
 
-Condition variable for thread synchronization.
-
-**Types:**
-
-* **Condition** - Standard condition variable
-* **SharedCondition** - Condition variable for shared memory
+Thread abstraction for concurrent execution.
 
 **Features:**
 
-* Wait with optional predicate
-* Timed wait operations
-* Signal and broadcast notifications
+* pthread wrapper with move semantics
+* Join, tryJoin, cancel operations
+* Running state query
+
+---
+
+### Thread Pool
+
+Worker pool for parallel task execution.
+
+**Features:**
+
+* Configurable worker count (default: hardware_concurrency)
+* Task queue with condition variable
+* Template-based task submission
+
+**Utilities:**
+
+* `distribute` - Distribute work across threads
+* `parallelForEach` - Parallel iteration
+
+---
+
+### Semaphore
+
+Counting semaphore for resource management.
+
+**Types:**
+
+* **Semaphore** - Named and unnamed semaphores
+* **SharedSemaphore** - Semaphore for shared memory
+
+**Features:**
+
+* Post, wait, tryWait operations
+* Timed wait with timeout
+* Value query
 
 ---
 
@@ -45,49 +74,20 @@ Mutual exclusion locks for protecting shared data.
 
 ---
 
-### Semaphore
+### Condition
 
-Counting semaphore for resource management.
+Condition variable for thread synchronization.
 
 **Types:**
 
-* **Semaphore** - Named and unnamed semaphores
-* **SharedSemaphore** - Semaphore for shared memory
+* **Condition** - Standard condition variable
+* **SharedCondition** - Condition variable for shared memory
 
 **Features:**
 
-* Post, wait, tryWait operations
-* Timed wait with timeout
-* Value query
-
----
-
-### Thread
-
-Thread abstraction for concurrent execution.
-
-**Features:**
-
-* pthread wrapper with move semantics
-* Join, tryJoin, cancel operations
-* Running state query
-
----
-
-### ThreadPool
-
-Worker pool for parallel task execution.
-
-**Features:**
-
-* Configurable worker count (default: hardware_concurrency)
-* Task queue with condition variable
-* Template-based task submission
-
-**Utilities:**
-
-* `distribute` - Distribute work across threads
-* `parallelForEach` - Parallel iteration
+* Wait with optional predicate
+* Timed wait operations
+* Signal and broadcast notifications
 
 ---
 

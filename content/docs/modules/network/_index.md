@@ -10,6 +10,83 @@ The **Network** module provides comprehensive networking capabilities for buildi
 
 ---
 
+### MAC Address
+
+MAC (Media Access Control) address handling.
+
+**Features:**
+
+* 48-bit MAC address representation
+* Parsing and formatting
+* Address comparison
+
+---
+
+### IP Address
+
+IP address abstraction (IPv4/IPv6).
+
+**Features:**
+
+* IPv4 and IPv6 support
+* Address parsing and formatting
+* Network/broadcast address calculation
+
+---
+
+### Protocol
+
+Protocol definitions and socket types.
+
+**Protocol Types:**
+
+* **Tcp** - TCP stream sockets
+* **Udp** - UDP datagram sockets
+* **Tls** - TLS/SSL encrypted sockets
+* **UnixStream** - Unix domain stream sockets
+* **UnixDgram** - Unix domain datagram sockets
+* **Raw** - Raw IP sockets
+* **Icmp** - ICMP sockets
+* **Netlink** - Netlink sockets
+
+---
+
+### Endpoint
+
+Network endpoint abstraction (IP address + port).
+
+**Features:**
+
+* IPv4 and IPv6 support
+* Address family handling
+* Endpoint comparison and formatting
+
+---
+
+### Socket
+
+Low-level socket abstraction.
+
+**Features:**
+
+* Template-based for different protocols
+* Non-blocking I/O
+* Socket options (SO_REUSEADDR, SO_KEEPALIVE, etc.)
+
+---
+
+### Socket Stream
+
+Stream interface for sockets.
+
+**Features:**
+
+* std::iostream integration
+* Buffered I/O
+* Stream operators (<<, >>)
+
+---
+
 ### Acceptor
 
 Server socket abstraction for accepting incoming connections.
@@ -34,43 +111,19 @@ Address Resolution Protocol implementation.
 
 ---
 
-### ChunkStream
+### DNS Resolver
 
-HTTP chunked transfer encoding support.
-
-**Features:**
-
-* Chunked encoding/decoding
-* Stream-based interface
-* HTTP/1.1 compliance
-
----
-
-### Endpoint
-
-Network endpoint abstraction (IP address + port).
+DNS resolution and hostname lookup.
 
 **Features:**
 
-* IPv4 and IPv6 support
-* Address family handling
-* Endpoint comparison and formatting
+* Hostname to IP resolution
+* Service name resolution
+* IPv4/IPv6 support
 
 ---
 
-### HttpClient
-
-HTTP/HTTPS client implementation.
-
-**Features:**
-
-* GET, POST, PUT, DELETE, HEAD, PATCH methods
-* TLS/SSL support
-* Keep-alive connections
-
----
-
-### HttpMessage
+### HTTP Message
 
 HTTP request and response message handling.
 
@@ -87,7 +140,31 @@ HTTP request and response message handling.
 
 ---
 
-### HttpServer
+### HTTP/HTTPS Client
+
+HTTP/HTTPS client implementation.
+
+**Features:**
+
+* GET, POST, PUT, DELETE, HEAD, PATCH methods
+* TLS/SSL support
+* Keep-alive connections
+
+---
+
+### HTTP Chunk Stream
+
+HTTP chunked transfer encoding support.
+
+**Features:**
+
+* Chunked encoding/decoding
+* Stream-based interface
+* HTTP/1.1 compliance
+
+---
+
+### HTTP/HTTPS Server
 
 HTTP/HTTPS server implementation.
 
@@ -96,6 +173,30 @@ HTTP/HTTPS server implementation.
 * Request handling callbacks
 * Multi-threaded support
 * TLS/SSL support
+
+---
+
+### Mail Message
+
+Email message construction for SMTP.
+
+**Features:**
+
+* MIME message building
+* Header management
+* Attachment support
+
+---
+
+### SMTP/SMTPS Client
+
+SMTP/SMTPS email client.
+
+**Features:**
+
+* SMTP protocol implementation
+* STARTTLS support
+* Authentication mechanisms
 
 ---
 
@@ -111,7 +212,7 @@ Network interface information and management.
 
 ---
 
-### InterfaceManager
+### Interface Manager
 
 System network interface management.
 
@@ -120,107 +221,6 @@ System network interface management.
 * Interface discovery
 * Address family filtering
 * Interface status monitoring
-
----
-
-### IpAddress
-
-IP address abstraction (IPv4/IPv6).
-
-**Features:**
-
-* IPv4 and IPv6 support
-* Address parsing and formatting
-* Network/broadcast address calculation
-
----
-
-### MacAddress
-
-MAC (Media Access Control) address handling.
-
-**Features:**
-
-* 48-bit MAC address representation
-* Parsing and formatting
-* Address comparison
-
----
-
-### MailMessage
-
-Email message construction for SMTP.
-
-**Features:**
-
-* MIME message building
-* Header management
-* Attachment support
-
----
-
-### Protocol
-
-Protocol definitions and socket types.
-
-**Protocol Types:**
-
-* **Tcp** - TCP stream sockets
-* **Udp** - UDP datagram sockets
-* **Tls** - TLS/SSL encrypted sockets
-* **UnixStream** - Unix domain stream sockets
-* **UnixDgram** - Unix domain datagram sockets
-* **Raw** - Raw IP sockets
-* **Icmp** - ICMP sockets
-* **Netlink** - Netlink sockets
-
----
-
-### Resolver
-
-DNS resolution and hostname lookup.
-
-**Features:**
-
-* Hostname to IP resolution
-* Service name resolution
-* IPv4/IPv6 support
-
----
-
-### SmtpClient
-
-SMTP/SMTPS email client.
-
-**Features:**
-
-* SMTP protocol implementation
-* STARTTLS support
-* Authentication mechanisms
-
----
-
-### Socket
-
-Low-level socket abstraction.
-
-**Features:**
-
-* Template-based for different protocols
-* Non-blocking I/O
-* Socket options (SO_REUSEADDR, SO_KEEPALIVE, etc.)
-
----
-
-### SocketStream
-
-Stream interface for sockets.
-
-**Features:**
-
-* std::iostream integration
-* Buffered I/O
-* Stream operators (<<, >>)
 
 ---
 
