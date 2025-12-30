@@ -58,13 +58,16 @@ join-www/
 ├── content/              # Documentation content (Markdown)
 │   ├── _index.md         # Documentation home page
 │   └── docs/
+│       ├── _index.md     # Documentation overview
 │       ├── quickstart/
+│       │   └── _index.md # Quick start guide
 │       └── modules/
-│           ├── core/
-│           ├── crypto/
-│           ├── network/
-│           ├── sax/
-│           └── thread/
+│           ├── _index.md # Modules overview
+│           ├── core/     # Core module (networking, threads, reactor, etc.)
+│           ├── crypto/   # Crypto module (hashing, signatures, TLS, etc.)
+│           ├── data/     # Data module (JSON, MessagePack, compression)
+│           ├── fabric/   # Fabric module (interface mgmt, ARP, DNS)
+│           └── services/ # Services module (HTTP, SMTP, etc.)
 ├── themes/
 │   └── hugo-book/        # Theme (Git submodule)
 └── public/               # Generated site (ignored by Git)
@@ -129,14 +132,27 @@ Structure example:
 content/docs/
 ├── _index.md (weight: 1)
 ├── quickstart/
-│   ├── _index.md (weight: 2)
-│   ├── installation.md (weight: 1)
-│   └── quickstart.md (weight: 2)
+│   └── _index.md (weight: 1)
 └── modules/
-    ├── _index.md (weight: 3)
-    └── core/
-        ├── _index.md (weight: 1)
-        └── cache.md (weight: 1)
+    ├── _index.md (weight: 2)
+    ├── core/
+    │   ├── _index.md (weight: 1)
+    │   ├── reactor.md
+    │   ├── socket.md
+    │   └── ...
+    ├── crypto/
+    │   ├── _index.md (weight: 2)
+    │   ├── digest.md
+    │   └── ...
+    ├── data/
+    │   ├── _index.md (weight: 3)
+    │   └── ...
+    ├── fabric/
+    │   ├── _index.md (weight: 4)
+    │   └── ...
+    └── services/
+        ├── _index.md (weight: 5)
+        └── ...
 ```
 
 ### Links between pages
@@ -144,7 +160,7 @@ content/docs/
 Use Hugo shortcodes to create relative links:
 
 ```markdown
-See the [cache documentation]({{< relref "modules/core/cache" >}})
+See the [crypto module]({{< ref "crypto" >}})
 ```
 
 ## Build the Site
@@ -187,6 +203,8 @@ rsync -avz --delete public/ user@server:/var/www/join-www/
 
 ## Resources
 
+- [Join Framework Repository](https://github.com/joinframework/join)
+- [Join API Documentation](https://joinframework.github.io/join/)
 - [Hugo Documentation](https://gohugo.io/documentation/)
 - [Hugo Book Theme](https://github.com/alex-shpak/hugo-book)
 - [Markdown Syntax](https://www.markdownguide.org/basic-syntax/)
