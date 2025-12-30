@@ -5,7 +5,7 @@ weight: 1
 
 # Documentation
 
-Welcome to the **Join framework** documentation. Join is a lightweight C++ network framework library designed for building high-performance networked applications.
+Welcome to the **Join framework** documentation. Join is a modular C++ network runtime framework for Linux designed for building high-performance, low-latency networked applications.
 
 ---
 
@@ -20,7 +20,7 @@ Get up and running with Join in minutes.
 * Create your first application
 * Troubleshoot common issues
 
-👉 [Get Started](/docs/quickstart/)
+👉 [Get Started]({{< ref "quickstart" >}})
 
 ---
 
@@ -30,13 +30,13 @@ Explore the framework's modular architecture.
 
 **Discover:**
 
-* Core - Foundation components and utilities
-* Network - HTTP, sockets, and protocols
-* Crypto - Cryptographic operations
-* SAX - JSON and MessagePack parsing
-* Thread - Multithreading primitives
+* **Core** - Foundation components: reactor, sockets, threads, concurrency primitives
+* **Fabric** - Network control: interface management, ARP, DNS resolution
+* **Crypto** - Security: encryption, hashing, signatures, Base64
+* **Data** - Serialization: JSON, MessagePack, compression
+* **Services** - Protocols: HTTP/HTTPS, SMTP/SMTPS
 
-👉 [Browse Modules](/docs/modules/)
+👉 [Browse Modules]({{< ref "modules" >}})
 
 ---
 
@@ -45,12 +45,12 @@ Explore the framework's modular architecture.
 ### API Reference
 Complete class and function documentation generated with Doxygen.
 
-🔗 [Browse API](https://joinframework.github.io/join/)
+👉 [Browse API](https://joinframework.github.io/join/)
 
 ### GitHub Repository
 Source code, issues, and releases.
 
-🔗 [View on GitHub](https://github.com/joinframework/join)
+👉 [View on GitHub](https://github.com/joinframework/join)
 
 ### Quality Metrics
 

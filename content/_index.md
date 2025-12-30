@@ -4,42 +4,53 @@ title: "Join Framework"
 
 # Welcome to Join Framework
 
-**Join** is a modern, lightweight C++ framework designed for building high-performance network applications. Built with simplicity and efficiency in mind, Join provides a comprehensive set of tools for network programming, cryptography, multithreading, and data serialization.
+**Join** is a **modular C++ network runtime framework for Linux**, designed for **low-latency**, **high-throughput**, and **system-level networking**.
 
-## Why Join?
+It provides a set of composable libraries covering networking primitives, concurrency, serialization, cryptography, and Linux network fabric management.
 
-- **High Performance**: Zero-copy operations and efficient memory management
-- **Modern C++**: Leverages contemporary C++ features for clean, expressive code
-- **Production Ready**: Thoroughly tested with high code coverage
-- **MIT Licensed**: Free to use in both open source and commercial projects
+## 🎯 Design Goals
 
-## Key Features
+- Linux-native networking (sockets, netlink, raw sockets)
+- Event-driven and reactor-based architecture
+- Strong separation of concerns via modular libraries
+- High test coverage and correctness-first design
+- Suitable for infrastructure, control-plane, and runtime components
 
-- **Asynchronous I/O**: Powerful reactor pattern for handling thousands of concurrent connections
-- **TLS/SSL Support**: Secure network communication with OpenSSL integration
-- **HTTP/HTTPS**: Built-in client and server implementations
-- **Thread-Safe**: Lock-free queues and thread pool for concurrent programming
-- **JSON & MessagePack**: Fast serialization and deserialization
+## 🚀 Why Join?
 
-## Getting Started
+Join focuses on providing **robust, efficient building blocks** for:
+- Network runtimes
+- System services
+- Control planes
+- High-performance servers
+- Infrastructure tooling
 
-New to Join? Start with our [Quick Start Guide]({{< ref "docs/quickstart" >}}) to get up and running in minutes.
+## 📦 Modular Architecture
 
-## Explore the Modules
+The framework is a collection of specialized modules that build upon one another:
 
-Join is organized into five core modules, each addressing specific needs:
+| Module | Purpose | Highlights |
+| :--- | :--- | :--- |
+| **[`core`]({{< ref "core" >}})** | **Foundation** | Epoll Reactor, TCP/UDP/TLS, Unix Sockets, Thread Pools, Mutexes |
+| **[`fabric`]({{< ref "fabric" >}})** | **Network Control** | Netlink Interface Manager, ARP client, DNS Resolver |
+| **[`crypto`]({{< ref "crypto" >}})** | **Security** | OpenSSL Wrappers, HMAC, Digital Signatures, Base64 |
+| **[`data`]({{< ref "data" >}})** | **Serialization** | High-perf JSON (DOM/SAX), MessagePack, Zlib Streams |
+| **[`services`]({{< ref "services" >}})** | **Protocols** | HTTP/1.1 (Client/Server), SMTP, Mail Parsing |
 
-- [**Core**]({{< ref "docs/modules/core" >}}): Essential utilities, reactor pattern, timers, thread-safe queues and more ...
-- [**Network**]({{< ref "docs/modules/network" >}}): Socket abstractions, HTTP/SMTP clients and servers, DNS resolution
-- [**Crypto**]({{< ref "docs/modules/crypto" >}}): Cryptographic functions including hashing, HMAC, signatures, and Base64
-- [**Sax**]({{< ref "docs/modules/sax" >}}): High-performance JSON and MessagePack parsers
-- [**Thread**]({{< ref "docs/modules/thread" >}}): Threading primitives and thread pool
+## 🛠️ Getting Started
 
-## Community & Support
+New to Join? Start with our [Quick Start Guide]({{< ref "quickstart" >}}) to get up and running in minutes.
 
-- **GitHub**: [joinframework/join](https://github.com/joinframework/join)
+## 📊 Quality & Performance
+
+* **1000+ Unit Tests** covering networking, concurrency, and data parsing
+* **Security:** Continuous scanning via Codacy and GitHub Security workflows
+
+## 📚 Resources
+
 - **API Documentation**: [Doxygen](https://joinframework.github.io/join/index.html)
-- **Issues**: Report bugs and request features on [GitHub Issues](https://github.com/joinframework/join/issues)
+- **GitHub**: [joinframework/join](https://github.com/joinframework/join)
+- **Issues**: [Report bugs and request features](https://github.com/joinframework/join/issues)
 
 ## License
 

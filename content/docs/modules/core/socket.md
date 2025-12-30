@@ -1,7 +1,7 @@
 ---
 
 title: "Socket"
-weight: 5
+weight: 7
 ---
 
 # Socket

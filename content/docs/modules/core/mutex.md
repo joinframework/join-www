@@ -1,6 +1,6 @@
 ---
 title: "Mutex"
-weight: 4
+weight: 13
 ---
 
 # Mutex

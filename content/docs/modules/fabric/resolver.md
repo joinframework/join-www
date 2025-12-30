@@ -1,7 +1,7 @@
 ---
 
 title: "Resolver"
-weight: 9
+weight: 6
 ---
 
 # Resolver

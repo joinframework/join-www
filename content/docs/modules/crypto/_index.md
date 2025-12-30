@@ -1,93 +1,69 @@
 ---
 title: "Crypto"
-weight: 2
+weight: 3
 bookCollapseSection: true
 ---
 
 # Crypto
 
-The **Crypto** module provides cryptographic operations and security features built on OpenSSL.
+The **Crypto** module provides cryptographic operations and security features built on OpenSSL, offering both stream-based and one-shot interfaces for common cryptographic tasks.
 
 ---
+
+## 📝 Encoding
 
 ### Base64
 
 Base64 encoding and decoding with stream support.
 
-**Features:**
-
-* Stream-based encoding/decoding (Encoder/Decoder)
-* One-shot encode/decode operations
-* Binary-to-hex conversion utilities
-
 ---
+
+## 🔐 Cryptographic Hash Functions
 
 ### Digest
 
-Cryptographic hash functions with stream interface.
+Stream-based cryptographic hashing with support for multiple algorithms:
 
-**Algorithms:**
-
-* MD5, SHA-1, SHA-224/256/384/512, SM3
-
-**Features:**
-
-* Stream-based hashing (Digestbuf)
-* One-shot hash functions (md5hex, sha256bin, etc.)
-* Binary and hex output formats
+**Supported Algorithms:**
+- MD5
+- SHA-1
+- SHA-224, SHA-256, SHA-384, SHA-512
+- SM3
 
 ---
 
-### HMAC
+## 🔑 Message Authentication
 
-Hash-based Message Authentication Code with stream support.
+### HMAC (Hash-based Message Authentication Code)
 
-**Features:**
-
-* Stream-based HMAC computation (Hmacbuf)
-* Support for all Digest algorithms
-* One-shot HMAC functions with binary/hex output
+Keyed-hash message authentication with stream support.
 
 ---
 
-### OpenSSL
-
-OpenSSL library management and smart pointers.
-
-**Features:**
-
-* Library initialization (initializeOpenSSL)
-* Smart pointer wrappers (EvpPkeyPtr, SslCtxPtr, etc.)
-* Default cipher and curve configurations
-
----
+## ✍️ Digital Signatures
 
 ### Signature
 
-Digital signature operations with stream interface.
+Stream-based digital signature creation and verification:
 
-**Features:**
-
-* Stream-based signing and verification (Signaturebuf)
-* Support for RSA, DSA, ECDSA, EdDSA via EVP_PKEY
-* One-shot sign/verify operations
-
----
-
-### TLSKey
-
-TLS key management for public and private keys.
-
-**Features:**
-
-* PEM format key loading (public/private)
-* EVP_PKEY wrapper with RAII
-* Key length and type queries
+**Supported Algorithms:**
+- RSA
+- DSA
+- ECDSA (Elliptic Curve)
+- EdDSA (Ed25519, Ed448)
 
 ---
 
-## API Reference
+## 🔐 TLS/SSL Support
+
+### TLS Key Management
+
+Public and private key handling for TLS.
+
+---
+
+## 📚 API Reference
 
 For detailed API documentation, see:
 
-🔗 [Doxygen Crypto Module Reference](https://joinframework.github.io/join/)
+[Doxygen Reference](https://joinframework.github.io/join/)

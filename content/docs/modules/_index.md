@@ -5,7 +5,7 @@ weight: 2
 
 # Modules
 
-Join is organized as a **modular C++ framework**. The codebase is structured into distinct modules, each focusing on a specific responsibility.
+Join is organized into five specialized modules, each addressing specific needs in building high-performance networked applications.
 
 This modular organization provides:
 
@@ -13,90 +13,85 @@ This modular organization provides:
 * easy navigation through the codebase
 * logical grouping of related functionality
 
-## Available Modules
+---
+
+## 🏗️ Core Module
+
+**Foundation components and runtime primitives**
+
+The core module provides essential building blocks including the epoll-based reactor, socket abstractions (TCP, UDP, TLS, Unix), threading primitives, lock-free queues, timers, and utilities.
+
+**Key Components:**
+- Reactor pattern with epoll
+- TCP/UDP/TLS sockets
+- Thread pools and synchronization
+- Lock-free shared memory queues
+- High-precision timers
+
+👉 See: [Core Module]({{< ref "core" >}})
 
 ---
 
-### Core
+## 🌐 Fabric Module
 
-The **Core** module provides the fundamental building blocks used across the framework.
+**Network control and Linux fabric management**
 
-It includes:
+The fabric module provides network interface management, ARP protocol implementation, and DNS resolution for controlling and monitoring the Linux network stack.
 
-* reactor pattern for asynchronous I/O
-* timers (monotonic and real-time)
-* thread-safe queues (SPSC, MPSC, MPMC)
-* caching and filesystem utilities
-* error handling and compression
-* ...
+**Key Components:**
+- Netlink-based interface manager
+- ARP client implementation
+- DNS resolver
 
-👉 See: [Core Module](/docs/modules/core/)
+👉 See: [Fabric Module]({{< ref "fabric" >}})
 
 ---
 
-### Network
+## 🔐 Crypto Module
 
-The **Network** module provides comprehensive networking capabilities.
+**Security and cryptographic operations**
 
-It includes:
+The crypto module offers cryptographic functions built on OpenSSL, including hashing, HMAC, digital signatures, and encoding utilities.
 
-* HTTP/HTTPS client and server
-* SMTP/SMTPS email client
-* sockets (TCP, UDP, Unix, Raw, ICMP, Netlink)
-* DNS resolution
-* network interface management
-* ...
+**Key Components:**
+- Hash functions (MD5, SHA-1/224/256/384/512)
+- HMAC with stream support
+- Digital signatures (RSA, DSA, ECDSA, EdDSA)
+- Base64 encoding/decoding
 
-👉 See: [Network Module](/docs/modules/network/)
-
----
-
-### Crypto
-
-The **Crypto** module provides cryptographic primitives and security-related utilities.
-
-It includes:
-
-* Base64 encoding/decoding
-* hash functions (MD5, SHA, BLAKE2, etc.)
-* HMAC message authentication
-* digital signatures (RSA, DSA, ECDSA, EdDSA)
-* TLS key and certificate management
-* ...
-
-👉 See: [Crypto Module](/docs/modules/crypto/)
+👉 See: [Crypto Module]({{< ref "crypto" >}})
 
 ---
 
-### Sax
+## 📊 Data Module
 
-The **Sax** module provides high-performance data serialization.
+**High-performance serialization**
 
-It includes:
+The data module provides fast JSON and MessagePack parsers with both DOM and SAX-style interfaces, plus compression support.
 
-* JSON reader and writer
-* MessagePack reader and writer
-* SAX-style event-driven parsing
-* optimized numeric conversions
-* ...
+**Key Components:**
+- High-performance JSON parser (DOM/SAX)
+- MessagePack binary format
+- Zlib compression streams
+- Dynamic value containers
 
-👉 See: [Sax Module](/docs/modules/sax/)
+👉 See: [Data Module]({{< ref "data" >}})
 
 ---
 
-### Thread
+## 🚀 Services Module
 
-The **Thread** module provides multithreading utilities and abstractions.
+**Application protocols**
 
-It includes:
+The services module implements common application-layer protocols including HTTP/HTTPS client and server, SMTP/SMTPS client, and chunked transfer encoding.
 
-* thread management
-* mutexes (standard and recursive)
-* condition variables and semaphores
-* thread pools
-* ...
+**Key Components:**
+- HTTP/1.1 client and server
+- SMTP/SMTPS email client
+- Chunked transfer encoding
+- Mail message construction
 
-👉 See: [Thread Module](/docs/modules/thread/)
+👉 See: [Services Module]({{< ref "services" >}})
 
 ---
 
@@ -107,15 +102,15 @@ The framework code is internally organized with dependencies between modules:
 ```text
  ├─ Core (foundation)
  ├─ Crypto
- ├─ Network
- ├─ Sax
- └─ Thread
+ ├─ Fabric
+ ├─ Data
+ └─ Services
 ```
 
 ---
 
 ## Next Steps
 
-* Start with the [Core Module](/docs/modules/core/)
+* Start with the [Core Module]({{< ref "core" >}})
 * Explore each module documentation for details
 * Refer to the [Doxygen documentation](https://joinframework.github.io/join/) for API reference

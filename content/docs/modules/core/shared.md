@@ -1,6 +1,6 @@
 ---
 title: "Shared Memory"
-weight: 7
+weight: 2
 ---
 
 # Shared Memory
