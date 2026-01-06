@@ -14,6 +14,43 @@ The **Services** module implements application-layer protocols including HTTP/HT
 
 HTTP/1.1 implementation with client and server support:
 
+### Cache
+
+Memory-mapped files (mmap) for efficient access to frequently read files.
+
+**Features:**
+- Thread-safe access using mutex locks
+- Automatic memory-mapped file management
+- Automatic cache invalidation on file changes
+- Easy removal of individual cache entries or clearing the entire cache
+- Keeps track of cached file sizes and modification timestamps
+
+**Use Cases:**
+- Serving static files efficiently in HTTP servers
+- Reducing repeated disk reads for frequently accessed resources
+- Caching configuration files or templates for fast access
+- Memory-efficient access to large files without loading them entirely into RAM
+
+---
+
+### Chunk Stream
+
+HTTP chunked transfer encoding support:
+
+**Features:**
+- Chunked encoding for streaming responses
+- Chunked decoding for streaming requests
+- Stream-based interface
+- HTTP/1.1 compliance
+
+**Use Cases:**
+- Large file transfers
+- Streaming data
+- Server-sent events
+- Progressive rendering
+
+---
+
 ### HTTP Message
 
 Core HTTP message handling:
@@ -105,24 +142,6 @@ HTTP/HTTPS server implementation:
 - Web applications
 - Microservices
 - Internal services
-
----
-
-### Chunk Stream
-
-HTTP chunked transfer encoding support:
-
-**Features:**
-- Chunked encoding for streaming responses
-- Chunked decoding for streaming requests
-- Stream-based interface
-- HTTP/1.1 compliance
-
-**Use Cases:**
-- Large file transfers
-- Streaming data
-- Server-sent events
-- Progressive rendering
 
 ---
 

@@ -67,22 +67,6 @@ Tcp::Endpoint endpoint1(ip, 8080);
 Tcp::Endpoint endpoint2("10.0.0.1", 8080);
 ```
 
-### From URL
-
-```cpp
-// Hostname resolution happens automatically
-Tcp::Endpoint web("https://example.com:8443");
-
-std::cout << web.ip() << "\n";        // Resolved IP
-std::cout << web.port() << "\n";      // 8443
-std::cout << web.hostname() << "\n";  // example.com
-```
-
-URL parsing extracts:
-- Scheme (determines default port)
-- Hostname (resolved to IP)
-- Port (explicit or default)
-
 ### From protocol and port
 
 ```cpp
@@ -302,10 +286,10 @@ const struct sockaddr* caddr = endpoint.addr();
 
 | Endpoint Type        | Address Type     | Additional Data        |
 | -------------------- | ---------------- | ---------------------- |
-| BasicInternetEndpoint| IP + Port        | Hostname, device       |
 | BasicUnixEndpoint    | Filesystem path  | -                      |
 | BasicNetlinkEndpoint | PID + Groups     | Protocol type          |
 | BasicLinkLayerEndpoint| Interface       | -                      |
+| BasicInternetEndpoint| IP + Port        | Hostname, device       |
 
 All endpoints provide:
 - `protocol()` — get associated protocol

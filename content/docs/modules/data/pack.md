@@ -1,6 +1,6 @@
 ---
 title: "MessagePack"
-weight: 3
+weight: 4
 ---
 
 # MessagePack
@@ -29,11 +29,10 @@ Serialize `Value` objects to MessagePack format:
 
 using join;
 
-Value data = Object{
-    {"name", "Alice"},
-    {"age", 30},
-    {"active", true}
-};
+Value data;
+data["name"] = "Alice";
+data["age"] = 30;
+data["active"] = true;
 
 std::ostringstream out;
 PackWriter writer(out);
@@ -41,83 +40,6 @@ writer.serialize(data);
 ```
 
 The output is a **binary MessagePack document** written directly to the stream.
-
----
-
-### Scalar values
-
-#### Null and booleans
-
-```cpp
-writer.setNull();
-writer.setBool(true);
-writer.setBool(false);
-```
-
----
-
-#### Integers
-
-Signed and unsigned integers are encoded automatically using the most compact representation.
-
-```cpp
-writer.setInt(-42);
-writer.setUint(42);
-
-writer.setInt64(-123456789);
-writer.setUint64(123456789);
-```
-
----
-
-#### Floating-point numbers
-
-```cpp
-writer.setDouble(3.14159);
-```
-
----
-
-#### Strings
-
-```cpp
-writer.setString("Hello MessagePack");
-```
-
-String length and encoding are handled transparently.
-
----
-
-## Arrays
-
-### Writing arrays
-
-```cpp
-writer.startArray(3);
-writer.setInt(1);
-writer.setInt(2);
-writer.setInt(3);
-```
-
-Array elements are encoded using the most compact MessagePack representation automatically.
-
----
-
-## Objects (maps)
-
-### Writing objects
-
-```cpp
-writer.startObject(2);
-
-writer.setKey("id");
-writer.setInt(42);
-
-writer.setKey("name");
-writer.setString("join");
-```
-
-Object keys are encoded as strings.
 
 ---
 
@@ -145,8 +67,8 @@ reader.deserialize(buffer, length);
 PackReader accepts multiple input types:
 
 ```cpp
-// Memory buffer
-reader.deserialize(data, length);
+// C-string with length
+reader.deserialize(cstr, length);
 
 // Pointer range
 reader.deserialize(first, last);
