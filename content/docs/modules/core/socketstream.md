@@ -656,10 +656,6 @@ bool readWithTimeout(Tcp::Stream& stream, std::string& line, int ms) {
 
 | Protocol   | Stream Type       | Use Case                    |
 | ---------- | ----------------- | --------------------------- |
-| Tcp        | BasicSocketStream | HTTP, custom text protocols |
 | UnixStream | BasicSocketStream | Local IPC                   |
+| Tcp        | BasicSocketStream | HTTP, custom text protocols |
 | Tls        | BasicTlsStream    | Secure TCP                  |
-| Http       | BasicSocketStream | Web clients                 |
-| Https      | BasicTlsStream    | Secure web clients          |
-| Smtp       | BasicTlsStream    | Email clients (STARTTLS)    |
-| Smtps      | BasicTlsStream    | Secure email clients        |

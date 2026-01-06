@@ -1,6 +1,6 @@
 ---
 title: "Value"
-weight: 4
+weight: 5
 ---
 
 # Value
@@ -214,6 +214,7 @@ assert(a == b);
 
 ```cpp
 Value v;
+
 v.jsonRead(jsonString);
 
 v.jsonWrite(std::cout, 2);     // pretty print
@@ -224,6 +225,7 @@ v.jsonCanonicalize(std::cout);
 
 ```cpp
 Value v;
+
 v.packRead(buffer, length);
 
 v.packWrite(std::cout);

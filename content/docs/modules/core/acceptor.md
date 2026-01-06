@@ -25,7 +25,7 @@ Two acceptor types are available:
 
 ## BasicStreamAcceptor
 
-The base acceptor class for connection‑oriented protocols.
+The base acceptor class for connection‑oriented protocols such as TCP and Unix stream.
 
 ### Creating a TCP server
 
@@ -507,10 +507,6 @@ The `IPV6_V6ONLY` option is automatically disabled, allowing IPv4 clients to con
 
 | Protocol      | Acceptor Type         | Use Case                |
 | ------------- | --------------------- | ----------------------- |
-| Tcp           | BasicStreamAcceptor   | HTTP, custom protocols  |
 | UnixStream    | BasicStreamAcceptor   | Local IPC               |
+| Tcp           | BasicStreamAcceptor   | HTTP, custom protocols  |
 | Tls           | BasicTlsAcceptor      | Secure TCP              |
-| Http          | BasicStreamAcceptor   | Web servers             |
-| Https         | BasicTlsAcceptor      | Secure web servers      |
-| Smtp          | BasicTlsAcceptor      | Email servers (STARTTLS)|
-| Smtps         | BasicTlsAcceptor      | Secure email servers    |
