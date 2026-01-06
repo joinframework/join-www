@@ -304,7 +304,7 @@ socket.setCaFile("/etc/ssl/certs/ca-bundle.crt");
 socket.setCaPath("/etc/ssl/certs/");
 ```
 
-⚠️ By default, peer verification is **disabled**. Always enable it for production clients.
+⚠️ By default, peer verification is **disabled**.
 
 ### Setting client certificate
 
@@ -423,7 +423,7 @@ int proto = socket.protocol();     // IPPROTO_TCP, IPPROTO_UDP
 ### MTU discovery
 
 ```cpp
-// Get path MTU (datagram sockets)
+// Get path MTU
 int mtu = socket.mtu();
 ```
 

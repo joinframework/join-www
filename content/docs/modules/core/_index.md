@@ -166,14 +166,6 @@ High-precision timers using timerfd with reactor integration:
 
 ## 🗂️ Utilities
 
-### Cache
-
-File content caching using memory-mapped files:
-
-- Memory-mapped file caching (mmap)
-- Automatic modification time tracking
-- Thread-safe operations
-
 ### File System
 
 File system utilities and operations:
@@ -181,18 +173,6 @@ File system utilities and operations:
 - File I/O helpers
 - Path manipulation
 - File status queries
-
-### View
-
-Non-owning views for efficient data access without copies:
-
-- **StringView** - Lightweight string view with seek support
-- **StreamView** - Stream buffer view (seekable/non-seekable)
-- **BufferingView** - Adapter with snapshot/consume operations
-
-### Stream Buffer
-
-Custom stream buffer implementations for specialized I/O.
 
 ### Variant
 

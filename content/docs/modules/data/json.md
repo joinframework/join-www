@@ -1,6 +1,6 @@
 ---
 title: "JSON"
-weight: 2
+weight: 3
 ---
 
 # JSON
@@ -29,11 +29,10 @@ Serialize `Value` objects to JSON format:
 
 using join;
 
-Value data = Object{
-    {"name", "Alice"},
-    {"age", 30},
-    {"active", true}
-};
+Value data;
+data["name"] = "Alice";
+data["age"] = 30;
+data["active"] = true;
 
 std::ostringstream out;
 JsonWriter writer(out);
@@ -67,11 +66,10 @@ Output:
 JsonWriter handles special IEEE 754 values:
 
 ```cpp
-Value data = Array{
-    std::numeric_limits<double>::infinity(),
-    -std::numeric_limits<double>::infinity(),
-    std::numeric_limits<double>::quiet_NaN()
-};
+Value data;
+data.pushBack(std::numeric_limits<double>::infinity());
+data.pushBack(-std::numeric_limits<double>::infinity());
+data.pushBack(std::numeric_limits<double>::quiet_NaN());
 
 JsonWriter writer(out);
 writer.serialize(data);
@@ -87,11 +85,10 @@ writer.serialize(data);
 Produce RFC 8785 compliant canonical JSON:
 
 ```cpp
-Value data = Object{
-    {"z_field", 1},
-    {"a_field", 2},
-    {"m_field", 3}
-};
+Value data;
+data["z_field"] = 1;
+data["a_field"] = 2;
+data["m_field"] = 3;
 
 std::ostringstream out;
 JsonCanonicalizer canonicalizer(out);

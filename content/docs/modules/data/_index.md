@@ -10,6 +10,75 @@ The **Data** module provides high-performance data serialization with support fo
 
 ---
 
+## 🔍 View Classes
+
+Efficient input abstraction layer providing unified access to different data sources:
+
+### StringView
+
+Zero-copy view over string data for memory-efficient parsing:
+
+**Features:**
+- Direct pointer-based navigation
+- No memory allocation
+- Fast character access and lookahead
+- Position tracking (seekable)
+
+**Use Cases:**
+- Parsing JSON/MessagePack from memory buffers
+- Configuration file parsing
+- Zero-copy data validation
+
+### BasicStreamView
+
+Template-based stream adapter with compile-time seekability control:
+
+**Variants:**
+- `StringStreamView` (seekable)
+- `FileStreamView` (seekable)
+- `StreamView` (non-seekable, for pipes/network)
+
+**Features:**
+- Unified interface for different stream types
+- Efficient buffered access
+- Optional seek support
+- Stream buffer integration
+
+### BufferingView
+
+Adapter that captures parsed content for error reporting:
+
+**Features:**
+- Records consumed characters
+- Seekable: uses position tracking
+- Non-seekable: uses thread-local buffer
+- Snapshot and consume operations
+
+**Use Cases:**
+- Error context capture
+- Token extraction
+- Parse validation
+
+### Optimized Operations
+
+**Character Operations:**
+- `peek()` / `get()` - Look ahead and extract
+- `getIf(char)` - Conditional extraction
+- `getIfNoCase(char)` - Case-insensitive matching
+- `read(buf, count)` - Bulk reading
+
+**Specialized Methods:**
+- `readUntilEscaped()` - Fast string content extraction
+- `skipWhitespaces()` - Efficient whitespace skipping
+- `skipWhitespacesAndComments()` - JSON comment support
+
+**Performance Features:**
+- Lookup tables for character classification
+- Zero-copy operations where possible
+- Branch prediction optimization
+
+---
+
 ## 🎭 SAX-Style Parsing
 
 Event-driven parsing architecture for memory-efficient processing of large data streams:
