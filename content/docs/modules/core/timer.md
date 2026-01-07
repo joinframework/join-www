@@ -131,7 +131,8 @@ After cancellation:
 ### Check if a timer is active
 
 ```cpp
-if (timer.active()) {
+if (timer.active())
+{
     ...
 }
 ```

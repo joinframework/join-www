@@ -117,7 +117,8 @@ Value root;
 JsonReader reader(root);
 
 // From string
-if (reader.deserialize(jsonString) == 0) {
+if (reader.deserialize(jsonString) == 0)
+{
     std::cout << root["name"].getString() << "\n";
 }
 ```
@@ -246,10 +247,14 @@ Supported formats:
 ### Checking errors
 
 ```cpp
-if (reader.deserialize(json) == -1) {
-    if (lastError == JsonErrc::InvalidEscaping) {
+if (reader.deserialize(json) == -1)
+{
+    if (lastError == JsonErrc::InvalidEscaping)
+    {
         std::cerr << "Bad escape sequence\n";
-    } else {
+    }
+    else
+    {
         std::cerr << "Parse error: " << lastError.message() << "\n";
     }
 }
@@ -340,7 +345,8 @@ std::cout << json << "\n";
 // Parse back
 Value parsed;
 JsonReader reader(parsed);
-if (reader.deserialize(json) == 0) {
+if (reader.deserialize(json) == 0)
+{
     std::cout << "User count: " << parsed["count"].getInt() << "\n";
     std::cout << "First user: " << parsed["users"][0]["name"].getString() << "\n";
 }

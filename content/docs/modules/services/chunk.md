@@ -120,7 +120,8 @@ stream.flush();
 Chunkstream stream(storage);
 
 // Stream data continuously
-for (const auto& chunk : dataChunks) {
+for (const auto& chunk : dataChunks)
+{
     stream << chunk;
 }
 
@@ -139,7 +140,8 @@ Chunkstream stream(storage);
 
 // Read line by line
 std::string line;
-while (std::getline(stream, line)) {
+while (std::getline(stream, line))
+{
     process(line);
 }
 ```
@@ -150,7 +152,8 @@ while (std::getline(stream, line)) {
 Chunkstream stream(storage);
 
 char buffer[1024];
-while (stream.read(buffer, sizeof(buffer))) {
+while (stream.read(buffer, sizeof(buffer)))
+{
     size_t bytesRead = stream.gcount();
     process(buffer, bytesRead);
 }
@@ -193,14 +196,15 @@ chunked.flush();  // Sends terminating chunk
 HttpResponse res;
 res.readHeaders(serverStream);
 
-if (res.header("Transfer-Encoding").find("chunked") != std::string::npos) {
+if (res.header("Transfer-Encoding").find("chunked") != std::string::npos)
+{
     // Wrap with Chunkstream
     Chunkstream chunked(serverStream);
-    
+
     // Read all data
     std::string data;
     std::getline(chunked, data, '\0');
-    
+
     process(data);
 }
 ```
@@ -235,12 +239,16 @@ Chunkstream stream(base);  // 16 KB
 ```cpp
 Chunkstream stream(storage);
 
-if (!stream) {
+if (!stream)
+{
     std::error_code ec = join::lastError;
-    
-    if (ec == Errc::InvalidParam) {
+
+    if (ec == Errc::InvalidParam)
+    {
         // Invalid chunk format
-    } else if (ec == Errc::MessageTooLong) {
+    }
+    else if (ec == Errc::MessageTooLong)
+    {
         // Chunk exceeds maximum size
     }
 }
@@ -253,25 +261,27 @@ if (!stream) {
 ### Progressive response
 
 ```cpp
-void sendProgressiveData(std::iostream& client) {
+void sendProgressiveData(std::iostream& client)
+{
     HttpResponse res;
     res.response("200", "OK");
     res.header("Transfer-Encoding", "chunked");
     res.header("Content-Type", "application/json");
     res.writeHeaders(client);
-    
+
     Chunkstream stream(client);
-    
+
     stream << "[\n";
-    
+
     bool first = true;
-    for (const auto& item : generateItems()) {
+    for (const auto& item : generateItems())
+    {
         if (!first) stream << ",\n";
         stream << "  " << item.toJson();
         stream.flush();  // Send immediately
         first = false;
     }
-    
+
     stream << "\n]\n";
     stream.flush();  // Final chunk
 }
@@ -280,14 +290,15 @@ void sendProgressiveData(std::iostream& client) {
 ### Streaming file upload
 
 ```cpp
-void uploadFile(const std::string& filename, std::iostream& server) {
+void uploadFile(const std::string& filename, std::iostream& server)
+{
     HttpRequest req(HttpMethod::Post);
     req.path("/upload");
     req.header("Transfer-Encoding", "chunked");
     req.writeHeaders(server);
-    
+
     Chunkstream stream(server);
-    
+
     std::ifstream file(filename, std::ios::binary);
     stream << file.rdbuf();
     stream.flush();
@@ -297,19 +308,21 @@ void uploadFile(const std::string& filename, std::iostream& server) {
 ### Server-sent events
 
 ```cpp
-void sendEvents(std::iostream& client) {
+void sendEvents(std::iostream& client)
+{
     HttpResponse res;
     res.response("200", "OK");
     res.header("Transfer-Encoding", "chunked");
     res.header("Content-Type", "text/event-stream");
     res.header("Cache-Control", "no-cache");
     res.writeHeaders(client);
-    
+
     Chunkstream stream(client);
-    
-    while (running) {
+
+    while (running)
+    {
         Event event = waitForEvent();
-        
+
         stream << "event: " << event.type << "\n";
         stream << "data: " << event.data << "\n\n";
         stream.flush();

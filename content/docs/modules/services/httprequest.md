@@ -47,7 +47,8 @@ req.header("Authorization", "Bearer token123");
 req.header("User-Agent", "MyApp/1.0");
 
 // Check if header exists
-if (req.hasHeader("Authorization")) {
+if (req.hasHeader("Authorization"))
+{
     std::string auth = req.header("Authorization");
 }
 ```
@@ -98,7 +99,8 @@ req.parameter("limit", "50");
 req.parameter("sort", "name");
 
 // Check parameter
-if (req.hasParameter("page")) {
+if (req.hasParameter("page"))
+{
     std::string page = req.parameter("page");
 }
 
@@ -214,7 +216,8 @@ HttpRequest req;
 
 // Read from stream
 std::stringstream ss(requestData);
-if (req.readHeaders(ss) == 0) {
+if (req.readHeaders(ss) == 0)
+{
     // Headers parsed successfully
     std::string method = req.methodString();
     std::string path = req.path();
@@ -280,15 +283,16 @@ client.flush();
 ```cpp
 // In server handler
 HttpRequest req;
-if (req.readHeaders(stream) == 0) {
+if (req.readHeaders(stream) == 0)
+{
     // Access request data
     HttpMethod method = req.method();
     std::string path = req.path();
     std::string userAgent = req.header("User-Agent");
-    
+
     // Get query parameters
     std::string id = req.parameter("id");
-    
+
     // Process request...
 }
 ```
@@ -300,14 +304,20 @@ if (req.readHeaders(stream) == 0) {
 ```cpp
 HttpRequest req;
 
-if (req.readHeaders(stream) == -1) {
+if (req.readHeaders(stream) == -1)
+{
     std::error_code ec = join::lastError;
-    
-    if (ec == HttpErrc::BadRequest) {
+
+    if (ec == HttpErrc::BadRequest)
+    {
         // Malformed request
-    } else if (ec == HttpErrc::Unsupported) {
+    }
+    else if (ec == HttpErrc::Unsupported)
+    {
         // Unsupported method
-    } else if (ec == HttpErrc::UriTooLong) {
+    }
+    else if (ec == HttpErrc::UriTooLong)
+    {
         // URI exceeds limits
     }
 }
@@ -330,11 +340,12 @@ req.parameter("email", "user@example.com");  // Becomes "user%40example.com"
 ```cpp
 HttpRequest req;
 
-for (const auto& endpoint : endpoints) {
+for (const auto& endpoint : endpoints)
+{
     req.clear();  // Reset for reuse
     req.method(HttpMethod::Get);
     req.path(endpoint);
-    
+
     // Send request...
 }
 ```

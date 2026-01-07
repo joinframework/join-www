@@ -95,11 +95,13 @@ IpAddress addr("192.168.1.1");
 
 int family = addr.family();  // AF_INET or AF_INET6
 
-if (addr.isIpv4Address()) {
+if (addr.isIpv4Address())
+{
     // IPv4 address
 }
 
-if (addr.isIpv6Address()) {
+if (addr.isIpv6Address())
+{
     // IPv6 address
 }
 ```
@@ -123,15 +125,18 @@ bool global = addr.isGlobal();          // Globally routable
 ### Static validation
 
 ```cpp
-if (IpAddress::isIpAddress("192.168.1.1")) {
+if (IpAddress::isIpAddress("192.168.1.1"))
+{
     // Valid IP address (v4 or v6)
 }
 
-if (IpAddress::isIpv4Address("10.0.0.1")) {
+if (IpAddress::isIpv4Address("10.0.0.1"))
+{
     // Valid IPv4 address
 }
 
-if (IpAddress::isIpv6Address("2001:db8::1")) {
+if (IpAddress::isIpv6Address("2001:db8::1"))
+{
     // Valid IPv6 address
 }
 ```
@@ -188,7 +193,8 @@ IpAddress broadcast = network | ~mask;  // 192.168.1.255
 
 // Check if same network
 IpAddress ip2("192.168.1.200");
-if ((ip & mask) == (ip2 & mask)) {
+if ((ip & mask) == (ip2 & mask))
+{
     // Same network
 }
 ```
@@ -227,7 +233,8 @@ IpAddress mask(28, AF_INET);  // 255.255.255.240
 ```cpp
 IpAddress ip("192.168.1.255");
 
-if (ip.isBroadcast(24)) {
+if (ip.isBroadcast(24))
+{
     // Broadcast for /24 network
 }
 ```
@@ -256,7 +263,8 @@ Get IPv4 address of a network interface:
 ```cpp
 IpAddress addr = IpAddress::ipv4Address("eth0");
 
-if (!addr.isWildcard()) {
+if (!addr.isWildcard())
+{
     std::cout << "eth0 address: " << addr << "\n";
 }
 ```
@@ -289,9 +297,8 @@ Addresses are ordered by:
 ### Subnet checking
 
 ```cpp
-bool isInSubnet(const IpAddress& ip, 
-                const IpAddress& network, 
-                int prefix) {
+bool isInSubnet(const IpAddress& ip, const IpAddress& network, int prefix)
+{
     IpAddress mask(prefix, ip.family());
     return (ip & mask) == (network & mask);
 }
@@ -299,7 +306,8 @@ bool isInSubnet(const IpAddress& ip,
 IpAddress host("192.168.1.50");
 IpAddress net("192.168.1.0");
 
-if (isInSubnet(host, net, 24)) {
+if (isInSubnet(host, net, 24))
+{
     std::cout << "Host is in network\n";
 }
 ```
@@ -309,18 +317,19 @@ if (isInSubnet(host, net, 24)) {
 ### Network enumeration
 
 ```cpp
-void enumerateNetwork(const IpAddress& network, int prefix) {
+void enumerateNetwork(const IpAddress& network, int prefix)
+{
     IpAddress mask(prefix, AF_INET);
     IpAddress base = network & mask;
-    
+
     // First host
     IpAddress firstHost = base;
     firstHost[3] = 1;
-    
+
     // Last host
     IpAddress lastHost = base | ~mask;
     lastHost[3] -= 1;
-    
+
     std::cout << "Network: " << base << "\n";
     std::cout << "First host: " << firstHost << "\n";
     std::cout << "Last host: " << lastHost << "\n";
@@ -333,9 +342,8 @@ void enumerateNetwork(const IpAddress& network, int prefix) {
 ### IP range validation
 
 ```cpp
-bool isInRange(const IpAddress& ip,
-               const IpAddress& start,
-               const IpAddress& end) {
+bool isInRange(const IpAddress& ip, const IpAddress& start, const IpAddress& end)
+{
     return (start <= ip) && (ip <= end);
 }
 
@@ -343,7 +351,8 @@ IpAddress ip("192.168.1.50");
 IpAddress start("192.168.1.1");
 IpAddress end("192.168.1.100");
 
-if (isInRange(ip, start, end)) {
+if (isInRange(ip, start, end))
+{
     std::cout << "IP is in range\n";
 }
 ```
@@ -355,13 +364,19 @@ if (isInRange(ip, start, end)) {
 ```cpp
 IpAddress addr = getAddress();  // Could be v4 or v6
 
-if (addr.isIpv4Address()) {
+if (addr.isIpv4Address())
+{
     // Handle IPv4
-} else if (addr.isIpv6Address()) {
-    if (addr.isIpv4Mapped()) {
+}
+else if (addr.isIpv6Address())
+{
+    if (addr.isIpv4Mapped())
+    {
         // IPv4-mapped IPv6 address
         IpAddress v4 = addr.toIpv4();
-    } else {
+    }
+    else
+    {
         // Native IPv6
     }
 }
@@ -387,13 +402,15 @@ IpAddress addr2("fe80::1%2");
 ```cpp
 IpAddress addr("::192.168.1.1");
 
-if (addr.isIpv4Compat()) {
+if (addr.isIpv4Compat())
+{
     // IPv4-compatible (deprecated)
 }
 
 IpAddress mapped("::ffff:192.168.1.1");
 
-if (mapped.isIpv4Mapped()) {
+if (mapped.isIpv4Mapped())
+{
     // IPv4-mapped IPv6 address
     IpAddress v4 = mapped.toIpv4();
 }
@@ -415,14 +432,18 @@ if (mapped.isIpv4Mapped()) {
 ## Error handling
 
 ```cpp
-try {
+try
+{
     IpAddress addr("invalid");
-} catch (const std::invalid_argument& e) {
+}
+catch (const std::invalid_argument& e)
+{
     std::cerr << "Invalid IP address: " << e.what() << "\n";
 }
 
 // Safe validation
-if (IpAddress::isIpAddress(userInput)) {
+if (IpAddress::isIpAddress(userInput))
+{
     IpAddress addr(userInput);
 }
 ```

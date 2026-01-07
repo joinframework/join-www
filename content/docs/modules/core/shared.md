@@ -61,7 +61,8 @@ using join;
 
 Spsc::Producer producer("my_channel", 1024, 64);
 
-if (producer.open() == -1) {
+if (producer.open() == -1)
+{
     // Handle error
 }
 ```
@@ -69,7 +70,8 @@ if (producer.open() == -1) {
 ### Sending data
 
 ```cpp
-struct Message {
+struct Message
+{
     uint64_t id;
     char data[1016];
 };
@@ -77,7 +79,8 @@ struct Message {
 Message msg = {42, "Hello"};
 
 // Non-blocking
-if (producer.tryPush(&msg) == -1) {
+if (producer.tryPush(&msg) == -1)
+{
     // Buffer full
 }
 
@@ -93,7 +96,8 @@ producer.timedPush(&msg, std::chrono::milliseconds(100));
 ```cpp
 Spsc::Consumer consumer("my_channel", 1024, 64);
 
-if (consumer.open() == -1) {
+if (consumer.open() == -1)
+{
     // Handle error
 }
 ```
@@ -104,7 +108,8 @@ if (consumer.open() == -1) {
 Message msg;
 
 // Non-blocking
-if (consumer.tryPop(&msg) == -1) {
+if (consumer.tryPop(&msg) == -1)
+{
     // No data available
 }
 
@@ -156,11 +161,13 @@ endpointA.receive(buffer);
 ### Non-blocking operations
 
 ```cpp
-if (endpoint.trySend(buffer) == 0) {
+if (endpoint.trySend(buffer) == 0)
+{
     // Sent successfully
 }
 
-if (endpoint.tryReceive(buffer) == 0) {
+if (endpoint.tryReceive(buffer) == 0)
+{
     // Received data
 }
 ```
@@ -173,7 +180,8 @@ if (endpoint.tryReceive(buffer) == 0) {
 
 ```cpp
 uint64_t slots = producer.available();
-if (producer.full()) {
+if (producer.full())
+{
     // Cannot send without blocking
 }
 ```
@@ -182,7 +190,8 @@ if (producer.full()) {
 
 ```cpp
 uint64_t messages = consumer.pending();
-if (consumer.empty()) {
+if (consumer.empty())
+{
     // No messages available
 }
 ```
@@ -190,7 +199,8 @@ if (consumer.empty()) {
 ### Endpoint state
 
 ```cpp
-if (endpoint.opened()) {
+if (endpoint.opened())
+{
     uint64_t canSend = endpoint.available();
     uint64_t canRecv = endpoint.pending();
 }
@@ -237,7 +247,8 @@ Unlink removes the shared memory segment from the system.
 All operations return `0` on success, `-1` on failure. Check `lastError` for details:
 
 ```cpp
-if (producer.push(&msg) == -1) {
+if (producer.push(&msg) == -1)
+{
     std::cerr << "Error: " << lastError.message() << "\n";
 }
 ```

@@ -127,7 +127,8 @@ Value arr = Array{10, 20, 30};
 arr[0] = 5;
 arr.pushBack(40);
 
-for (size_t i = 0; i < arr.size(); ++i) {
+for (size_t i = 0; i < arr.size(); ++i)
+{
     std::cout << arr[i].getInt() << "\n";
 }
 ```
@@ -135,7 +136,8 @@ for (size_t i = 0; i < arr.size(); ++i) {
 Safe access:
 
 ```cpp
-if (arr.contains(2)) {
+if (arr.contains(2))
+{
     auto v = arr.at(2);
 }
 ```

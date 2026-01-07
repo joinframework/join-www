@@ -34,23 +34,26 @@ Condition cond;
 bool ready = false;
 
 // Thread 1: Wait for condition
-void waiter() {
+void waiter()
+{
     ScopedLock<Mutex> lock(mutex);
-    
-    while (!ready) {
+
+    while (!ready)
+    {
         cond.wait(lock);  // Atomically unlocks mutex and waits
     }
-    
+
     // Condition is true, mutex is locked again
 }
 
 // Thread 2: Signal condition
-void signaler() {
+void signaler()
+{
     {
         ScopedLock<Mutex> lock(mutex);
         ready = true;
     }
-    
+
     cond.signal();  // Wake up one waiting thread
 }
 ```
@@ -68,7 +71,8 @@ Condition variable for inter-process synchronization:
 
 using join;
 
-struct SyncData {
+struct SyncData
+{
     SharedMutex mutex;
     SharedCondition cond;
     bool ready;
@@ -83,8 +87,9 @@ SyncData* data = new (shm.get()) SyncData();
 // Process A: Wait
 {
     ScopedLock<SharedMutex> lock(data->mutex);
-    
-    while (!data->ready) {
+
+    while (!data->ready)
+    {
         data->cond.wait(lock);
     }
 }
@@ -152,7 +157,8 @@ cond.wait(lock, []() {
 
 Equivalent to:
 ```cpp
-while (!ready) {
+while (!ready)
+{
     cond.wait(lock);
 }
 ```
@@ -164,9 +170,12 @@ Wait with timeout:
 ```cpp
 ScopedLock<Mutex> lock(mutex);
 
-if (cond.timedWait(lock, std::chrono::seconds(5))) {
+if (cond.timedWait(lock, std::chrono::seconds(5)))
+{
     // Signaled before timeout
-} else {
+}
+else
+{
     // Timeout occurred
 }
 ```
@@ -176,9 +185,12 @@ if (cond.timedWait(lock, std::chrono::seconds(5))) {
 ```cpp
 ScopedLock<Mutex> lock(mutex);
 
-if (cond.timedWait(lock, std::chrono::seconds(5), []() { return ready; })) {
+if (cond.timedWait(lock, std::chrono::seconds(5), []() { return ready; }))
+{
     // Condition became true
-} else {
+}
+else
+{
     // Timeout (condition still false)
 }
 ```
@@ -198,38 +210,44 @@ std::queue<int> queue;
 bool done = false;
 
 // Producer thread
-void produce() {
-    for (int i = 0; i < 100; ++i) {
+void produce()
+{
+    for (int i = 0; i < 100; ++i)
+    {
         {
             ScopedLock<Mutex> lock(mutex);
             queue.push(i);
         }
         cond.signal();
     }
-    
+
     {
         ScopedLock<Mutex> lock(mutex);
         done = true;
     }
+
     cond.broadcast();
 }
 
 // Consumer thread
-void consume() {
-    while (true) {
+void consume()
+{
+    while (true)
+    {
         ScopedLock<Mutex> lock(mutex);
-        
+
         cond.wait(lock, [&]() {
             return !queue.empty() || done;
         });
-        
-        if (queue.empty() && done) {
+
+        if (queue.empty() && done)
+        {
             break;
         }
-        
+
         int value = queue.front();
         queue.pop();
-        
+
         // Process value
     }
 }
@@ -240,23 +258,29 @@ void consume() {
 ### Thread pool barrier
 
 ```cpp
-class Barrier {
+class Barrier
+{
 public:
-    Barrier(int count) : _count(count), _waiting(0) {}
-    
-    void wait() {
+    Barrier(int count) : _count(count), _waiting(0)
+    {}
+
+    void wait()
+    {
         ScopedLock<Mutex> lock(_mutex);
-        
-        if (++_waiting == _count) {
+
+        if (++_waiting == _count)
+        {
             _waiting = 0;
             _cond.broadcast();
-        } else {
+        }
+        else
+        {
             _cond.wait(lock, [this]() {
                 return _waiting == 0;
             });
         }
     }
-    
+
 private:
     Mutex _mutex;
     Condition _cond;
@@ -267,10 +291,11 @@ private:
 // Usage
 Barrier barrier(4);  // 4 threads
 
-void worker() {
+void worker()
+{
     // Do work phase 1
     barrier.wait();  // All threads wait here
-    
+
     // Do work phase 2 (only after all reached barrier)
 }
 ```
@@ -280,33 +305,40 @@ void worker() {
 ### Event notification
 
 ```cpp
-class Event {
+class Event
+{
 public:
-    void wait() {
+    void wait()
+    {
         ScopedLock<Mutex> lock(_mutex);
         _cond.wait(lock, [this]() { return _signaled; });
         _signaled = false;  // Auto-reset
     }
-    
-    bool waitFor(std::chrono::milliseconds timeout) {
+
+    bool waitFor(std::chrono::milliseconds timeout)
+    {
         ScopedLock<Mutex> lock(_mutex);
         bool result = _cond.timedWait(lock, timeout, [this]() {
             return _signaled;
         });
-        if (result) {
+
+        if (result)
+        {
             _signaled = false;  // Auto-reset
         }
+
         return result;
     }
-    
-    void signal() {
+
+    void signal()
+    {
         {
             ScopedLock<Mutex> lock(_mutex);
             _signaled = true;
         }
         _cond.signal();
     }
-    
+
 private:
     Mutex _mutex;
     Condition _cond;
@@ -319,7 +351,8 @@ private:
 ### Inter-process semaphore
 
 ```cpp
-struct Semaphore {
+struct Semaphore
+{
     SharedMutex mutex;
     SharedCondition cond;
     int count;
@@ -329,25 +362,27 @@ struct Semaphore {
 SharedMemory shm("semaphore", sizeof(Semaphore));
 shm.open();
 
-Semaphore* sem = new (shm.get()) Semaphore{
+Semaphore* sem = new (shm.get()) Semaphore {
     SharedMutex(),
     SharedCondition(),
     3  // Initial count
 };
 
 // Wait (P operation)
-void wait(Semaphore* sem) {
+void wait(Semaphore* sem)
+{
     ScopedLock<SharedMutex> lock(sem->mutex);
-    
+
     sem->cond.wait(lock, [sem]() {
         return sem->count > 0;
     });
-    
+
     --sem->count;
 }
 
 // Signal (V operation)
-void signal(Semaphore* sem) {
+void signal(Semaphore* sem)
+{
     {
         ScopedLock<SharedMutex> lock(sem->mutex);
         ++sem->count;
@@ -400,12 +435,14 @@ Condition cond2;
 bool ready1 = false;
 bool ready2 = false;
 
-void waiter1() {
+void waiter1()
+{
     ScopedLock<Mutex> lock(mutex);
     cond1.wait(lock, []() { return ready1; });
 }
 
-void waiter2() {
+void waiter2()
+{
     ScopedLock<Mutex> lock(mutex);
     cond2.wait(lock, []() { return ready2; });
 }
@@ -422,7 +459,8 @@ Condition variables can wake up without being signaled (spurious wakeup). **Alwa
 ```cpp
 // BAD: vulnerable to spurious wakeups
 cond.wait(lock);
-if (ready) {
+if (ready)
+{
     // Might not be ready!
 }
 

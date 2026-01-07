@@ -50,7 +50,8 @@ Most Join functions return `-1` on failure. Check the thread-local `lastError` f
 
 using join;
 
-if (operation() == -1) {
+if (operation() == -1)
+{
     std::cerr << "Error: " << lastError.message() << "\n";
 }
 ```
@@ -58,11 +59,13 @@ if (operation() == -1) {
 ### Comparing error codes
 
 ```cpp
-if (lastError == Errc::TimedOut) {
+if (lastError == Errc::TimedOut)
+{
     // Handle timeout
 }
 
-if (lastError == Errc::TemporaryError) {
+if (lastError == Errc::TemporaryError)
+{
     // Retry operation
 }
 ```
@@ -70,7 +73,8 @@ if (lastError == Errc::TemporaryError) {
 ### Checking error category
 
 ```cpp
-if (lastError.category() == join::getErrorCategory()) {
+if (lastError.category() == join::getErrorCategory())
+{
     // This is a Join error
 }
 ```
@@ -102,7 +106,8 @@ Join errors map to standard system error codes. The `equivalent` function provid
 std::error_code sysErr = std::make_error_code(std::errc::connection_refused);
 
 // Equivalent to Join error
-if (join::getErrorCategory().equivalent(sysErr, static_cast<int>(Errc::ConnectionRefused))) {
+if (join::getErrorCategory().equivalent(sysErr, static_cast<int>(Errc::ConnectionRefused)))
+{
     // true
 }
 ```
@@ -130,9 +135,12 @@ std::cout << ec.message() << "\n";  // "connection refused"
 ### Custom error handling
 
 ```cpp
-void handleError(const std::error_code& ec) {
-    if (ec.category() == join::getErrorCategory()) {
-        switch (static_cast<Errc>(ec.value())) {
+void handleError(const std::error_code& ec)
+{
+    if (ec.category() == join::getErrorCategory())
+    {
+        switch (static_cast<Errc>(ec.value()))
+        {
             case Errc::TimedOut:
                 // Retry logic
                 break;
@@ -153,8 +161,10 @@ void handleError(const std::error_code& ec) {
 `lastError` is **thread-local**, meaning each thread has its own error state:
 
 ```cpp
-void threadFunction() {
-    if (operation() == -1) {
+void threadFunction()
+{
+    if (operation() == -1)
+    {
         // lastError is specific to this thread
         std::cerr << lastError.message() << "\n";
     }
@@ -188,10 +198,14 @@ using join;
 
 Spsc::Producer producer("channel", 1024, 64);
 
-if (producer.open() == -1) {
-    if (lastError == Errc::InUse) {
+if (producer.open() == -1)
+{
+    if (lastError == Errc::InUse)
+    {
         std::cerr << "Channel already open\n";
-    } else {
+    }
+    else
+    {
         std::cerr << "Failed to open: " << lastError.message() << "\n";
     }
     return;
@@ -201,17 +215,21 @@ if (producer.open() == -1) {
 ### Retry on temporary errors
 
 ```cpp
-int retryOperation() {
+int retryOperation()
+{
     int attempts = 0;
-    while (attempts < 3) {
-        if (producer.tryPush(&msg) == 0) {
+    while (attempts < 3)
+    {
+        if (producer.tryPush(&msg) == 0)
+        {
             return 0;  // Success
         }
-        
-        if (lastError != Errc::TemporaryError) {
+
+        if (lastError != Errc::TemporaryError)
+        {
             return -1;  // Permanent error
         }
-        
+
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         attempts++;
     }

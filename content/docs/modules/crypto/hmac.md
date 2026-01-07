@@ -183,7 +183,8 @@ hmac << data;
 
 BytesArray mac = hmac.finalize();
 
-if (hmac.fail()) {
+if (hmac.fail())
+{
     std::cerr << "HMAC computation failed" << std::endl;
 }
 ```
@@ -195,11 +196,13 @@ if (hmac.fail()) {
 ### Constant‑time comparison
 
 ```cpp
-bool verify(const BytesArray& a, const BytesArray& b) {
+bool verify(const BytesArray& a, const BytesArray& b)
+{
     if (a.size() != b.size()) return false;
 
     uint8_t diff = 0;
-    for (size_t i = 0; i < a.size(); ++i) {
+    for (size_t i = 0; i < a.size(); ++i)
+    {
         diff |= a[i] ^ b[i];
     }
     return diff == 0;
@@ -212,7 +215,8 @@ bool verify(const BytesArray& a, const BytesArray& b) {
 BytesArray expected = Hmac::sha256bin(key, data);
 BytesArray received = ...;
 
-if (verify(expected, received)) {
+if (verify(expected, received))
+{
     // valid
 }
 ```
@@ -224,8 +228,8 @@ if (verify(expected, received)) {
 ### API request signing
 
 ```cpp
-std::string signRequest(const std::string& key,
-                        const std::string& payload) {
+std::string signRequest(const std::string& key, const std::string& payload)
+{
     return Hmac::sha256hex(key, payload);
 }
 ```
@@ -235,7 +239,8 @@ std::string signRequest(const std::string& key,
 ```cpp
 bool verifyWebhook(const std::string& key,
                    const std::string& payload,
-                   const std::string& signature) {
+                   const std::string& signature)
+{
     std::string computed = Hmac::sha256hex(key, payload);
     return computed == signature;
 }
@@ -245,7 +250,8 @@ bool verifyWebhook(const std::string& key,
 
 ```cpp
 std::string makeCookie(const std::string& key,
-                       const std::string& data) {
+                       const std::string& data)
+{
     std::string mac = Hmac::sha256hex(key, data);
     return data + "." + mac;
 }
@@ -258,10 +264,14 @@ std::string makeCookie(const std::string& key,
 ### Invalid algorithm
 
 ```cpp
-try {
+try
+{
     Hmac hmac(static_cast<Hmac::Algorithm>(999), key);
-} catch (const std::system_error& e) {
-    if (e.code() == DigestErrc::InvalidAlgorithm) {
+}
+catch (const std::system_error& e)
+{
+    if (e.code() == DigestErrc::InvalidAlgorithm)
+    {
         std::cerr << "Unsupported HMAC algorithm" << std::endl;
     }
 }
@@ -270,10 +280,14 @@ try {
 ### Invalid key
 
 ```cpp
-try {
+try
+{
     Hmac hmac(Hmac::SHA256, "");
-} catch (const std::system_error& e) {
-    if (e.code() == DigestErrc::InvalidKey) {
+}
+catch (const std::system_error& e)
+{
+    if (e.code() == DigestErrc::InvalidKey)
+    {
         std::cerr << "Invalid HMAC key" << std::endl;
     }
 }

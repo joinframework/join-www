@@ -512,7 +512,7 @@ if (!Signature::verify(data, sig, pubKey, Digest::Sha256))
 
 ```cpp
 // Good: Sign data with context
-std::string toSign = 
+std::string toSign =
     "v1" + "\n" +
     timestamp + "\n" +
     userId + "\n" +

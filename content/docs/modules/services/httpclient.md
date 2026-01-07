@@ -94,7 +94,8 @@ client << req;
 HttpResponse res;
 client >> res;
 
-if (res.status() == "200") {
+if (res.status() == "200")
+{
     std::string data;
     std::getline(client, data, '\0');
     processData(data);
@@ -200,15 +201,16 @@ req.header("Authorization", "Basic " + credentials);
 HttpClient client("api.example.com", 80, true);
 
 // Multiple requests on same connection
-for (int i = 0; i < 10; ++i) {
+for (int i = 0; i < 10; ++i)
+{
     HttpRequest req(HttpMethod::Get);
     req.path("/data/" + std::to_string(i));
-    
+
     client << req;
-    
+
     HttpResponse res;
     client >> res;
-    
+
     // Process response...
 }
 // Connection automatically reused
@@ -245,7 +247,8 @@ std::getline(client, body, '\0');
 
 // Or read with Content-Length
 size_t length = res.contentLength();
-if (length > 0) {
+if (length > 0)
+{
     std::string body(length, '\0');
     client.read(&body[0], length);
 }
@@ -257,11 +260,16 @@ if (length > 0) {
 HttpResponse res;
 client >> res;
 
-if (res.status() == "200") {
+if (res.status() == "200")
+{
     // Success
-} else if (res.status() == "404") {
+}
+else if (res.status() == "404")
+{
     // Not found
-} else if (res.status()[0] == '5') {
+}
+else if (res.status()[0] == '5')
+{
     // Server error
 }
 ```
@@ -298,23 +306,28 @@ std::getline(client, body, '\0');
 ```cpp
 HttpClient client("api.example.com");
 
-try {
+try
+{
     client << req;
-    
-    if (client.fail()) {
+
+    if (client.fail())
+    {
         std::cerr << "Request failed\n";
         return;
     }
-    
+
     HttpResponse res;
     client >> res;
-    
-    if (client.fail()) {
+
+    if (client.fail())
+    {
         std::cerr << "Response failed\n";
         return;
     }
-    
-} catch (const std::exception& e) {
+
+}
+catch (const std::exception& e)
+{
     std::cerr << "Error: " << e.what() << "\n";
 }
 ```
@@ -326,48 +339,53 @@ try {
 ### JSON API client
 
 ```cpp
-class ApiClient {
+class ApiClient
+{
     HttpsClient client;
     std::string token;
-    
+
 public:
     ApiClient(const std::string& host, const std::string& token)
-    : client(host), token(token) {}
-    
-    std::string get(const std::string& endpoint) {
+    : client(host), token(token)
+    {}
+
+    std::string get(const std::string& endpoint)
+    {
         HttpRequest req(HttpMethod::Get);
         req.path(endpoint);
         req.header("Accept", "application/json");
         req.header("Authorization", "Bearer " + token);
-        
+
         client << req;
-        
+
         HttpResponse res;
         client >> res;
-        
-        if (res.status() != "200") {
+
+        if (res.status() != "200")
+        {
             throw std::runtime_error("Request failed: " + res.status());
         }
-        
+
         std::string body;
         std::getline(client, body, '\0');
         return body;
     }
-    
-    std::string post(const std::string& endpoint, const std::string& json) {
+
+    std::string post(const std::string& endpoint, const std::string& json)
+    {
         HttpRequest req(HttpMethod::Post);
         req.path(endpoint);
         req.header("Content-Type", "application/json");
         req.header("Authorization", "Bearer " + token);
         req.header("Content-Length", std::to_string(json.size()));
-        
+
         client << req;
         client << json;
         client.flush();
-        
+
         HttpResponse res;
         client >> res;
-        
+
         std::string body;
         std::getline(client, body, '\0');
         return body;
@@ -378,18 +396,20 @@ public:
 ### File download
 
 ```cpp
-void downloadFile(const std::string& url, const std::string& output) {
+void downloadFile(const std::string& url, const std::string& output)
+{
     HttpClient client("example.com");
-    
+
     HttpRequest req(HttpMethod::Get);
     req.path("/files/document.pdf");
-    
+
     client << req;
-    
+
     HttpResponse res;
     client >> res;
-    
-    if (res.status() == "200") {
+
+    if (res.status() == "200")
+    {
         std::ofstream file(output, std::ios::binary);
         file << client.rdbuf();
     }
@@ -399,26 +419,32 @@ void downloadFile(const std::string& url, const std::string& output) {
 ### Retry logic
 
 ```cpp
-HttpResponse requestWithRetry(HttpClient& client, HttpRequest& req, int maxRetries = 3) {
-    for (int i = 0; i < maxRetries; ++i) {
-        try {
+HttpResponse requestWithRetry(HttpClient& client, HttpRequest& req, int maxRetries = 3)
+{
+    for (int i = 0; i < maxRetries; ++i)
+    {
+        try
+        {
             client << req;
-            
+
             HttpResponse res;
             client >> res;
-            
-            if (res.status()[0] != '5') {
+
+            if (res.status()[0] != '5')
+            {
                 return res;  // Success or client error
             }
-            
+
             // Server error - retry
             std::this_thread::sleep_for(std::chrono::seconds(1 << i));
-            
-        } catch (...) {
+
+        }
+        catch (...)
+        {
             if (i == maxRetries - 1) throw;
         }
     }
-    
+
     throw std::runtime_error("Max retries exceeded");
 }
 ```
@@ -448,7 +474,8 @@ client >> res;
 ```cpp
 // Good: Reuse client for multiple requests
 HttpClient client("api.example.com");
-for (const auto& endpoint : endpoints) {
+for (const auto& endpoint : endpoints)
+{
     HttpRequest req(HttpMethod::Get);
     req.path(endpoint);
     client << req;
@@ -456,7 +483,8 @@ for (const auto& endpoint : endpoints) {
 }
 
 // Avoid: Creating new client each time
-for (const auto& endpoint : endpoints) {
+for (const auto& endpoint : endpoints)
+{
     HttpClient client("api.example.com");  // Slow!
     // ...
 }
@@ -477,9 +505,12 @@ client << req;
 HttpResponse res;
 client >> res;
 
-if (res.status()[0] == '2') {
+if (res.status()[0] == '2')
+{
     // Success (2xx)
-} else {
+}
+else
+{
     // Handle error
 }
 ```

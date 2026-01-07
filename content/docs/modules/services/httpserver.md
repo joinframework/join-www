@@ -110,10 +110,10 @@ server.addExecute(
     "users",
     [](HttpServer::Worker* worker) {
         worker->header("Content-Type", "application/json");
-        
+
         std::string json = R"({"users":["Alice","Bob"]})";
         worker->header("Content-Length", std::to_string(json.size()));
-        
+
         worker->sendHeaders();
         *worker << json;
         worker->flush();
@@ -130,10 +130,10 @@ server.addExecute(
         size_t length = worker->contentLength();
         std::string body(length, '\0');
         worker->read(&body[0], length);
-        
+
         // Process data
         processData(body);
-        
+
         // Send response
         worker->header("Content-Type", "application/json");
         *worker << R"({"status":"success"})";
@@ -166,13 +166,14 @@ server.addExecute(
 ```cpp
 [](HttpServer::Worker* worker) {
     // Check headers
-    if (worker->hasHeader("Content-Type")) {
+    if (worker->hasHeader("Content-Type"))
+    {
         std::string type = worker->header("Content-Type");
     }
-    
+
     // Get content length
     size_t length = worker->contentLength();
-    
+
     // Read body
     std::string body(length, '\0');
     worker->read(&body[0], length);
@@ -186,13 +187,13 @@ server.addExecute(
     // Set response headers
     worker->header("Content-Type", "text/html");
     worker->header("Cache-Control", "no-cache");
-    
+
     // Write headers
     worker->sendHeaders();
-    
+
     // Write body
     *worker << "<html><body>Hello</body></html>";
-    
+
     // Flush
     worker->flush();
 }
@@ -204,10 +205,10 @@ server.addExecute(
 [](HttpServer::Worker* worker) {
     // Send file
     worker->sendFile("/var/www/index.html");
-    
+
     // Send error
     worker->sendError("404", "Not Found");
-    
+
     // Send redirect
     worker->sendRedirect("302", "Found", "https://example.com/new");
 }
@@ -272,16 +273,18 @@ server.addRedirect(
 auto authHandler = [](const std::string& type,
                       const std::string& credentials,
                       std::error_code& err) -> bool {
-    if (type != "Bearer") {
+    if (type != "Bearer")
+    {
         err = HttpErrc::Unauthorized;
         return false;
     }
-    
-    if (!validateToken(credentials)) {
+
+    if (!validateToken(credentials))
+    {
         err = HttpErrc::Forbidden;
         return false;
     }
-    
+
     return true;
 };
 
@@ -384,9 +387,9 @@ server.addExecute(
     [](auto* w) {
         std::string body(w->contentLength(), '\0');
         w->read(&body[0], body.size());
-        
+
         auto user = createUser(body);
-        
+
         w->header("Content-Type", "application/json");
         w->sendHeaders();
         *w << user.toJson();
@@ -473,12 +476,12 @@ HttpServer ioBound(std::thread::hardware_concurrency() * 4);
 ```cpp
 [](auto* worker) {
     std::string body = generateBody();
-    
+
     // Option 1: Content-Length
     worker->header("Content-Length", std::to_string(body.size()));
     worker->sendHeaders();
     *worker << body;
-    
+
     // Option 2: Chunked transfer
     worker->header("Transfer-Encoding", "chunked");
     worker->sendHeaders();
@@ -509,7 +512,8 @@ HttpServer server(4);
 server.create(endpoint);
 
 // Handle shutdown signal
-signal(SIGINT, [](int) {
+signal(SIGINT, [](int)
+{
     server.close();
 });
 

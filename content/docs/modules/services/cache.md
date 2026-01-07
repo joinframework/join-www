@@ -417,7 +417,7 @@ if (data == nullptr)
 class Application
 {
     Cache sharedCache;
-    
+
     void handleRequest1()
     {
         useCache(sharedCache);

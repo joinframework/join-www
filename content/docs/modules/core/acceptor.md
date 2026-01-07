@@ -37,7 +37,8 @@ using join;
 Tcp::Acceptor acceptor;
 Tcp::Endpoint endpoint("0.0.0.0", 8080);
 
-if (acceptor.create(endpoint) == -1) {
+if (acceptor.create(endpoint) == -1)
+{
     // Handle error
 }
 ```
@@ -53,7 +54,8 @@ The `create()` method:
 // Accept and get a socket
 Tcp::Socket client = acceptor.accept();
 
-if (client.connected()) {
+if (client.connected())
+{
     // Handle client connection
 }
 ```
@@ -69,7 +71,8 @@ Accepted sockets are automatically configured:
 // Accept and get a stream wrapper
 Tcp::Stream stream = acceptor.acceptStream();
 
-if (stream.connected()) {
+if (stream.connected())
+{
     stream << "Welcome!\n";
 }
 ```
@@ -90,7 +93,8 @@ using join;
 Tls::Acceptor acceptor;
 
 // Set server certificate and key
-if (acceptor.setCertificate("server.pem", "server-key.pem") == -1) {
+if (acceptor.setCertificate("server.pem", "server-key.pem") == -1)
+{
     // Handle error
 }
 
@@ -106,7 +110,8 @@ acceptor.create(endpoint);
 // Accept without TLS encryption (for STARTTLS)
 Tls::Socket client = acceptor.accept();
 
-if (client.connected()) {
+if (client.connected())
+{
     // Connection established but not encrypted
     // Client can call startEncryption() later
 }
@@ -134,8 +139,10 @@ The `acceptEncrypted()` method:
 ```cpp
 Tls::Stream stream = acceptor.acceptStreamEncrypted();
 
-if (stream.connected()) {
-    if (stream.waitEncrypted(5000)) {
+if (stream.connected())
+{
+    if (stream.waitEncrypted(5000))
+    {
         // Secure connection established
     }
 }
@@ -224,13 +231,16 @@ Tcp::Acceptor acceptor;
 Tcp::Endpoint endpoint("0.0.0.0", 9000);
 acceptor.create(endpoint);
 
-while (true) {
+while (true)
+{
     Tcp::Socket client = acceptor.accept();
-    
-    if (client.connected()) {
+
+    if (client.connected())
+    {
         char buffer[1024];
         int n = client.read(buffer, sizeof(buffer));
-        if (n > 0) {
+        if (n > 0)
+        {
             client.write(buffer, n);
         }
         client.disconnect();
@@ -246,9 +256,11 @@ while (true) {
 
 using join;
 
-void handleClient(Tcp::Socket client) {
+void handleClient(Tcp::Socket client)
+{
     char buffer[1024];
-    while (true) {
+    while (true)
+    {
         int n = client.read(buffer, sizeof(buffer));
         if (n <= 0) break;
         client.write(buffer, n);
@@ -256,14 +268,17 @@ void handleClient(Tcp::Socket client) {
     client.disconnect();
 }
 
-int main() {
+int main()
+{
     Tcp::Acceptor acceptor;
     Tcp::Endpoint endpoint("0.0.0.0", 9000);
     acceptor.create(endpoint);
-    
-    while (true) {
+
+    while (true)
+    {
         Tcp::Socket client = acceptor.accept();
-        if (client.connected()) {
+        if (client.connected())
+        {
             std::thread(handleClient, std::move(client)).detach();
         }
     }
@@ -286,17 +301,19 @@ acceptor.setCipher("ECDHE-RSA-AES256-GCM-SHA384");
 Https::Endpoint endpoint("0.0.0.0", 8443);
 acceptor.create(endpoint);
 
-while (true) {
+while (true)
+{
     Https::Socket client = acceptor.acceptEncrypted();
-    
-    if (client.connected() && client.waitEncrypted(5000)) {
+
+    if (client.connected() && client.waitEncrypted(5000))
+    {
         // Handle HTTPS request
-        std::string response = 
+        std::string response =
             "HTTP/1.1 200 OK\r\n"
             "Content-Type: text/plain\r\n"
             "Content-Length: 13\r\n\r\n"
             "Hello, HTTPS!";
-        
+
         client.writeExactly(response.c_str(), response.size());
         client.disconnect();
     }
@@ -315,10 +332,12 @@ UnixStream::Endpoint endpoint("/tmp/server.sock");
 
 acceptor.create(endpoint);
 
-while (true) {
+while (true)
+{
     UnixStream::Socket client = acceptor.accept();
-    
-    if (client.connected()) {
+
+    if (client.connected())
+    {
         // Handle local IPC connection
     }
 }
@@ -340,19 +359,22 @@ using join;
 
 class Server : public Tcp::Acceptor {
 protected:
-    void onReceive() override {
+    void onReceive() override
+    {
         Tcp::Socket client = accept();
-        if (client.connected()) {
+        if (client.connected())
+        {
             // Handle new connection
         }
     }
 };
 
-int main() {
+int main()
+{
     Server server;
     Tcp::Endpoint endpoint("0.0.0.0", 9000);
     server.create(endpoint);
-    
+
     Reactor::instance()->addHandler(&server);
     Reactor::instance()->run();
 }
@@ -367,7 +389,8 @@ The reactor will call `onReceive()` whenever a new connection is ready to accept
 ### Check if listening
 
 ```cpp
-if (acceptor.opened()) {
+if (acceptor.opened())
+{
     // Acceptor is listening
 }
 ```
@@ -376,7 +399,7 @@ if (acceptor.opened()) {
 
 ```cpp
 auto endpoint = acceptor.localEndpoint();
-std::cout << "Listening on " << endpoint.ip() 
+std::cout << "Listening on " << endpoint.ip()
           << ":" << endpoint.port() << std::endl;
 ```
 
@@ -418,17 +441,22 @@ This:
 Acceptor methods return `-1` on error and set the global `lastError`:
 
 ```cpp
-if (acceptor.create(endpoint) == -1) {
-    std::cerr << "Failed to create acceptor: " 
+if (acceptor.create(endpoint) == -1)
+{
+    std::cerr << "Failed to create acceptor: "
               << lastError.message() << std::endl;
 }
 
 Tcp::Socket client = acceptor.accept();
-if (!client.connected()) {
-    if (lastError == std::errc::resource_unavailable_try_again) {
+if (!client.connected())
+{
+    if (lastError == std::errc::resource_unavailable_try_again)
+    {
         // No connection available (non-blocking)
-    } else {
-        std::cerr << "Accept failed: " 
+    }
+    else
+    {
+        std::cerr << "Accept failed: "
                   << lastError.message() << std::endl;
     }
 }
@@ -457,7 +485,8 @@ client.write("220 SMTP Server Ready\r\n", 23);
 
 // Upgrade to TLS
 client.startEncryption();
-if (client.waitEncrypted(5000)) {
+if (client.waitEncrypted(5000))
+{
     // Now encrypted
 }
 ```

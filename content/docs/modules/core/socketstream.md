@@ -72,15 +72,18 @@ stream.read(buffer, sizeof(buffer));
 ### Stream state
 
 ```cpp
-if (stream.good()) {
+if (stream.good())
+{
     // Stream is ready for I/O
 }
 
-if (stream.fail()) {
+if (stream.fail())
+{
     // I/O operation failed
 }
 
-if (stream.eof()) {
+if (stream.eof())
+{
     // End of stream reached
 }
 
@@ -134,7 +137,8 @@ stream.flush();
 // Upgrade to TLS
 stream.startEncryption();
 
-if (stream.good()) {
+if (stream.good())
+{
     // Now encrypted
 }
 ```
@@ -205,7 +209,8 @@ Tcp::Endpoint server("192.168.1.100", 8080);
 
 stream.connect(server);
 
-if (stream.fail()) {
+if (stream.fail())
+{
     std::cerr << "Connection failed" << std::endl;
 }
 ```
@@ -239,15 +244,18 @@ The `disconnect()` method:
 ### Connection state
 
 ```cpp
-if (stream.opened()) {
+if (stream.opened())
+{
     // Socket is open
 }
 
-if (stream.connected()) {
+if (stream.connected())
+{
     // Socket is connected
 }
 
-if (stream.encrypted()) {
+if (stream.encrypted())
+{
     // Connection is encrypted (TLS streams only)
 }
 ```
@@ -305,7 +313,8 @@ stream << "GET / HTTP/1.1\r\n"
 
 // Read response
 std::string line;
-while (std::getline(stream, line)) {
+while (std::getline(stream, line))
+{
     std::cout << line << std::endl;
 }
 ```
@@ -334,7 +343,8 @@ stream << "GET / HTTP/1.1\r\n"
 
 // Read response
 std::string line;
-while (std::getline(stream, line)) {
+while (std::getline(stream, line))
+{
     std::cout << line << std::endl;
 }
 ```
@@ -354,9 +364,10 @@ stream.connect(server);
 stream.timeout(5000);
 
 std::string message;
-while (std::getline(std::cin, message)) {
+while (std::getline(std::cin, message))
+{
     stream << message << "\n" << std::flush;
-    
+
     std::string response;
     std::getline(stream, response);
     std::cout << "Echo: " << response << std::endl;
@@ -416,10 +427,13 @@ Streams can throw `std::ios_base::failure` when exceptions are enabled.
 ```cpp
 stream.exceptions(std::ios_base::failbit | std::ios_base::badbit);
 
-try {
+try
+{
     stream.connect(server);
     stream << "Hello\n" << std::flush;
-} catch (const std::ios_base::failure& e) {
+}
+catch (const std::ios_base::failure& e)
+{
     std::cerr << "Stream error: " << e.what() << std::endl;
 }
 ```
@@ -429,14 +443,16 @@ try {
 ```cpp
 stream.connect(server);
 
-if (stream.fail()) {
+if (stream.fail())
+{
     std::cerr << "Connection failed" << std::endl;
     return;
 }
 
 stream << "Hello\n" << std::flush;
 
-if (stream.fail()) {
+if (stream.fail())
+{
     std::cerr << "Write failed" << std::endl;
 }
 ```
@@ -449,7 +465,7 @@ if (stream.fail()) {
 
 ```cpp
 auto local = stream.localEndpoint();
-std::cout << "Local: " << local.ip() 
+std::cout << "Local: " << local.ip()
           << ":" << local.port() << std::endl;
 ```
 
@@ -457,7 +473,7 @@ std::cout << "Local: " << local.ip()
 
 ```cpp
 auto remote = stream.remoteEndpoint();
-std::cout << "Remote: " << remote.ip() 
+std::cout << "Remote: " << remote.ip()
           << ":" << remote.port() << std::endl;
 ```
 
@@ -476,7 +492,8 @@ sock.setOption(BasicSocket<Tcp>::Option::NoDelay, 1);
 sock.setOption(BasicSocket<Tcp>::Option::KeepAlive, 1);
 
 // Check connection state
-if (sock.connected()) {
+if (sock.connected())
+{
     // ...
 }
 ```
@@ -490,7 +507,8 @@ Streams support binary data transfer.
 ### Writing binary data
 
 ```cpp
-struct Header {
+struct Header
+{
     uint32_t length;
     uint16_t type;
 };
@@ -506,7 +524,8 @@ stream.flush();
 Header hdr;
 stream.read(reinterpret_cast<char*>(&hdr), sizeof(hdr));
 
-if (stream.gcount() == sizeof(hdr)) {
+if (stream.gcount() == sizeof(hdr))
+{
     // Successfully read header
 }
 ```
@@ -573,7 +592,8 @@ stream.socket().setOption(
 Streams are movable but not copyable.
 
 ```cpp
-Tcp::Stream createStream() {
+Tcp::Stream createStream()
+{
     Tcp::Stream stream;
     stream.connect(server);
     return stream;  // Move
@@ -607,11 +627,13 @@ streams.push_back(std::move(stream2));  // Move into container
 ### Request‑response protocol
 
 ```cpp
-void sendRequest(Tcp::Stream& stream, const std::string& request) {
+void sendRequest(Tcp::Stream& stream, const std::string& request)
+{
     stream << request << "\n" << std::flush;
 }
 
-std::string receiveResponse(Tcp::Stream& stream) {
+std::string receiveResponse(Tcp::Stream& stream)
+{
     std::string response;
     std::getline(stream, response);
     return response;
@@ -621,7 +643,8 @@ std::string receiveResponse(Tcp::Stream& stream) {
 ### Chunked reading
 
 ```cpp
-std::string readAll(Tcp::Stream& stream) {
+std::string readAll(Tcp::Stream& stream)
+{
     std::ostringstream buffer;
     buffer << stream.rdbuf();
     return buffer.str();
@@ -631,7 +654,8 @@ std::string readAll(Tcp::Stream& stream) {
 ### Timeout‑based reading
 
 ```cpp
-bool readWithTimeout(Tcp::Stream& stream, std::string& line, int ms) {
+bool readWithTimeout(Tcp::Stream& stream, std::string& line, int ms)
+{
     stream.timeout(ms);
     std::getline(stream, line);
     return stream.good();

@@ -38,7 +38,8 @@ ThreadPool pool(4);
 ### Submitting tasks
 
 ```cpp
-void task(int id) {
+void task(int id)
+{
     std::cout << "Task " << id << "\n";
 }
 
@@ -82,10 +83,11 @@ using join;
 std::vector<int> data(10000);
 
 // Function receives [begin, end) iterators for its partition
-distribute(data.begin(), data.end(), 
+distribute(data.begin(), data.end(),
     [](auto first, auto last) {
         int sum = 0;
-        for (auto it = first; it != last; ++it) {
+        for (auto it = first; it != last; ++it)
+        {
             sum += *it;
         }
         // Process sum for this partition
@@ -110,7 +112,7 @@ Applies a function to each element in parallel:
 ```cpp
 std::vector<int> data = {1, 2, 3, 4, 5, 6, 7, 8};
 
-parallelForEach(data.begin(), data.end(), 
+parallelForEach(data.begin(), data.end(),
     [](int& value) {
         value *= 2;  // Double each element in parallel
     }
@@ -128,7 +130,8 @@ Equivalent to `std::for_each` but executed in parallel across multiple threads.
 ```cpp
 ThreadPool pool(8);
 
-for (int i = 0; i < 100; ++i) {
+for (int i = 0; i < 100; ++i)
+{
     pool.push([i]() {
         // Process task i
         processData(i);
@@ -145,7 +148,7 @@ for (int i = 0; i < 100; ++i) {
 ```cpp
 std::vector<double> results(1000);
 
-parallelForEach(results.begin(), results.end(), 
+parallelForEach(results.begin(), results.end(),
     [](double& result) {
         result = expensiveComputation();
     }
@@ -165,19 +168,21 @@ distribute(data.begin(), data.end(),
     [&](auto first, auto last) {
         static std::atomic<int> partitionId{0};
         int id = partitionId++;
-        
+
         int sum = 0;
-        for (auto it = first; it != last; ++it) {
+        for (auto it = first; it != last; ++it)
+        {
             sum += *it;
         }
-        
+
         partialSums[id] = sum;
     }
 );
 
 // Reduce: combine partial results
 int total = 0;
-for (int sum : partialSums) {
+for (int sum : partialSums)
+{
     total += sum;
 }
 ```
@@ -205,23 +210,27 @@ parallelForEach(image.begin(), image.end(),
 ### Background job processor
 
 ```cpp
-class JobProcessor {
+class JobProcessor
+{
 public:
-    JobProcessor() : _pool(4) {
+    JobProcessor() : _pool(4)
+    {
         // Pool automatically starts workers
     }
-    
-    void submitJob(const std::string& data) {
+
+    void submitJob(const std::string& data)
+    {
         _pool.push([data]() {
             processJob(data);
         });
     }
-    
+
 private:
-    static void processJob(const std::string& data) {
+    static void processJob(const std::string& data)
+    {
         // Heavy processing
     }
-    
+
     ThreadPool _pool;
 };
 ```
@@ -231,15 +240,17 @@ private:
 ### Batch processing
 
 ```cpp
-void processBatch(const std::vector<std::string>& files) {
+void processBatch(const std::vector<std::string>& files)
+{
     ThreadPool pool;
-    
-    for (const auto& file : files) {
+
+    for (const auto& file : files)
+    {
         pool.push([file]() {
             loadAndProcess(file);
         });
     }
-    
+
     // Destructor waits for all files to be processed
 }
 ```
@@ -260,7 +271,7 @@ Mutex mutex;
 parallelForEach(data.begin(), data.end(),
     [&](int& value) {
         int result = compute(value);
-        
+
         ScopedLock<Mutex> lock(mutex);
         results.push_back(result);
     }
@@ -293,11 +304,12 @@ bool done = false;
 
 pool.push([&]() {
     // Do work
-    
+
     {
         ScopedLock<Mutex> lock(mutex);
         done = true;
     }
+
     cond.signal();
 });
 
@@ -330,7 +342,8 @@ ThreadPool customPool(8);
 
 ```cpp
 // BAD: too fine-grained (overhead dominates)
-for (int i = 0; i < 1000000; ++i) {
+for (int i = 0; i < 1000000; ++i)
+{
     pool.push([i]() {
         data[i] *= 2;  // Too small, thread overhead too high
     });
@@ -338,11 +351,13 @@ for (int i = 0; i < 1000000; ++i) {
 
 // GOOD: coarse-grained batches
 int batchSize = 1000;
-for (int batch = 0; batch < 1000; ++batch) {
+for (int batch = 0; batch < 1000; ++batch)
+{
     pool.push([batch, batchSize]() {
         int start = batch * batchSize;
         int end = start + batchSize;
-        for (int i = start; i < end; ++i) {
+        for (int i = start; i < end; ++i)
+        {
             data[i] *= 2;
         }
     });
@@ -361,11 +376,12 @@ parallelForEach(data.begin(), data.end(), [](int& v) { v *= 2; });
 ```cpp
 {
     ThreadPool pool;
-    
-    for (int i = 0; i < 100; ++i) {
+
+    for (int i = 0; i < 100; ++i)
+    {
         pool.push(task);
     }
-    
+
     // Destructor waits for all 100 tasks to complete
 }
 ```

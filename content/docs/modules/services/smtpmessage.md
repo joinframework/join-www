@@ -99,11 +99,11 @@ mail.addRecipient(MailRecipient("user1@example.com"));
 mail.addRecipient(MailRecipient("user2@example.com", "User Two"));
 
 // Add CC recipients
-mail.addRecipient(MailRecipient("manager@example.com", "Manager", 
+mail.addRecipient(MailRecipient("manager@example.com", "Manager",
                                 MailRecipient::CCRecipient));
 
 // Add BCC recipients
-mail.addRecipient(MailRecipient("archive@example.com", 
+mail.addRecipient(MailRecipient("archive@example.com",
                                 MailRecipient::BCCRecipient));
 ```
 
@@ -202,13 +202,13 @@ mail.addRecipient(
 
 // CC: Keep manager in the loop
 mail.addRecipient(
-    MailRecipient("manager@company.com", "Manager", 
+    MailRecipient("manager@company.com", "Manager",
                   MailRecipient::CCRecipient)
 );
 
 // BCC: Archive copy
 mail.addRecipient(
-    MailRecipient("archive@company.com", 
+    MailRecipient("archive@company.com",
                   MailRecipient::BCCRecipient)
 );
 
@@ -287,7 +287,8 @@ MailMessage newsletter;
 newsletter.sender(MailSender("news@company.com", "Company Newsletter"));
 
 // Add multiple recipients
-for (const auto& subscriber : subscribers) {
+for (const auto& subscriber : subscribers)
+{
     newsletter.addRecipient(
         MailRecipient(subscriber.email, subscriber.name)
     );
@@ -329,13 +330,13 @@ report.addRecipient(
 
 // CC: Team members
 report.addRecipient(
-    MailRecipient("team@company.com", "Team", 
+    MailRecipient("team@company.com", "Team",
                   MailRecipient::CCRecipient)
 );
 
 // BCC: Archive
 report.addRecipient(
-    MailRecipient("archive@company.com", 
+    MailRecipient("archive@company.com",
                   MailRecipient::BCCRecipient)
 );
 
@@ -400,13 +401,15 @@ mail.addRecipient(MailRecipient("jane@example.com"));
 ### Validate email addresses
 
 ```cpp
-bool isValidEmail(const std::string& email) {
+bool isValidEmail(const std::string& email)
+{
     // Basic validation
     return email.find('@') != std::string::npos &&
            email.find('.') != std::string::npos;
 }
 
-if (isValidEmail(userEmail)) {
+if (isValidEmail(userEmail))
+{
     mail.addRecipient(MailRecipient(userEmail));
 }
 ```

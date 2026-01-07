@@ -41,22 +41,27 @@ Custom event handlers inherit from `EventHandler` and implement event callbacks:
 
 using join;
 
-class MyHandler : public EventHandler {
+class MyHandler : public EventHandler
+{
 public:
-    int handle() const noexcept override {
+    int handle() const noexcept override
+    {
         return _fd;
     }
 
 protected:
-    void onReceive() override {
+    void onReceive() override
+    {
         // Called when data is ready to read
     }
 
-    void onClose() override {
+    void onClose() override
+    {
         // Called when connection is closed
     }
 
-    void onError() override {
+    void onError() override
+    {
         // Called when an error occurs
     }
 
@@ -74,7 +79,8 @@ private:
 ```cpp
 MyHandler handler;
 
-if (Reactor::instance()->addHandler(&handler) == -1) {
+if (Reactor::instance()->addHandler(&handler) == -1)
+{
     // Handle error
 }
 ```
@@ -84,7 +90,8 @@ The reactor automatically starts a dispatcher thread when the first handler is a
 ### Removing a handler
 
 ```cpp
-if (Reactor::instance()->delHandler(&handler) == -1) {
+if (Reactor::instance()->delHandler(&handler) == -1)
+{
     // Handle error
 }
 ```
@@ -100,10 +107,12 @@ The reactor automatically stops the dispatcher thread when the last handler is r
 Called when the file descriptor is **readable** (data available):
 
 ```cpp
-void onReceive() override {
+void onReceive() override
+{
     char buffer[1024];
     ssize_t n = read(handle(), buffer, sizeof(buffer));
-    if (n > 0) {
+    if (n > 0)
+    {
         // Process data
     }
 }
@@ -114,7 +123,8 @@ void onReceive() override {
 Called when the connection is **closed** by the peer:
 
 ```cpp
-void onClose() override {
+void onClose() override
+{
     std::cout << "Connection closed\n";
     // Cleanup resources
 }
@@ -125,7 +135,8 @@ void onClose() override {
 Called when an **error** occurs on the file descriptor:
 
 ```cpp
-void onError() override {
+void onError() override
+{
     std::cerr << "Error on descriptor " << handle() << "\n";
     // Handle error condition
 }
@@ -215,17 +226,24 @@ The reactor monitors these `epoll` events:
 The reactor runs an event loop in a dedicated thread:
 
 ```cpp
-while (running) {
+while (running)
+{
     int nset = epoll_wait(epoll_fd, events, ...);
-    
-    for (int i = 0; i < nset; ++i) {
+
+    for (int i = 0; i < nset; ++i)
+    {
         EventHandler* handler = events[i].data.ptr;
-        
-        if (events[i].events & EPOLLERR) {
+
+        if (events[i].events & EPOLLERR)
+        {
             handler->onError();
-        } else if (events[i].events & EPOLLRDHUP) {
+        }
+        else if (events[i].events & EPOLLRDHUP)
+        {
             handler->onClose();
-        } else if (events[i].events & EPOLLIN) {
+        }
+        else if (events[i].events & EPOLLIN)
+        {
             handler->onReceive();
         }
     }
@@ -253,32 +271,39 @@ while (running) {
 #include <unistd.h>
 #include <fcntl.h>
 
-class FileWatcher : public EventHandler {
+class FileWatcher : public EventHandler
+{
 public:
-    FileWatcher(const std::string& path) {
+    FileWatcher(const std::string& path)
+    {
         _fd = open(path.c_str(), O_RDONLY | O_NONBLOCK);
         Reactor::instance()->addHandler(this);
     }
 
-    ~FileWatcher() {
+    ~FileWatcher()
+    {
         Reactor::instance()->delHandler(this);
         close(_fd);
     }
 
-    int handle() const noexcept override {
+    int handle() const noexcept override
+    {
         return _fd;
     }
 
 protected:
-    void onReceive() override {
+    void onReceive() override
+    {
         char buffer[4096];
         ssize_t n = read(_fd, buffer, sizeof(buffer));
-        if (n > 0) {
+        if (n > 0)
+        {
             std::cout << "Read " << n << " bytes\n";
         }
     }
 
-    void onError() override {
+    void onError() override
+    {
         std::cerr << "Error reading file\n";
     }
 

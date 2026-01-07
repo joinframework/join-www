@@ -124,7 +124,8 @@ Zstream zs(storage, Zstream::Gzip);
 
 // Read decompressed data
 std::string line;
-while (std::getline(zs, line)) {
+while (std::getline(zs, line))
+{
     std::cout << line << "\n";
 }
 ```
@@ -192,7 +193,8 @@ zs.flush();
 // Read from beginning
 file.seekg(0, std::ios::beg);
 std::string line;
-while (std::getline(zs, line)) {
+while (std::getline(zs, line))
+{
     process(line);
 }
 ```
@@ -249,11 +251,15 @@ zs.flush();
 Zstream zs(storage, Zstream::Gzip);
 
 zs << data;
-if (!zs) {
+if (!zs)
+{
     // Compression failed
-    if (zs.bad()) {
+    if (zs.bad())
+    {
         std::cerr << "Fatal stream error\n";
-    } else if (zs.fail()) {
+    }
+    else if (zs.fail())
+    {
         std::cerr << "Operation failed\n";
     }
 }
@@ -265,13 +271,15 @@ if (!zs) {
 Zstream zs(storage, Zstream::Gzip);
 
 zs.write(buffer, size);
-if (zs.fail()) {
+if (zs.fail())
+{
     // Write failed
     return -1;
 }
 
 zs.flush();
-if (zs.fail()) {
+if (zs.fail())
+{
     // Flush failed
     return -1;
 }
@@ -282,10 +290,11 @@ if (zs.fail()) {
 ```cpp
 Zstream zs(storage, Zstream::Gzip);
 
-if (!zs.good()) {
+if (!zs.good())
+{
     // Clear error state
     zs.clear();
-    
+
     // Attempt to continue
     zs.seekg(0);
 }
@@ -366,13 +375,15 @@ Zstream zs(custom_stream, Zstream::Zlib);
 ```cpp
 // Good: Batch writes for better compression
 Zstream zs(storage, Zstream::Gzip);
-for (const auto& item : items) {
+for (const auto& item : items)
+{
     zs << item << "\n";
 }
 zs.flush();  // Single flush at end
 
 // Less efficient: Frequent flushes
-for (const auto& item : items) {
+for (const auto& item : items)
+{
     zs << item << "\n";
     zs.flush();  // Don't do this!
 }
@@ -382,7 +393,7 @@ for (const auto& item : items) {
 
 ```cpp
 // Good: Binary mode for compressed files
-std::fstream file("data.gz", 
+std::fstream file("data.gz",
     std::ios::binary | std::ios::in | std::ios::out);
 Zstream zs(file, Zstream::Gzip);
 
@@ -414,7 +425,8 @@ zs.flush();
 `Zstream` uses the decorator pattern:
 
 ```cpp
-class Zstream : public std::iostream {
+class Zstream : public std::iostream
+{
 protected:
     Zstreambuf _zbuf;  // Wraps underlying streambuf
 };
@@ -436,7 +448,8 @@ virtual int_type overflow(int_type c) override;
 
 ```cpp
 // Compression stream automatically resets on sync
-virtual int_type sync() override {
+virtual int_type sync() override
+{
     overflow();           // Flush compressed data
     deflateReset(...);    // Reset compressor state
     return innerbuf->pubsync();
@@ -450,12 +463,12 @@ virtual int_type sync() override {
 ### Compress file
 
 ```cpp
-void compressFile(const std::string& input, 
-                  const std::string& output) {
+void compressFile(const std::string& input, const std::string& output)
+{
     std::ifstream in(input, std::ios::binary);
     std::ofstream out(output, std::ios::binary);
     std::iostream outstream(out.rdbuf());
-    
+
     Zstream zs(outstream, Zstream::Gzip);
     zs << in.rdbuf();
     zs.flush();
@@ -465,14 +478,15 @@ void compressFile(const std::string& input,
 ### Decompress file
 
 ```cpp
-std::string decompressFile(const std::string& filename) {
+std::string decompressFile(const std::string& filename)
+{
     std::ifstream in(filename, std::ios::binary);
     std::iostream instream(in.rdbuf());
-    
+
     Zstream zs(instream, Zstream::Gzip);
     std::stringstream result;
     result << zs.rdbuf();
-    
+
     return result.str();
 }
 ```
@@ -480,13 +494,14 @@ std::string decompressFile(const std::string& filename) {
 ### Compress string
 
 ```cpp
-std::string compress(const std::string& data) {
+std::string compress(const std::string& data)
+{
     std::stringstream storage;
     Zstream zs(storage, Zstream::Zlib);
-    
+
     zs << data;
     zs.flush();
-    
+
     return storage.str();
 }
 ```
@@ -494,13 +509,14 @@ std::string compress(const std::string& data) {
 ### Decompress string
 
 ```cpp
-std::string decompress(const std::string& compressed) {
+std::string decompress(const std::string& compressed)
+{
     std::stringstream storage(compressed);
     Zstream zs(storage, Zstream::Zlib);
-    
+
     std::string result;
     std::getline(zs, result, '\0');
-    
+
     return result;
 }
 ```

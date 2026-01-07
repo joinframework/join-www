@@ -275,11 +275,13 @@ Tcp tcpv6(AF_INET6);
 Protocols can be compared for equality:
 
 ```cpp
-if (Tcp::v4() == Tcp::v4()) {
+if (Tcp::v4() == Tcp::v4())
+{
     // Same protocol
 }
 
-if (Tcp::v4() != Tcp::v6()) {
+if (Tcp::v4() != Tcp::v6())
+{
     // Different address families
 }
 ```

@@ -49,9 +49,12 @@ The `get()` method tries the ARP cache first, then sends an ARP request if neede
 IpAddress target("192.168.1.100");
 MacAddress mac = arp.get(target);
 
-if (!mac.isWildcard()) {
+if (!mac.isWildcard())
+{
     std::cout << "MAC: " << mac.toString() << std::endl;
-} else {
+}
+else
+{
     std::cerr << "Failed to resolve MAC address" << std::endl;
 }
 ```
@@ -76,7 +79,8 @@ Broadcast an ARP request to actively discover the MAC address.
 IpAddress target("192.168.1.100");
 MacAddress mac = arp.request(target);
 
-if (!mac.isWildcard()) {
+if (!mac.isWildcard())
+{
     std::cout << "Discovered: " << mac.toString() << std::endl;
 }
 ```
@@ -104,9 +108,12 @@ Look up an entry in the kernel's ARP cache without sending requests.
 IpAddress target("192.168.1.100");
 MacAddress mac = arp.cache(target);
 
-if (!mac.isWildcard()) {
+if (!mac.isWildcard())
+{
     std::cout << "Cached: " << mac.toString() << std::endl;
-} else if (lastError == Errc::NotFound) {
+}
+else if (lastError == Errc::NotFound)
+{
     std::cout << "No cache entry" << std::endl;
 }
 ```
@@ -131,7 +138,8 @@ Manually add entries to the ARP cache.
 MacAddress mac("00:11:22:33:44:55");
 IpAddress ip("192.168.1.100");
 
-if (arp.add(mac, ip) == 0) {
+if (arp.add(mac, ip) == 0)
+{
     std::cout << "Entry added" << std::endl;
 }
 ```
@@ -180,12 +188,18 @@ ARP methods set the global `lastError` on failure.
 ```cpp
 MacAddress mac = arp.request(ip);
 
-if (mac.isWildcard()) {
-    if (lastError == std::errc::no_such_device_or_address) {
+if (mac.isWildcard())
+{
+    if (lastError == std::errc::no_such_device_or_address)
+    {
         std::cerr << "No ARP reply (host down or filtered)" << std::endl;
-    } else if (lastError == Errc::InvalidParam) {
+    }
+    else if (lastError == Errc::InvalidParam)
+    {
         std::cerr << "Invalid IP address (must be IPv4)" << std::endl;
-    } else {
+    }
+    else
+    {
         std::cerr << "ARP error: " << lastError.message() << std::endl;
     }
 }
@@ -209,16 +223,19 @@ Common error codes:
 
 using join;
 
-void scanSubnet(const std::string& interface) {
+void scanSubnet(const std::string& interface)
+{
     Arp arp(interface);
     IpAddress base("192.168.1.0");
-    
-    for (int i = 1; i < 255; ++i) {
+
+    for (int i = 1; i < 255; ++i)
+    {
         IpAddress target = base + i;
         MacAddress mac = arp.request(target);
-        
-        if (!mac.isWildcard()) {
-            std::cout << target.toString() << " -> " 
+
+        if (!mac.isWildcard())
+        {
+            std::cout << target.toString() << " -> "
                       << mac.toString() << std::endl;
         }
     }
@@ -233,32 +250,36 @@ void scanSubnet(const std::string& interface) {
 
 using join;
 
-int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] 
+int main(int argc, char* argv[])
+{
+    if (argc != 3)
+    {
+        std::cerr << "Usage: " << argv[0]
                   << " <interface> <ip>" << std::endl;
         return 1;
     }
-    
+
     std::string interface = argv[1];
     IpAddress target(argv[2]);
-    
+
     // Try cache first
     MacAddress mac = Arp::cache(target, interface);
-    
-    if (!mac.isWildcard()) {
+
+    if (!mac.isWildcard())
+    {
         std::cout << "Cached: " << mac.toString() << std::endl;
         return 0;
     }
-    
+
     // Send request
     mac = Arp::request(target, interface);
-    
-    if (!mac.isWildcard()) {
+
+    if (!mac.isWildcard())
+    {
         std::cout << "Resolved: " << mac.toString() << std::endl;
         return 0;
     }
-    
+
     std::cerr << "Failed: " << lastError.message() << std::endl;
     return 1;
 }
@@ -274,20 +295,23 @@ int main(int argc, char* argv[]) {
 
 using join;
 
-void showArpCache(const std::string& interface) {
+void showArpCache(const std::string& interface)
+{
     // Read /proc/net/arp
     std::ifstream arp("/proc/net/arp");
     std::string line;
-    
+
     std::getline(arp, line);  // Skip header
-    
-    while (std::getline(arp, line)) {
+
+    while (std::getline(arp, line))
+    {
         std::istringstream iss(line);
         std::string ip, hwtype, flags, hwaddr, mask, dev;
-        
+
         iss >> ip >> hwtype >> flags >> hwaddr >> mask >> dev;
-        
-        if (dev == interface && flags != "0x0") {
+
+        if (dev == interface && flags != "0x0")
+        {
             std::cout << ip << " -> " << hwaddr << std::endl;
         }
     }
@@ -302,14 +326,18 @@ void showArpCache(const std::string& interface) {
 
 using join;
 
-void addStaticEntry() {
+void addStaticEntry()
+{
     MacAddress mac("00:11:22:33:44:55");
     IpAddress ip("192.168.1.100");
-    
-    if (Arp::add(mac, ip, "eth0") == 0) {
+
+    if (Arp::add(mac, ip, "eth0") == 0)
+    {
         std::cout << "Static entry added successfully" << std::endl;
-    } else {
-        std::cerr << "Failed to add entry: " 
+    }
+    else
+    {
+        std::cerr << "Failed to add entry: "
                   << lastError.message() << std::endl;
     }
 }

@@ -63,12 +63,14 @@ int c = view.get();
 int next = view.peek();
 
 // Conditional extraction
-if (view.getIf('{')) {
+if (view.getIf('{'))
+{
     // Character was '{'
 }
 
 // Case-insensitive check
-if (view.getIfNoCase('t')) {
+if (view.getIfNoCase('t'))
+{
     // Matched 't' or 'T'
 }
 ```
@@ -146,7 +148,8 @@ All views include optimized whitespace skipping.
 // Skip spaces, tabs, newlines, carriage returns
 view.skipWhitespaces();
 
-if (view.peek() == '{') {
+if (view.peek() == '{')
+{
     // First non-whitespace character
 }
 ```
@@ -157,7 +160,8 @@ Useful for relaxed JSON parsing:
 
 ```cpp
 // Skip whitespace, // comments, and /* block comments */
-if (view.skipWhitespacesAndComments() == 0) {
+if (view.skipWhitespacesAndComments() == 0)
+{
     // Success
 }
 ```
@@ -211,7 +215,8 @@ StreamView base(std::cin);
 BufferingView<StreamView> view(base);
 
 // Parse token
-while (std::isalnum(view.peek())) {
+while (std::isalnum(view.peek()))
+{
     view.get();
 }
 
@@ -247,18 +252,22 @@ Views are designed for efficient parsing.
 ### JSON parsing example
 
 ```cpp
-void parseString(StringView& view, std::string& out) {
+void parseString(StringView& view, std::string& out)
+{
     view.getIf('"');  // Skip opening quote
-    
-    while (true) {
+
+    while (true)
+    {
         view.readUntilEscaped(out);
-        
+
         int c = view.peek();
-        if (c == '"') {
+        if (c == '"')
+        {
             view.get();
             break;
         }
-        if (c == '\\') {
+        if (c == '\\')
+        {
             // Handle escape sequence
             view.get();
             c = view.get();
@@ -272,17 +281,21 @@ void parseString(StringView& view, std::string& out) {
 
 ```cpp
 template <typename ViewType>
-class JsonReader {
+class JsonReader
+{
     ViewType& _view;
-    
+
 public:
-    JsonReader(ViewType& view) : _view(view) {}
-    
-    int parseValue(Value& val) {
+    JsonReader(ViewType& view) : _view(view)
+    {}
+
+    int parseValue(Value& val)
+    {
         _view.skipWhitespaces();
-        
+
         int c = _view.peek();
-        switch (c) {
+        switch (c)
+        {
             case '{': return parseObject(val);
             case '[': return parseArray(val);
             case '"': return parseString(val);
@@ -344,7 +357,8 @@ view.readUntilEscaped(result);
 
 // Avoid: Growing incrementally
 std::string result;
-while (...) {
+while (...)
+{
     result += view.get();  // May reallocate
 }
 ```
@@ -355,7 +369,8 @@ while (...) {
 // Need to extract tokens
 BufferingView<StringView> view(base);
 
-while (parseToken(view)) {
+while (parseToken(view))
+{
     std::string token;
     view.consume(token);
     processToken(token);
@@ -365,13 +380,15 @@ while (parseToken(view)) {
 ### Handle errors
 
 ```cpp
-if (view.skipWhitespacesAndComments() != 0) {
+if (view.skipWhitespacesAndComments() != 0)
+{
     // Unclosed comment
     return -1;
 }
 
 int c = view.get();
-if (c == std::char_traits<char>::eof()) {
+if (c == std::char_traits<char>::eof())
+{
     // Unexpected end of input
     return -1;
 }
@@ -390,7 +407,8 @@ Useful for parsing protocols:
 if (view.getIfNoCase('t') &&
     view.getIfNoCase('r') &&
     view.getIfNoCase('u') &&
-    view.getIfNoCase('e')) {
+    view.getIfNoCase('e'))
+{
     return true;
 }
 ```
@@ -415,11 +433,15 @@ Check view capabilities at compile-time:
 
 ```cpp
 template <typename ViewType>
-void process(ViewType& view) {
-    if constexpr (is_seekable<ViewType>::value) {
+void process(ViewType& view)
+{
+    if constexpr (is_seekable<ViewType>::value)
+    {
         auto pos = view.tell();
         // ... can seek
-    } else {
+    }
+    else
+    {
         BufferingView<ViewType> buffered(view);
         // ... use buffering instead
     }

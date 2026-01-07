@@ -181,7 +181,8 @@ digest << data;
 
 BytesArray hash = digest.finalize();
 
-if (digest.fail()) {
+if (digest.fail())
+{
     std::cerr << "Hashing failed" << std::endl;
 }
 ```
@@ -199,24 +200,28 @@ if (digest.fail()) {
 
 using join;
 
-std::string sha256File(const std::string& filename) {
+std::string sha256File(const std::string& filename)
+{
     std::ifstream file(filename, std::ios::binary);
-    
-    if (!file) {
+
+    if (!file)
+    {
         return "";
     }
-    
+
     Digest digest(Digest::SHA256);
     char buffer[4096];
-    
-    while (file.read(buffer, sizeof(buffer)) || file.gcount() > 0) {
+
+    while (file.read(buffer, sizeof(buffer)) || file.gcount() > 0)
+    {
         digest.write(buffer, file.gcount());
     }
-    
+
     return bin2hex(digest.finalize());
 }
 
-int main() {
+int main()
+{
     std::string checksum = sha256File("document.pdf");
     std::cout << "SHA-256: " << checksum << std::endl;
 }
@@ -230,20 +235,23 @@ int main() {
 
 using join;
 
-struct HashedPassword {
+struct HashedPassword
+{
     BytesArray salt;
     BytesArray hash;
 };
 
-HashedPassword hashPassword(const std::string& password) {
+HashedPassword hashPassword(const std::string& password)
+{
     HashedPassword result;
-    
+
     // Generate random salt
     result.salt.resize(32);
-    for (auto& byte : result.salt) {
+    for (auto& byte : result.salt)
+    {
         byte = randomize<uint8_t>();
     }
-    
+
     // Hash password with salt
     Digest digest(Digest::SHA256);
     digest.write(
@@ -251,23 +259,23 @@ HashedPassword hashPassword(const std::string& password) {
         result.salt.size()
     );
     digest.write(password.c_str(), password.size());
-    
+
     result.hash = digest.finalize();
-    
+
     return result;
 }
 
-bool verifyPassword(const std::string& password,
-                   const HashedPassword& stored) {
+bool verifyPassword(const std::string& password, const HashedPassword& stored)
+{
     Digest digest(Digest::SHA256);
     digest.write(
         reinterpret_cast<const char*>(stored.salt.data()),
         stored.salt.size()
     );
     digest.write(password.c_str(), password.size());
-    
+
     BytesArray computed = digest.finalize();
-    
+
     return computed == stored.hash;
 }
 ```
@@ -281,23 +289,26 @@ bool verifyPassword(const std::string& password,
 
 using join;
 
-class ContentStore {
+class ContentStore
+{
 public:
-    std::string store(const std::string& content) {
+    std::string store(const std::string& content)
+    {
         // Generate content hash
         std::string hash = Digest::sha256hex(content);
-        
+
         // Store content by hash
         storage[hash] = content;
-        
+
         return hash;
     }
-    
-    std::string retrieve(const std::string& hash) {
+
+    std::string retrieve(const std::string& hash)
+    {
         auto it = storage.find(hash);
         return it != storage.end() ? it->second : "";
     }
-    
+
 private:
     std::map<std::string, std::string> storage;
 };
@@ -310,19 +321,22 @@ private:
 
 using join;
 
-struct DataPacket {
+struct DataPacket
+{
     std::string data;
     std::string checksum;
 };
 
-DataPacket createPacket(const std::string& data) {
+DataPacket createPacket(const std::string& data)
+{
     DataPacket packet;
     packet.data = data;
     packet.checksum = Digest::sha256hex(data);
     return packet;
 }
 
-bool verifyPacket(const DataPacket& packet) {
+bool verifyPacket(const DataPacket& packet)
+{
     std::string computed = Digest::sha256hex(packet.data);
     return computed == packet.checksum;
 }
@@ -335,18 +349,21 @@ bool verifyPacket(const DataPacket& packet) {
 
 using join;
 
-class MerkleNode {
+class MerkleNode
+{
 public:
-    std::string hash() const {
-        if (isLeaf) {
+    std::string hash() const
+    {
+        if (isLeaf)
+        {
             return Digest::sha256hex(data);
         }
-        
+
         // Hash of concatenated child hashes
         std::string combined = leftHash + rightHash;
         return Digest::sha256hex(combined);
     }
-    
+
 private:
     bool isLeaf;
     std::string data;
@@ -363,12 +380,12 @@ private:
 
 using join;
 
-std::string hashGitObject(const std::string& type,
-                          const std::string& content) {
+std::string hashGitObject(const std::string& type, const std::string& content)
+{
     // Git format: "type size\0content"
     std::ostringstream oss;
     oss << type << " " << content.size() << '\0' << content;
-    
+
     return Digest::sha1hex(oss.str());
 }
 
@@ -385,19 +402,22 @@ std::string commitHash = hashGitObject("commit", commitData);
 
 using join;
 
-class Deduplicator {
+class Deduplicator
+{
 public:
-    bool isDuplicate(const std::string& data) {
+    bool isDuplicate(const std::string& data)
+    {
         std::string hash = Digest::sha256hex(data);
-        
-        if (seen.count(hash)) {
+
+        if (seen.count(hash))
+        {
             return true;
         }
-        
+
         seen.insert(hash);
         return false;
     }
-    
+
 private:
     std::set<std::string> seen;
 };
@@ -410,13 +430,15 @@ private:
 
 using join;
 
-std::string generateETag(const std::string& content) {
+std::string generateETag(const std::string& content)
+{
     // Weak ETag
     std::string hash = Digest::md5hex(content);
     return "W/\"" + hash + "\"";
 }
 
-std::string generateStrongETag(const std::string& content) {
+std::string generateStrongETag(const std::string& content)
+{
     // Strong ETag
     std::string hash = Digest::sha256hex(content);
     return "\"" + hash + "\"";
@@ -466,10 +488,14 @@ Specialized:
 ### Invalid algorithm
 
 ```cpp
-try {
+try
+{
     Digest digest(static_cast<Digest::Algorithm>(999));
-} catch (const std::system_error& e) {
-    if (e.code() == DigestErrc::InvalidAlgorithm) {
+}
+catch (const std::system_error& e)
+{
+    if (e.code() == DigestErrc::InvalidAlgorithm)
+    {
         std::cerr << "Unsupported algorithm" << std::endl;
     }
 }
@@ -483,8 +509,9 @@ digest << data;
 
 BytesArray hash = digest.finalize();
 
-if (hash.empty()) {
-    std::cerr << "Hashing failed: " 
+if (hash.empty())
+{
+    std::cerr << "Hashing failed: "
               << lastError.message() << std::endl;
 }
 ```
@@ -506,7 +533,8 @@ For large files, use streaming:
 // Efficient: streaming
 Digest digest(Digest::SHA256);
 char buffer[8192];
-while (file.read(buffer, sizeof(buffer)) || file.gcount() > 0) {
+while (file.read(buffer, sizeof(buffer)) || file.gcount() > 0)
+{
     digest.write(buffer, file.gcount());
 }
 
@@ -525,7 +553,8 @@ Digest sha256(Digest::SHA256);
 Digest sha512(Digest::SHA512);
 
 char buffer[4096];
-while (file.read(buffer, sizeof(buffer)) || file.gcount() > 0) {
+while (file.read(buffer, sizeof(buffer)) || file.gcount() > 0)
+{
     sha256.write(buffer, file.gcount());
     sha512.write(buffer, file.gcount());
 }
@@ -542,8 +571,8 @@ BytesArray hash512 = Digest::sha512bin(data);
 ### Hex digest comparison
 
 ```cpp
-bool verifyChecksum(const std::string& data,
-                   const std::string& expectedHash) {
+bool verifyChecksum(const std::string& data, const std::string& expectedHash)
+{
     std::string computed = Digest::sha256hex(data);
     return computed == expectedHash;
 }
@@ -552,8 +581,8 @@ bool verifyChecksum(const std::string& data,
 ### Binary digest comparison
 
 ```cpp
-bool verifyBinary(const BytesArray& data,
-                 const BytesArray& expectedHash) {
+bool verifyBinary(const BytesArray& data, const BytesArray& expectedHash)
+{
     BytesArray computed = Digest::sha256bin(data);
     return computed == expectedHash;
 }
@@ -562,13 +591,15 @@ bool verifyBinary(const BytesArray& data,
 ### Hash chain
 
 ```cpp
-std::string hashChain(const std::string& data, int iterations) {
+std::string hashChain(const std::string& data, int iterations)
+{
     std::string hash = data;
-    
-    for (int i = 0; i < iterations; ++i) {
+
+    for (int i = 0; i < iterations; ++i)
+    {
         hash = Digest::sha256hex(hash);
     }
-    
+
     return hash;
 }
 ```

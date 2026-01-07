@@ -111,7 +111,8 @@ encoder << data;
 
 std::string encoded = encoder.get();
 
-if (encoder.fail()) {
+if (encoder.fail())
+{
     std::cerr << "Encoding failed" << std::endl;
 }
 ```
@@ -142,7 +143,8 @@ decoder << encodedData;
 
 BytesArray decoded = decoder.get();
 
-if (decoder.fail()) {
+if (decoder.fail())
+{
     std::cerr << "Decoding failed" << std::endl;
 }
 ```
@@ -160,19 +162,21 @@ if (decoder.fail()) {
 
 using join;
 
-std::string encodeFile(const std::string& filename) {
+std::string encodeFile(const std::string& filename)
+{
     std::ifstream file(filename, std::ios::binary);
-    
-    if (!file) {
+
+    if (!file)
+    {
         return "";
     }
-    
+
     // Read entire file
     std::string content(
         (std::istreambuf_iterator<char>(file)),
         std::istreambuf_iterator<char>()
     );
-    
+
     return Base64::encode(content);
 }
 ```
@@ -185,25 +189,27 @@ std::string encodeFile(const std::string& filename) {
 
 using join;
 
-bool decodeToFile(const std::string& encoded, 
-                  const std::string& filename) {
+bool decodeToFile(const std::string& encoded, const std::string& filename)
+{
     BytesArray decoded = Base64::decode(encoded);
-    
-    if (decoded.empty()) {
+
+    if (decoded.empty())
+    {
         return false;
     }
-    
+
     std::ofstream file(filename, std::ios::binary);
-    
-    if (!file) {
+
+    if (!file)
+    {
         return false;
     }
-    
+
     file.write(
         reinterpret_cast<const char*>(decoded.data()),
         decoded.size()
     );
-    
+
     return true;
 }
 ```
@@ -215,8 +221,8 @@ bool decodeToFile(const std::string& encoded,
 
 using join;
 
-std::string createDataUrl(const std::string& mimeType,
-                          const BytesArray& data) {
+std::string createDataUrl(const std::string& mimeType, const BytesArray& data)
+{
     std::string encoded = Base64::encode(data);
     return "data:" + mimeType + ";base64," + encoded;
 }
@@ -235,8 +241,8 @@ std::string dataUrl = createDataUrl("image/png", imageData);
 
 using join;
 
-std::string createAuthHeader(const std::string& username,
-                             const std::string& password) {
+std::string createAuthHeader(const std::string& username, const std::string& password)
+{
     std::string credentials = username + ":" + password;
     std::string encoded = Base64::encode(credentials);
     return "Authorization: Basic " + encoded;
@@ -255,28 +261,31 @@ std::string header = createAuthHeader("user", "pass");
 
 using join;
 
-struct JWT {
+struct JWT
+{
     std::string header;
     std::string payload;
     std::string signature;
 };
 
-JWT parseJWT(const std::string& token) {
+JWT parseJWT(const std::string& token)
+{
     JWT jwt;
     std::istringstream iss(token);
-    
+
     std::getline(iss, jwt.header, '.');
     std::getline(iss, jwt.payload, '.');
     std::getline(iss, jwt.signature);
-    
+
     return jwt;
 }
 
-std::string decodeJWTPayload(const std::string& token) {
+std::string decodeJWTPayload(const std::string& token)
+{
     JWT jwt = parseJWT(token);
-    
+
     BytesArray decoded = Base64::decode(jwt.payload);
-    
+
     return std::string(decoded.begin(), decoded.end());
 }
 ```
@@ -289,23 +298,24 @@ std::string decodeJWTPayload(const std::string& token) {
 
 using join;
 
-std::string createMimeAttachment(const std::string& filename) {
+std::string createMimeAttachment(const std::string& filename)
+{
     std::ifstream file(filename, std::ios::binary);
-    
+
     std::string content(
         (std::istreambuf_iterator<char>(file)),
         std::istreambuf_iterator<char>()
     );
-    
+
     std::string encoded = Base64::encode(content);
-    
+
     std::ostringstream mime;
     mime << "Content-Type: application/octet-stream\r\n";
-    mime << "Content-Disposition: attachment; filename=\"" 
+    mime << "Content-Disposition: attachment; filename=\""
          << filename << "\"\r\n";
     mime << "Content-Transfer-Encoding: base64\r\n\r\n";
     mime << encoded << "\r\n";
-    
+
     return mime.str();
 }
 ```
@@ -319,25 +329,28 @@ std::string createMimeAttachment(const std::string& filename) {
 
 using join;
 
-void saveConfig(const std::string& filename,
-                const BytesArray& binaryData) {
+void saveConfig(const std::string& filename, const BytesArray& binaryData)
+{
     std::string encoded = Base64::encode(binaryData);
-    
+
     std::ofstream config(filename);
     config << "binary_data=" << encoded << "\n";
 }
 
-BytesArray loadConfig(const std::string& filename) {
+BytesArray loadConfig(const std::string& filename)
+{
     std::ifstream config(filename);
     std::string line;
-    
-    while (std::getline(config, line)) {
-        if (line.find("binary_data=") == 0) {
+
+    while (std::getline(config, line))
+    {
+        if (line.find("binary_data=") == 0)
+        {
             std::string encoded = line.substr(12);
             return Base64::decode(encoded);
         }
     }
-    
+
     return {};
 }
 ```
@@ -350,33 +363,35 @@ BytesArray loadConfig(const std::string& filename) {
 
 using join;
 
-void encodeFileStreaming(const std::string& inputFile,
-                        const std::string& outputFile) {
+void encodeFileStreaming(const std::string& inputFile, const std::string& outputFile)
+{
     std::ifstream in(inputFile, std::ios::binary);
     std::ofstream out(outputFile);
-    
+
     Encoder encoder;
     char buffer[4096];
-    
-    while (in.read(buffer, sizeof(buffer)) || in.gcount() > 0) {
+
+    while (in.read(buffer, sizeof(buffer)) || in.gcount() > 0)
+    {
         encoder.write(buffer, in.gcount());
     }
-    
+
     out << encoder.get();
 }
 
-void decodeFileStreaming(const std::string& inputFile,
-                        const std::string& outputFile) {
+void decodeFileStreaming(const std::string& inputFile, const std::string& outputFile)
+{
     std::ifstream in(inputFile);
     std::ofstream out(outputFile, std::ios::binary);
-    
+
     Decoder decoder;
     std::string line;
-    
-    while (std::getline(in, line)) {
+
+    while (std::getline(in, line))
+    {
         decoder << line;
     }
-    
+
     BytesArray decoded = decoder.get();
     out.write(
         reinterpret_cast<const char*>(decoded.data()),
@@ -411,7 +426,8 @@ Encoding generally does not fail unless memory allocation fails.
 ```cpp
 std::string encoded = Base64::encode(data);
 
-if (encoded.empty()) {
+if (encoded.empty())
+{
     std::cerr << "Encoding failed" << std::endl;
 }
 ```
@@ -423,8 +439,10 @@ Decoding can fail if the input is not valid Base64.
 ```cpp
 BytesArray decoded = Base64::decode(invalidBase64);
 
-if (decoded.empty()) {
-    if (lastError == Errc::InvalidParam) {
+if (decoded.empty())
+{
+    if (lastError == Errc::InvalidParam)
+    {
         std::cerr << "Invalid Base64 input" << std::endl;
     }
 }
@@ -494,7 +512,8 @@ std::string encoded = Base64::encode(largeData);
 
 // Less efficient: multiple concatenations
 Encoder encoder;
-for (const auto& chunk : chunks) {
+for (const auto& chunk : chunks)
+{
     encoder << chunk;
 }
 std::string encoded = encoder.get();
@@ -507,13 +526,15 @@ std::string encoded = encoder.get();
 ### Encoding binary protocol messages
 
 ```cpp
-struct Message {
+struct Message
+{
     uint32_t type;
     uint32_t length;
     uint8_t data[256];
 };
 
-std::string encodeMessage(const Message& msg) {
+std::string encodeMessage(const Message& msg)
+{
     return Base64::encode(
         reinterpret_cast<const char*>(&msg),
         sizeof(Message)
@@ -527,13 +548,15 @@ std::string encodeMessage(const Message& msg) {
 #include <join/base64.hpp>
 #include <join/utils.hpp>
 
-std::string generateToken(size_t length = 32) {
+std::string generateToken(size_t length = 32)
+{
     BytesArray random(length);
-    
-    for (auto& byte : random) {
+
+    for (auto& byte : random)
+    {
         byte = randomize<uint8_t>();
     }
-    
+
     return Base64::encode(random);
 }
 ```
@@ -541,19 +564,20 @@ std::string generateToken(size_t length = 32) {
 ### Safe filename encoding
 
 ```cpp
-std::string encodeFilename(const std::string& filename) {
+std::string encodeFilename(const std::string& filename)
+{
     std::string encoded = Base64::encode(filename);
-    
+
     // Replace URL-unsafe characters
     std::replace(encoded.begin(), encoded.end(), '+', '-');
     std::replace(encoded.begin(), encoded.end(), '/', '_');
-    
+
     // Remove padding
     encoded.erase(
         std::find(encoded.begin(), encoded.end(), '='),
         encoded.end()
     );
-    
+
     return encoded;
 }
 ```
@@ -597,32 +621,35 @@ std::string encodeFilename(const std::string& filename) {
 Standard Base64 uses `+` and `/`, which are not URL‑safe. For URLs:
 
 ```cpp
-std::string urlSafeEncode(const std::string& data) {
+std::string urlSafeEncode(const std::string& data)
+{
     std::string encoded = Base64::encode(data);
-    
+
     // Replace characters
     std::replace(encoded.begin(), encoded.end(), '+', '-');
     std::replace(encoded.begin(), encoded.end(), '/', '_');
-    
+
     // Optionally remove padding
     encoded.erase(
         std::find(encoded.begin(), encoded.end(), '='),
         encoded.end()
     );
-    
+
     return encoded;
 }
 
-std::string urlSafeDecode(std::string data) {
+std::string urlSafeDecode(std::string data)
+{
     // Restore characters
     std::replace(data.begin(), data.end(), '-', '+');
     std::replace(data.begin(), data.end(), '_', '/');
-    
+
     // Add padding if needed
-    while (data.length() % 4) {
+    while (data.length() % 4)
+    {
         data += '=';
     }
-    
+
     return Base64::decode(data);
 }
 ```

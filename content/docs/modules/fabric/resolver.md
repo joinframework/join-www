@@ -40,7 +40,8 @@ using join;
 // Resolve to first IP address
 IpAddress ip = Resolver::resolveHost("example.com");
 
-if (!ip.isWildcard()) {
+if (!ip.isWildcard())
+{
     std::cout << "IP: " << ip.toString() << std::endl;
 }
 ```
@@ -49,9 +50,8 @@ if (!ip.isWildcard()) {
 
 ```cpp
 // Get all IP addresses (IPv4 and IPv6)
-IpAddressList addresses = Resolver::resolveAllHost("example.com");
-
-for (const auto& addr : addresses) {
+for (const auto& addr : Resolver::resolveAllHost("example.com"))
+{
     std::cout << addr.toString() << std::endl;
 }
 ```
@@ -114,9 +114,8 @@ std::cout << "Hostname: " << hostname << std::endl;
 IpAddress ip("8.8.8.8");
 
 // Get all hostnames
-AliasList aliases = Resolver::resolveAllAddress(ip);
-
-for (const auto& alias : aliases) {
+for (const auto& alias : Resolver::resolveAllAddress(ip))
+{
     std::cout << alias << std::endl;
 }
 ```
@@ -129,9 +128,8 @@ for (const auto& alias : aliases) {
 
 ```cpp
 // Get all name servers for domain
-ServerList servers = Resolver::resolveAllNameServer("example.com");
-
-for (const auto& server : servers) {
+for (const auto& server : Resolver::resolveAllNameServer("example.com"))
+{
     std::cout << "NS: " << server << std::endl;
 }
 ```
@@ -164,9 +162,8 @@ The SOA record identifies the primary name server for the zone.
 
 ```cpp
 // Get all mail exchangers
-ExchangerList exchangers = Resolver::resolveAllMailExchanger("example.com");
-
-for (const auto& mx : exchangers) {
+for (const auto& mx : Resolver::resolveAllMailExchanger("example.com"))
+{
     std::cout << "MX: " << mx << std::endl;
 }
 ```
@@ -201,9 +198,8 @@ This queries `/etc/services` for standard service port mappings.
 ### Getting configured name servers
 
 ```cpp
-IpAddressList servers = Resolver::nameServers();
-
-for (const auto& server : servers) {
+for (const auto& server : Resolver::nameServers())
+{
     std::cout << "DNS Server: " << server.toString() << std::endl;
 }
 ```
@@ -267,12 +263,18 @@ IpAddress ip = resolver.resolveHost(
 ```cpp
 IpAddress ip = Resolver::resolveHost("nonexistent.invalid");
 
-if (ip.isWildcard()) {
-    if (lastError == Errc::NotFound) {
+if (ip.isWildcard())
+{
+    if (lastError == Errc::NotFound)
+    {
         std::cerr << "Host not found" << std::endl;
-    } else if (lastError == std::errc::timed_out) {
+    }
+    else if (lastError == std::errc::timed_out)
+    {
         std::cerr << "DNS query timed out" << std::endl;
-    } else {
+    }
+    else
+    {
         std::cerr << "DNS error: " << lastError.message() << std::endl;
     }
 }
@@ -294,7 +296,8 @@ Common error codes:
 The `DnsPacket` structure contains complete DNS query/response data:
 
 ```cpp
-struct DnsPacket {
+struct DnsPacket
+{
     IpAddress src;                          // Source IP
     IpAddress dest;                         // Destination IP
     uint16_t port;                          // Port number
@@ -308,7 +311,8 @@ struct DnsPacket {
 ### QuestionRecord
 
 ```cpp
-struct QuestionRecord {
+struct QuestionRecord
+{
     std::string host;      // Hostname
     uint16_t type;         // Record type (A, AAAA, etc.)
     uint16_t dnsclass;     // DNS class (IN)
@@ -318,7 +322,8 @@ struct QuestionRecord {
 ### AnswerRecord
 
 ```cpp
-struct AnswerRecord : public QuestionRecord {
+struct AnswerRecord : public QuestionRecord
+{
     uint32_t ttl;          // Time to live
     IpAddress addr;        // IP address (A/AAAA)
     std::string name;      // Name (CNAME, NS, PTR, MX)
@@ -341,14 +346,17 @@ struct AnswerRecord : public QuestionRecord {
 ```cpp
 Resolver resolver;
 
-resolver._onSuccess = [](const DnsPacket& packet) {
+resolver._onSuccess = [](const DnsPacket& packet)
+{
     std::cout << "Query succeeded" << std::endl;
-    for (const auto& answer : packet.answers) {
+    for (const auto& answer : packet.answers)
+    {
         std::cout << "Answer: " << answer.host << std::endl;
     }
 };
 
-resolver._onFailure = [](const DnsPacket& packet) {
+resolver._onFailure = [](const DnsPacket& packet)
+{
     std::cerr << "Query failed: " << lastError.message() << std::endl;
 };
 
@@ -369,28 +377,32 @@ IpAddress ip = resolver.resolveHost("example.com", dnsServer);
 
 using join;
 
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
+int main(int argc, char* argv[])
+{
+    if (argc != 2)
+    {
         std::cerr << "Usage: " << argv[0] << " <hostname>" << std::endl;
         return 1;
     }
-    
+
     std::string hostname = argv[1];
-    
+
     // IPv4 addresses
     std::cout << "IPv4 addresses:" << std::endl;
     IpAddressList ipv4 = Resolver::resolveAllHost(hostname, AF_INET);
-    for (const auto& ip : ipv4) {
+    for (const auto& ip : ipv4)
+    {
         std::cout << "  " << ip.toString() << std::endl;
     }
-    
+
     // IPv6 addresses
     std::cout << "IPv6 addresses:" << std::endl;
     IpAddressList ipv6 = Resolver::resolveAllHost(hostname, AF_INET6);
-    for (const auto& ip : ipv6) {
+    for (const auto& ip : ipv6)
+    {
         std::cout << "  " << ip.toString() << std::endl;
     }
-    
+
     return 0;
 }
 ```
@@ -403,25 +415,31 @@ int main(int argc, char* argv[]) {
 
 using join;
 
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
+int main(int argc, char* argv[])
+{
+    if (argc != 2)
+    {
         std::cerr << "Usage: " << argv[0] << " <ip>" << std::endl;
         return 1;
     }
-    
+
     IpAddress ip(argv[1]);
-    
+
     AliasList aliases = Resolver::resolveAllAddress(ip);
-    
-    if (!aliases.empty()) {
+
+    if (!aliases.empty())
+    {
         std::cout << "Hostnames:" << std::endl;
-        for (const auto& alias : aliases) {
+        for (const auto& alias : aliases)
+        {
             std::cout << "  " << alias << std::endl;
         }
-    } else {
+    }
+    else
+    {
         std::cout << "No PTR records found" << std::endl;
     }
-    
+
     return 0;
 }
 ```
@@ -434,22 +452,26 @@ int main(int argc, char* argv[]) {
 
 using join;
 
-void findMailServers(const std::string& domain) {
+void findMailServers(const std::string& domain)
+{
     std::cout << "Mail servers for " << domain << ":" << std::endl;
-    
+
     ExchangerList mx = Resolver::resolveAllMailExchanger(domain);
-    
-    if (mx.empty()) {
+
+    if (mx.empty())
+    {
         std::cout << "  No MX records found" << std::endl;
         return;
     }
-    
-    for (const auto& server : mx) {
+
+    for (const auto& server : mx)
+    {
         std::cout << "  " << server << std::endl;
-        
+
         // Resolve mail server IP
         IpAddress ip = Resolver::resolveHost(server);
-        if (!ip.isWildcard()) {
+        if (!ip.isWildcard())
+        {
             std::cout << "    -> " << ip.toString() << std::endl;
         }
     }
@@ -464,42 +486,48 @@ void findMailServers(const std::string& domain) {
 
 using join;
 
-void diagnoseDomain(const std::string& domain) {
+void diagnoseDomain(const std::string& domain)
+{
     std::cout << "DNS information for " << domain << std::endl;
     std::cout << std::string(50, '=') << std::endl;
-    
+
     // A records
     std::cout << "\nA Records:" << std::endl;
     IpAddressList ipv4 = Resolver::resolveAllHost(domain, AF_INET);
-    for (const auto& ip : ipv4) {
+    for (const auto& ip : ipv4)
+    {
         std::cout << "  " << ip.toString() << std::endl;
     }
-    
+
     // AAAA records
     std::cout << "\nAAAA Records:" << std::endl;
     IpAddressList ipv6 = Resolver::resolveAllHost(domain, AF_INET6);
-    for (const auto& ip : ipv6) {
+    for (const auto& ip : ipv6)
+    {
         std::cout << "  " << ip.toString() << std::endl;
     }
-    
+
     // NS records
     std::cout << "\nName Servers:" << std::endl;
     ServerList ns = Resolver::resolveAllNameServer(domain);
-    for (const auto& server : ns) {
+    for (const auto& server : ns)
+    {
         std::cout << "  " << server << std::endl;
     }
-    
+
     // SOA record
     std::cout << "\nStart of Authority:" << std::endl;
     std::string soa = Resolver::resolveAuthority(domain);
-    if (!soa.empty()) {
+    if (!soa.empty())
+    {
         std::cout << "  " << soa << std::endl;
     }
-    
+
     // MX records
     std::cout << "\nMail Exchangers:" << std::endl;
     ExchangerList mx = Resolver::resolveAllMailExchanger(domain);
-    for (const auto& server : mx) {
+    for (const auto& server : mx)
+    {
         std::cout << "  " << server << std::endl;
     }
 }
@@ -513,32 +541,37 @@ void diagnoseDomain(const std::string& domain) {
 
 using join;
 
-void queryDnsServer(const std::string& hostname, 
-                    const std::string& server) {
+void queryDnsServer(const std::string& hostname, const std::string& server)
+{
     Resolver resolver;
     IpAddress dnsServer(server);
-    
-    std::cout << "Querying " << server << " for " 
+
+    std::cout << "Querying " << server << " for "
               << hostname << std::endl;
-    
+
     IpAddressList addresses = resolver.resolveAllHost(
         hostname,
         dnsServer,
         53,
         5000
     );
-    
-    if (!addresses.empty()) {
-        for (const auto& ip : addresses) {
+
+    if (!addresses.empty())
+    {
+        for (const auto& ip : addresses)
+        {
             std::cout << "  " << ip.toString() << std::endl;
         }
-    } else {
-        std::cerr << "Query failed: " 
+    }
+    else
+    {
+        std::cerr << "Query failed: "
                   << lastError.message() << std::endl;
     }
 }
 
-int main() {
+int main()
+{
     // Try different DNS servers
     queryDnsServer("example.com", "8.8.8.8");        // Google
     queryDnsServer("example.com", "1.1.1.1");        // Cloudflare

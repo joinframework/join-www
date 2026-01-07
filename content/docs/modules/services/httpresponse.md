@@ -163,11 +163,12 @@ ss << "Hello, World!";
 HttpResponse res;
 
 // Read from stream
-if (res.readHeaders(stream) == 0) {
+if (res.readHeaders(stream) == 0)
+{
     // Headers parsed successfully
     std::string status = res.status();
     std::string reason = res.reason();
-    
+
     // Check content length
     size_t length = res.contentLength();
 }
@@ -265,17 +266,18 @@ stream.flush();
 ### Error handling
 
 ```cpp
-void sendError(std::ostream& stream, const std::string& status, 
-               const std::string& reason) {
+void sendError(std::ostream& stream, const std::string& status,
+               const std::string& reason)
+{
     HttpResponse res;
     res.response(status, reason);
     res.header("Content-Type", "text/html");
     res.header("Connection", "close");
-    
-    std::string html = "<html><body><h1>" + status + " " + 
+
+    std::string html = "<html><body><h1>" + status + " " +
                       reason + "</h1></body></html>";
     res.header("Content-Length", std::to_string(html.size()));
-    
+
     res.writeHeaders(stream);
     stream << html;
     stream.flush();
@@ -297,15 +299,18 @@ HttpResponse res;
 client >> res;
 
 // Check status
-if (res.status() == "200") {
+if (res.status() == "200")
+{
     // Success - read body
     std::string body;
     size_t length = res.contentLength();
     body.resize(length);
     client.read(&body[0], length);
-} else {
+}
+else
+{
     // Error
-    std::cerr << "Error: " << res.status() << " " 
+    std::cerr << "Error: " << res.status() << " "
               << res.reason() << "\n";
 }
 ```
@@ -323,7 +328,8 @@ HttpResponse res;
 // Get content length from header
 size_t length = res.contentLength();
 
-if (length > 0) {
+if (length > 0)
+{
     std::string body;
     body.resize(length);
     stream.read(&body[0], length);
@@ -334,13 +340,15 @@ if (length > 0) {
 
 ```cpp
 // Check if header exists
-if (res.hasHeader("Content-Type")) {
+if (res.hasHeader("Content-Type"))
+{
     std::string type = res.header("Content-Type");
 }
 
 // Get all headers
 const auto& headers = res.headers();
-for (const auto& [name, value] : headers) {
+for (const auto& [name, value] : headers)
+{
     std::cout << name << ": " << value << "\n";
 }
 ```
@@ -352,10 +360,12 @@ for (const auto& [name, value] : headers) {
 ```cpp
 HttpResponse res;
 
-if (res.readHeaders(stream) == -1) {
+if (res.readHeaders(stream) == -1)
+{
     std::error_code ec = join::lastError;
-    
-    if (ec == HttpErrc::BadRequest) {
+
+    if (ec == HttpErrc::BadRequest)
+    {
         // Malformed response
     }
     // Handle error...
@@ -394,7 +404,8 @@ res.response("500", "Internal Server Error");
 ```cpp
 HttpResponse res;
 
-for (const auto& item : items) {
+for (const auto& item : items)
+{
     res.clear();  // Reset for reuse
     res.response("200", "OK");
     // Send response...

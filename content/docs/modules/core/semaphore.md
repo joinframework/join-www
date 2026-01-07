@@ -128,11 +128,14 @@ sem.wait();  // Blocks until counter > 0, then counter--
 Attempt to decrement without blocking:
 
 ```cpp
-if (sem.tryWait()) {
+if (sem.tryWait())
+{
     // Successfully acquired (counter was > 0)
     // Critical section
     sem.post();
-} else {
+}
+else
+{
     // Counter was 0, didn't acquire
 }
 ```
@@ -142,11 +145,14 @@ if (sem.tryWait()) {
 Wait with timeout:
 
 ```cpp
-if (sem.timedWait(std::chrono::seconds(5))) {
+if (sem.timedWait(std::chrono::seconds(5)))
+{
     // Acquired within timeout
     // Critical section
     sem.post();
-} else {
+}
+else
+{
     // Timeout occurred
 }
 ```
@@ -170,7 +176,8 @@ int count = sem.value();
 ```cpp
 Semaphore mutex(1);  // Binary semaphore
 
-void criticalSection() {
+void criticalSection()
+{
     mutex.wait();
     // Only one thread can be here
     mutex.post();
@@ -184,11 +191,12 @@ void criticalSection() {
 ```cpp
 Semaphore resources(5);  // 5 available resources
 
-void useResource() {
+void useResource()
+{
     resources.wait();  // Acquire one resource
-    
+
     // Use resource
-    
+
     resources.post();  // Release resource
 }
 ```
@@ -205,32 +213,37 @@ Semaphore spaces(100);    // Count of free spaces
 Mutex queueMutex;
 std::queue<int> queue;
 
-void producer() {
-    for (int i = 0; i < 1000; ++i) {
+void producer()
+{
+    for (int i = 0; i < 1000; ++i)
+    {
         spaces.wait();  // Wait for space
-        
+
         {
             ScopedLock<Mutex> lock(queueMutex);
             queue.push(i);
         }
-        
+
         items.post();  // Signal new item
     }
 }
 
-void consumer() {
-    while (true) {
+void consumer()
+{
+    while (true)
+    {
         items.wait();  // Wait for item
-        
+
         int value;
+
         {
             ScopedLock<Mutex> lock(queueMutex);
             value = queue.front();
             queue.pop();
         }
-        
+
         spaces.post();  // Signal free space
-        
+
         // Process value
     }
 }
@@ -241,39 +254,46 @@ void consumer() {
 ### Thread pool with work queue
 
 ```cpp
-class ThreadPool {
+class ThreadPool
+{
 public:
-    ThreadPool(int workers) : _tasks(0) {
-        for (int i = 0; i < workers; ++i) {
+    ThreadPool(int workers) : _tasks(0)
+    {
+        for (int i = 0; i < workers; ++i)
+        {
             std::thread([this]() { worker(); }).detach();
         }
     }
-    
-    void submit(std::function<void()> task) {
+
+    void submit(std::function<void()> task)
+    {
         {
             ScopedLock<Mutex> lock(_mutex);
             _queue.push(std::move(task));
         }
         _tasks.post();  // Signal new task
     }
-    
+
 private:
-    void worker() {
-        while (true) {
+    void worker()
+    {
+        while (true)
+        {
             _tasks.wait();  // Wait for task
-            
+
             std::function<void()> task;
+
             {
                 ScopedLock<Mutex> lock(_mutex);
                 if (_queue.empty()) continue;
                 task = std::move(_queue.front());
                 _queue.pop();
             }
-            
+
             task();  // Execute task
         }
     }
-    
+
     Mutex _mutex;
     Semaphore _tasks;
     std::queue<std::function<void()>> _queue;
@@ -308,34 +328,41 @@ sem_unlink("/process_signal");
 ### Rate limiting
 
 ```cpp
-class RateLimiter {
+class RateLimiter
+{
 public:
     RateLimiter(int requestsPerSecond)
     : _sem(requestsPerSecond)
-    , _rate(requestsPerSecond) {
+    , _rate(requestsPerSecond)
+    {
         std::thread([this]() { refill(); }).detach();
     }
-    
-    bool tryAcquire() {
+
+    bool tryAcquire()
+    {
         return _sem.tryWait();
     }
-    
-    void acquire() {
+
+    void acquire()
+    {
         _sem.wait();
     }
-    
+
 private:
-    void refill() {
-        while (true) {
+    void refill()
+    {
+        while (true)
+        {
             std::this_thread::sleep_for(std::chrono::seconds(1));
-            
+
             // Refill permits
-            for (int i = 0; i < _rate; ++i) {
+            for (int i = 0; i < _rate; ++i)
+            {
                 _sem.post();
             }
         }
     }
-    
+
     Semaphore _sem;
     int _rate;
 };
@@ -402,7 +429,8 @@ sem_unlink("/my_sem");
 ```cpp
 // BAD: resource never released on exception
 sem.wait();
-if (error) {
+if (error)
+{
     throw std::runtime_error("Error");  // sem.post() never called!
 }
 sem.post();

@@ -38,9 +38,12 @@ SmtpClient client("smtp.example.com", 587);
 client.credentials("username", "password");
 
 // Send email
-if (client.send(mail) == 0) {
+if (client.send(mail) == 0)
+{
     std::cout << "Email sent successfully\n";
-} else {
+}
+else
+{
     std::cerr << "Failed to send email\n";
 }
 ```
@@ -207,17 +210,19 @@ client.send(mail);
 ### Simple notification
 
 ```cpp
-void sendNotification(const std::string& to, const std::string& message) {
+void sendNotification(const std::string& to, const std::string& message)
+{
     MailMessage mail;
     mail.sender(MailSender("noreply@app.com", "App Notifications"));
     mail.addRecipient(MailRecipient(to));
     mail.subject("Notification");
     mail.content(message);
-    
+
     SmtpClient client("smtp.example.com", 587);
     client.credentials("app-email@example.com", "password");
-    
-    if (client.send(mail) != 0) {
+
+    if (client.send(mail) != 0)
+    {
         std::cerr << "Failed to send notification\n";
     }
 }
@@ -226,14 +231,15 @@ void sendNotification(const std::string& to, const std::string& message) {
 ### Welcome email
 
 ```cpp
-void sendWelcomeEmail(const User& user) {
+void sendWelcomeEmail(const User& user)
+{
     MailMessage mail;
-    
+
     mail.sender(MailSender("welcome@company.com", "Company Team"));
     mail.addRecipient(MailRecipient(user.email, user.name));
     mail.subject("Welcome to our service!");
-    
-    std::string content = 
+
+    std::string content =
         "Dear " + user.name + ",\n"
         "\n"
         "Welcome to our service!\n"
@@ -242,9 +248,9 @@ void sendWelcomeEmail(const User& user) {
         "\n"
         "Best regards,\n"
         "The Team";
-    
+
     mail.content(content);
-    
+
     SmtpClient client("smtp.company.com", 587);
     client.credentials("noreply@company.com", "password");
     client.send(mail);
@@ -257,12 +263,13 @@ void sendWelcomeEmail(const User& user) {
 // Current version doesn't support attachments directly
 // Workaround: Include links or embed small data
 
-void sendReportLink(const std::string& to, const std::string& reportUrl) {
+void sendReportLink(const std::string& to, const std::string& reportUrl)
+{
     MailMessage mail;
     mail.sender(MailSender("reports@company.com", "Reports"));
     mail.addRecipient(MailRecipient(to));
     mail.subject("Your report is ready");
-    
+
     mail.content(
         "Your report is ready for download:\n"
         "\n" +
@@ -270,7 +277,7 @@ void sendReportLink(const std::string& to, const std::string& reportUrl) {
         "\n"
         "This link will expire in 24 hours.\n"
     );
-    
+
     SmtpClient client("smtp.company.com", 587);
     client.credentials("reports@company.com", "password");
     client.send(mail);
@@ -287,9 +294,12 @@ void sendReportLink(const std::string& to, const std::string& reportUrl) {
 SmtpClient client("smtp.example.com", 587);
 client.credentials("user", "password");
 
-if (client.send(mail) == 0) {
+if (client.send(mail) == 0)
+{
     std::cout << "Email sent successfully\n";
-} else {
+}
+else
+{
     std::error_code ec = join::lastError;
     std::cerr << "Send failed: " << ec.message() << "\n";
 }
@@ -300,15 +310,16 @@ if (client.send(mail) == 0) {
 ```cpp
 int result = client.send(mail);
 
-if (result != 0) {
+if (result != 0)
+{
     // Check specific errors
     std::error_code ec = join::lastError;
-    
+
     // Connection failed
     // Authentication failed
     // Invalid recipient
     // Server rejected message
-    
+
     std::cerr << "Error: " << ec.message() << "\n";
 }
 ```
@@ -333,20 +344,25 @@ SmtpClient client("smtp.example.com", 25);
 ### Validate before sending
 
 ```cpp
-bool validateMail(const MailMessage& mail) {
-    if (mail.sender().empty()) {
+bool validateMail(const MailMessage& mail)
+{
+    if (mail.sender().empty())
+    {
         return false;
     }
-    if (mail.recipients().empty()) {
+    if (mail.recipients().empty())
+    {
         return false;
     }
-    if (mail.subject().empty()) {
+    if (mail.subject().empty())
+    {
         return false;
     }
     return true;
 }
 
-if (validateMail(mail)) {
+if (validateMail(mail))
+{
     client.send(mail);
 }
 ```
@@ -366,12 +382,15 @@ client.credentials("hardcoded@example.com", "password123");
 ### Retry on failure
 
 ```cpp
-bool sendWithRetry(SmtpClient& client, const MailMessage& mail, int maxRetries = 3) {
-    for (int i = 0; i < maxRetries; ++i) {
-        if (client.send(mail) == 0) {
+bool sendWithRetry(SmtpClient& client, const MailMessage& mail, int maxRetries = 3)
+{
+    for (int i = 0; i < maxRetries; ++i)
+    {
+        if (client.send(mail) == 0)
+        {
             return true;
         }
-        
+
         // Wait before retry
         std::this_thread::sleep_for(std::chrono::seconds(5));
     }

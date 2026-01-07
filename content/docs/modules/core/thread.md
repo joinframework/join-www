@@ -27,7 +27,8 @@ Thread features:
 
 using join;
 
-void worker() {
+void worker()
+{
     // Thread work
 }
 
@@ -48,7 +49,8 @@ thread.join();
 ### With arguments
 
 ```cpp
-void task(int id, const std::string& name) {
+void task(int id, const std::string& name)
+{
     std::cout << "Task " << id << ": " << name << "\n";
 }
 
@@ -59,9 +61,11 @@ thread.join();
 ### With member functions
 
 ```cpp
-class Worker {
+class Worker
+{
 public:
-    void process(int value) {
+    void process(int value)
+    {
         // Process value
     }
 };
@@ -97,9 +101,12 @@ Thread thread([]() {
     std::this_thread::sleep_for(std::chrono::seconds(2));
 });
 
-if (thread.tryJoin()) {
+if (thread.tryJoin())
+{
     // Thread already completed
-} else {
+}
+else
+{
     // Thread still running
     // Do other work...
     thread.join();  // Wait later
@@ -112,7 +119,8 @@ Request thread cancellation:
 
 ```cpp
 Thread thread([]() {
-    while (true) {
+    while (true)
+    {
         // Long-running work
     }
 });
@@ -166,7 +174,8 @@ thread.join();  // Safe, thread already done
 Threads support move operations for ownership transfer:
 
 ```cpp
-Thread createThread() {
+Thread createThread()
+{
     return Thread([]() {
         // Work
     });
@@ -200,16 +209,18 @@ thread2.join();  // Joins what was thread1
 ### Simple task execution
 
 ```cpp
-void processData(const std::vector<int>& data) {
+void processData(const std::vector<int>& data)
+{
     Thread thread([&data]() {
         // Process in background
-        for (int value : data) {
+        for (int value : data)
+        {
             // Heavy computation
         }
     });
-    
+
     // Do other work
-    
+
     thread.join();  // Wait for background processing
 }
 ```
@@ -219,45 +230,54 @@ void processData(const std::vector<int>& data) {
 ### Thread pool
 
 ```cpp
-class ThreadPool {
+class ThreadPool
+{
 public:
-    ThreadPool(size_t numThreads) {
-        for (size_t i = 0; i < numThreads; ++i) {
+    ThreadPool(size_t numThreads)
+    {
+        for (size_t i = 0; i < numThreads; ++i)
+        {
             _threads.emplace_back([this]() { worker(); });
         }
     }
-    
-    ~ThreadPool() {
+
+    ~ThreadPool()
+    {
         _stop = true;
-        for (auto& thread : _threads) {
+        for (auto& thread : _threads)
+        {
             thread.join();
         }
     }
-    
-    void submit(std::function<void()> task) {
+
+    void submit(std::function<void()> task)
+    {
         ScopedLock<Mutex> lock(_mutex);
         _tasks.push(std::move(task));
     }
-    
+
 private:
-    void worker() {
-        while (!_stop) {
+    void worker()
+    {
+        while (!_stop)
+        {
             std::function<void()> task;
-            
+
             {
                 ScopedLock<Mutex> lock(_mutex);
-                if (_tasks.empty()) {
+                if (_tasks.empty())
+                {
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     continue;
                 }
                 task = std::move(_tasks.front());
                 _tasks.pop();
             }
-            
+
             task();
         }
     }
-    
+
     std::vector<Thread> _threads;
     std::queue<std::function<void()>> _tasks;
     Mutex _mutex;
@@ -270,22 +290,25 @@ private:
 ### Parallel computation
 
 ```cpp
-void parallelSum(const std::vector<int>& data) {
+void parallelSum(const std::vector<int>& data)
+{
     size_t mid = data.size() / 2;
     int sum1 = 0, sum2 = 0;
-    
+
     Thread thread([&]() {
-        for (size_t i = 0; i < mid; ++i) {
+        for (size_t i = 0; i < mid; ++i)
+        {
             sum1 += data[i];
         }
     });
-    
-    for (size_t i = mid; i < data.size(); ++i) {
+
+    for (size_t i = mid; i < data.size(); ++i)
+    {
         sum2 += data[i];
     }
-    
+
     thread.join();
-    
+
     int total = sum1 + sum2;
     std::cout << "Total: " << total << "\n";
 }
@@ -296,27 +319,32 @@ void parallelSum(const std::vector<int>& data) {
 ### Background monitoring
 
 ```cpp
-class Monitor {
+class Monitor
+{
 public:
-    Monitor() : _running(true) {
+    Monitor() : _running(true)
+    {
         _thread = Thread([this]() {
-            while (_running) {
+            while (_running)
+            {
                 checkStatus();
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
         });
     }
-    
-    ~Monitor() {
+
+    ~Monitor()
+    {
         _running = false;
         _thread.join();
     }
-    
+
 private:
-    void checkStatus() {
+    void checkStatus()
+    {
         // Monitor system status
     }
-    
+
     Thread _thread;
     std::atomic_bool _running;
 };
@@ -329,28 +357,34 @@ private:
 Since `pthread_cancel` may not work reliably, use cooperative cancellation:
 
 ```cpp
-class Task {
+class Task
+{
 public:
-    void start() {
+    void start()
+    {
         _stop = false;
         _thread = Thread([this]() { run(); });
     }
-    
-    void stop() {
+
+    void stop()
+    {
         _stop = true;
         _thread.join();
     }
-    
+
 private:
-    void run() {
-        while (!_stop) {
+    void run()
+    {
+        while (!_stop)
+        {
             // Check _stop regularly
             // Do work
-            
-            if (_stop) break;
+
+            if (_stop)
+                break;
         }
     }
-    
+
     Thread _thread;
     std::atomic_bool _stop{false};
 };
@@ -424,25 +458,27 @@ t2.join();
 
 ```cpp
 // BAD: local variable destroyed before thread finishes
-void bad() {
+void bad()
+{
     std::vector<int> data = {1, 2, 3};
-    
+
     Thread thread([&data]() {
         // data may be destroyed already!
         for (int x : data) { }
     });
-    
+
     // Function returns, data destroyed, thread still running
 }
 
 // GOOD: join before return or copy data
-void good() {
+void good()
+{
     std::vector<int> data = {1, 2, 3};
-    
+
     Thread thread([data]() {  // Copy data
         for (int x : data) { }
     });
-    
+
     thread.join();  // Or ensure thread completes
 }
 ```

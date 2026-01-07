@@ -98,7 +98,8 @@ reader.deserialize(stream);
 * All parsing errors are reported via `join::lastError`
 
 ```cpp
-if (reader.deserialize(doc) == -1) {
+if (reader.deserialize(doc) == -1)
+{
     std::cerr << lastError.message() << "\n";
 }
 ```
@@ -137,8 +138,10 @@ Common error conditions include:
 | `RangeError`    | Truncated or incomplete input            |
 
 ```cpp
-if (reader.deserialize(data) == -1) {
-    if (lastError == SaxErrc::ExtraData) {
+if (reader.deserialize(data) == -1)
+{
+    if (lastError == SaxErrc::ExtraData)
+    {
         std::cerr << "Extra data after document\n";
     }
 }
@@ -203,7 +206,8 @@ std::string binary = out.str();
 // Parse back
 Value parsed;
 PackReader reader(parsed);
-if (reader.deserialize(binary) == 0) {
+if (reader.deserialize(binary) == 0)
+{
     std::cout << parsed["count"].getInt() << "\n";
 }
 ```

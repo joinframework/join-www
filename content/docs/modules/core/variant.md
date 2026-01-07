@@ -87,11 +87,13 @@ std::string s = v.get<std::string>();  // throws std::bad_cast
 ```cpp
 Variant<int, std::string> v = "hello";
 
-if (auto* str = v.getIf<std::string>()) {
+if (auto* str = v.getIf<std::string>())
+{
     // Use *str
 }
 
-if (auto* num = v.getIf<int>()) {
+if (auto* num = v.getIf<int>())
+{
     // Not executed
 }
 ```
@@ -105,11 +107,13 @@ if (auto* num = v.getIf<int>()) {
 ```cpp
 Variant<int, std::string, double> v = 42;
 
-if (v.is<int>()) {
+if (v.is<int>())
+{
     // true
 }
 
-if (v.is<std::string>()) {
+if (v.is<std::string>())
+{
     // false
 }
 ```
@@ -117,7 +121,8 @@ if (v.is<std::string>()) {
 ### Check by index
 
 ```cpp
-if (v.is<0>()) {
+if (v.is<0>())
+{
     // Checking if first alternative is active
 }
 ```
@@ -148,7 +153,7 @@ Variant<int, std::string> v(in_place_index_t<1>{}, "world");
 
 ```cpp
 Variant<int, std::vector<int>> v(
-    in_place_type_t<std::vector<int>>{}, 
+    in_place_type_t<std::vector<int>>{},
     {1, 2, 3, 4, 5}
 );
 ```

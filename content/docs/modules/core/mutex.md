@@ -50,13 +50,15 @@ Allows the same thread to acquire the lock multiple times:
 ```cpp
 RecursiveMutex mutex;
 
-void recursiveFunction(int depth) {
+void recursiveFunction(int depth)
+{
     mutex.lock();
-    
-    if (depth > 0) {
+
+    if (depth > 0)
+    {
         recursiveFunction(depth - 1);  // OK: recursive lock
     }
-    
+
     mutex.unlock();
 }
 ```
@@ -125,10 +127,13 @@ mutex.lock();  // Blocks until lock is acquired
 ### Non-blocking lock
 
 ```cpp
-if (mutex.tryLock()) {
+if (mutex.tryLock())
+{
     // Lock acquired
     mutex.unlock();
-} else {
+}
+else
+{
     // Lock not available
 }
 ```
@@ -146,15 +151,16 @@ mutex.unlock();  // Release the lock
 Automatically acquires and releases a lock using RAII:
 
 ```cpp
-void criticalSection() {
+void criticalSection()
+{
     Mutex mutex;
-    
+
     ScopedLock<Mutex> lock(mutex);
     // Lock acquired automatically
-    
+
     // Critical section
     // ...
-    
+
     // Lock released automatically when lock goes out of scope
 }
 ```
@@ -166,15 +172,19 @@ ScopedLock ensures the mutex is unlocked even if an exception is thrown:
 ```cpp
 Mutex mutex;
 
-try {
+try
+{
     ScopedLock<Mutex> lock(mutex);
-    
-    if (errorCondition) {
+
+    if (errorCondition)
+    {
         throw std::runtime_error("Error");
     }
-    
+
     // Lock automatically released here
-} catch (...) {
+}
+catch (...)
+{
     // Mutex already unlocked by ScopedLock destructor
 }
 ```
@@ -199,7 +209,8 @@ ScopedLock<SharedMutex> lock2(*sharedMutex);
 Mutex mutex;
 int sharedCounter = 0;
 
-void increment() {
+void increment()
+{
     mutex.lock();
     ++sharedCounter;
     mutex.unlock();
@@ -212,7 +223,8 @@ void increment() {
 Mutex mutex;
 int sharedCounter = 0;
 
-void increment() {
+void increment()
+{
     ScopedLock<Mutex> lock(mutex);
     ++sharedCounter;
     // Automatic unlock
@@ -224,11 +236,15 @@ void increment() {
 ```cpp
 Mutex mutex;
 
-void tryUpdate() {
-    if (mutex.tryLock()) {
+void tryUpdate()
+{
+    if (mutex.tryLock())
+    {
         // Update data
         mutex.unlock();
-    } else {
+    }
+    else
+    {
         // Skip update, mutex busy
     }
 }
@@ -240,13 +256,16 @@ void tryUpdate() {
 RecursiveMutex mutex;
 std::vector<int> data;
 
-void processElement(int index) {
+void processElement(int index)
+{
     ScopedLock<RecursiveMutex> lock(mutex);
-    
-    if (index < data.size()) {
+
+    if (index < data.size())
+    {
         // Process current element
-        
-        if (needsRecursion) {
+
+        if (needsRecursion)
+        {
             processElement(index + 1);  // OK: recursive lock
         }
     }
@@ -263,14 +282,15 @@ using join;
 
 // Process A (creates shared memory and mutex)
 SharedMemory shm("my_mutex", sizeof(SharedMutex));
-if (shm.open() == 0) {
+if (shm.open() == 0)
+{
     // Construct mutex using placement new
     SharedMutex* mutex = new (shm.get()) SharedMutex();
-    
+
     mutex->lock();
     // Critical section
     mutex->unlock();
-    
+
     // Before closing, explicitly destroy
     mutex->~SharedMutex();
     shm.close();
@@ -278,14 +298,15 @@ if (shm.open() == 0) {
 
 // Process B (attaches to existing shared memory)
 SharedMemory shm("my_mutex", sizeof(SharedMutex));
-if (shm.open() == 0) {
+if (shm.open() == 0)
+{
     // Reinterpret existing mutex (no construction needed)
     SharedMutex* mutex = reinterpret_cast<SharedMutex*>(shm.get());
-    
+
     mutex->lock();
     // Critical section
     mutex->unlock();
-    
+
     shm.close();
 }
 
@@ -327,14 +348,16 @@ pthread_cond_wait(&cond, handle);
 ```cpp
 // BAD: exception causes unlock to be skipped
 mutex.lock();
-if (error) {
+if (error)
+{
     throw std::runtime_error("Error");  // mutex never unlocked!
 }
 mutex.unlock();
 
 // GOOD: use ScopedLock
 ScopedLock<Mutex> lock(mutex);
-if (error) {
+if (error)
+{
     throw std::runtime_error("Error");  // mutex automatically unlocked
 }
 ```
@@ -345,13 +368,15 @@ if (error) {
 // BAD: deadlock with regular Mutex
 Mutex mutex;
 
-void outer() {
+void outer()
+{
     mutex.lock();
     inner();  // Deadlock! Same thread tries to lock again
     mutex.unlock();
 }
 
-void inner() {
+void inner()
+{
     mutex.lock();
     // ...
     mutex.unlock();

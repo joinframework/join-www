@@ -97,11 +97,13 @@ bool isBcast = broadcast.isBroadcast();  // true
 ### Validation
 
 ```cpp
-if (MacAddress::isMacAddress("01:23:45:67:89:ab")) {
+if (MacAddress::isMacAddress("01:23:45:67:89:ab"))
+{
     // Valid MAC address
 }
 
-if (!MacAddress::isMacAddress("invalid")) {
+if (!MacAddress::isMacAddress("invalid"))
+{
     // Invalid format
 }
 ```
@@ -227,13 +229,15 @@ Iterate over MAC address bytes:
 ```cpp
 MacAddress mac("01:23:45:67:89:ab");
 
-for (uint8_t byte : mac) {
+for (uint8_t byte : mac)
+{
     std::cout << std::hex << (int)byte << " ";
 }
 // Output: 1 23 45 67 89 ab
 
 // Using iterators
-for (auto it = mac.begin(); it != mac.end(); ++it) {
+for (auto it = mac.begin(); it != mac.end(); ++it)
+{
     *it ^= 0xff;  // Flip all bits
 }
 ```
@@ -247,9 +251,12 @@ Get MAC address of a network interface:
 ```cpp
 MacAddress mac = MacAddress::address("eth0");
 
-if (!mac.isWildcard()) {
+if (!mac.isWildcard())
+{
     std::cout << "eth0 MAC: " << mac << "\n";
-} else {
+}
+else
+{
     std::cerr << "Failed to get MAC address\n";
 }
 ```
@@ -279,18 +286,22 @@ Comparison is done byte-by-byte from left to right.
 ### MAC address pool
 
 ```cpp
-class MacPool {
+class MacPool
+{
 public:
     MacPool(const MacAddress& base, int count)
-    : _current(base), _end(base + count) {}
-    
-    MacAddress allocate() {
-        if (_current < _end) {
+    : _current(base), _end(base + count)
+    {}
+
+    MacAddress allocate()
+    {
+        if (_current < _end)
+        {
             return _current++;
         }
         throw std::runtime_error("Pool exhausted");
     }
-    
+
 private:
     MacAddress _current;
     MacAddress _end;
@@ -307,7 +318,8 @@ MacAddress mac2 = pool.allocate();  // 02:00:00:00:00:01
 ### OUI (Organizationally Unique Identifier) checking
 
 ```cpp
-bool isSameOUI(const MacAddress& a, const MacAddress& b) {
+bool isSameOUI(const MacAddress& a, const MacAddress& b)
+{
     return (a[0] == b[0]) && (a[1] == b[1]) && (a[2] == b[2]);
 }
 
@@ -324,16 +336,19 @@ if (isSameOUI(mac1, mac2)) {
 ### Local vs. universal bit
 
 ```cpp
-bool isLocallyAdministered(const MacAddress& mac) {
+bool isLocallyAdministered(const MacAddress& mac)
+{
     return (mac[0] & 0x02) != 0;
 }
 
-bool isUniversallyAdministered(const MacAddress& mac) {
+bool isUniversallyAdministered(const MacAddress& mac)
+{
     return (mac[0] & 0x02) == 0;
 }
 
 MacAddress local("02:00:00:00:00:00");
-if (isLocallyAdministered(local)) {
+if (isLocallyAdministered(local))
+{
     std::cout << "Locally administered address\n";
 }
 ```
@@ -343,16 +358,19 @@ if (isLocallyAdministered(local)) {
 ### Multicast bit
 
 ```cpp
-bool isMulticast(const MacAddress& mac) {
+bool isMulticast(const MacAddress& mac)
+{
     return (mac[0] & 0x01) != 0;
 }
 
-bool isUnicast(const MacAddress& mac) {
+bool isUnicast(const MacAddress& mac)
+{
     return (mac[0] & 0x01) == 0;
 }
 
 MacAddress multicast("01:00:5e:00:00:00");
-if (isMulticast(multicast)) {
+if (isMulticast(multicast))
+{
     std::cout << "Multicast address\n";
 }
 ```
@@ -362,18 +380,20 @@ if (isMulticast(multicast)) {
 ### EUI-64 generation for IPv6
 
 ```cpp
-void configureInterface(const std::string& iface) {
+void configureInterface(const std::string& iface)
+{
     MacAddress mac = MacAddress::address(iface);
-    
-    if (mac.isWildcard()) {
+
+    if (mac.isWildcard())
+    {
         std::cerr << "Failed to get MAC address\n";
         return;
     }
-    
+
     // Generate link-local address
     IpAddress linkLocal = mac.toLinkLocalIpv6();
     std::cout << "Link-local: " << linkLocal << "\n";
-    
+
     // Generate address with custom prefix
     IpAddress prefix("2001:db8::");
     IpAddress global = mac.toIpv6(prefix, 64);
@@ -397,16 +417,22 @@ void configureInterface(const std::string& iface) {
 ## Error handling
 
 ```cpp
-try {
+try
+{
     MacAddress mac("invalid:mac:address");
-} catch (const std::invalid_argument& e) {
+}
+catch (const std::invalid_argument& e)
+{
     std::cerr << "Invalid MAC: " << e.what() << "\n";
 }
 
 // Safe validation
-if (MacAddress::isMacAddress(userInput)) {
+if (MacAddress::isMacAddress(userInput))
+{
     MacAddress mac(userInput);
-} else {
+}
+else
+{
     std::cerr << "Invalid MAC address format\n";
 }
 ```

@@ -56,25 +56,33 @@ Custom serializers inherit from `StreamWriter` and implement SAX callbacks:
 
 using join;
 
-class MyWriter : public StreamWriter {
+class MyWriter : public StreamWriter
+{
 public:
-    MyWriter(std::ostream& out) : StreamWriter(out) {}
+    MyWriter(std::ostream& out) : StreamWriter(out)
+    {}
 
-    int setNull() override {
+    int setNull() override
+    {
         append4("null");
         return 0;
     }
 
-    int setBool(bool value) override {
-        if (value) {
+    int setBool(bool value) override
+    {
+        if (value)
+        {
             append4("true");
-        } else {
+        }
+        else
+        {
             append5("false");
         }
         return 0;
     }
 
-    int setInt(int32_t value) override {
+    int setInt(int32_t value) override
+    {
         std::string str = std::to_string(value);
         append(str.c_str(), str.size());
         return 0;
@@ -105,11 +113,13 @@ std::cout << out.str() << "\n";
 Custom deserializers inherit from `StreamReader`:
 
 ```cpp
-class MyReader : public StreamReader {
+class MyReader : public StreamReader
+{
 public:
     MyReader(Value& root) : StreamReader(root) {}
 
-    int deserialize(const std::string& document) override {
+    int deserialize(const std::string& document) override
+    {
         // Parse document and call SAX callbacks:
         // - setNull(), setBool(), setInt(), etc.
         // - startArray() / stopArray()
@@ -127,7 +137,8 @@ public:
 Value root;
 MyReader reader(root);
 
-if (reader.deserialize(jsonString) == 0) {
+if (reader.deserialize(jsonString) == 0)
+{
     // root now contains parsed data
     std::cout << root["name"].getString() << "\n";
 }
@@ -208,10 +219,14 @@ append("hello", 5);    // Array
 ### Checking errors
 
 ```cpp
-if (reader.deserialize(data) == -1) {
-    if (lastError == SaxErrc::StackOverflow) {
+if (reader.deserialize(data) == -1)
+{
+    if (lastError == SaxErrc::StackOverflow)
+    {
         std::cerr << "Document too deeply nested\n";
-    } else {
+    }
+    else
+    {
         std::cerr << "Parse error: " << lastError.message() << "\n";
     }
 }
@@ -248,26 +263,32 @@ StreamReader enforces a **maximum nesting depth of 19 levels** to prevent stack 
 ### Simple key-value serializer
 
 ```cpp
-class KVWriter : public StreamWriter {
+class KVWriter : public StreamWriter
+{
 public:
-    KVWriter(std::ostream& out) : StreamWriter(out) {}
+    KVWriter(std::ostream& out) : StreamWriter(out)
+    {}
 
-    int setString(const std::string& value) override {
+    int setString(const std::string& value) override
+    {
         append(value.c_str(), value.size());
         return 0;
     }
 
-    int startObject(uint32_t size) override {
+    int startObject(uint32_t size) override
+    {
         return 0;
     }
 
-    int setKey(const std::string& key) override {
+    int setKey(const std::string& key) override
+    {
         append(key.c_str(), key.size());
         append('=');
         return 0;
     }
 
-    int stopObject() override {
+    int stopObject() override
+    {
         return 0;
     }
 
