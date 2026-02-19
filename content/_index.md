@@ -4,28 +4,38 @@ title: "Join Framework"
 
 # Welcome to Join Framework
 
-**Join** is a **modular C++ network runtime framework for Linux**, designed for **low-latency**, **high-throughput**, and **system-level networking**.
+**Join** is a **modular C++ network runtime framework for Linux**, designed for optimized throughput and latency in system-level networking.
 
 It provides a set of composable libraries covering networking primitives, concurrency, serialization, cryptography, and Linux network fabric management.
 
-## 🎯 Design Goals
+---
+
+## Design Goals
 
 - Linux-native networking (sockets, netlink, raw sockets)
 - Event-driven and reactor-based architecture
+- Low-jitter event processing
 - Strong separation of concerns via modular libraries
 - High test coverage and correctness-first design
-- Suitable for infrastructure, control-plane, and runtime components
 
-## 🚀 Why Join?
+---
 
-Join focuses on providing **robust, efficient building blocks** for:
-- Network runtimes
-- System services
-- Control planes
-- High-performance servers
-- Infrastructure tooling
+## Target Use Cases
 
-## 📦 Modular Architecture
+**Designed for:**
+- Network services and microservices
+- Control plane and infrastructure components
+- System-level networking tools
+- High-performance servers (web, RPC, messaging)
+
+**Not designed for:**
+- Sub-microsecond latency requirements (HFT, market data)
+- Kernel-bypass networking (use DPDK or RDMA instead)
+- Data plane packet processing at 100 Gbps
+
+---
+
+## Modular Architecture
 
 The framework is a collection of specialized modules that build upon one another:
 
@@ -37,21 +47,26 @@ The framework is a collection of specialized modules that build upon one another
 | **[`data`]({{< ref "data" >}})** | **Serialization** | High-perf JSON (DOM/SAX), MessagePack, Zlib Streams |
 | **[`services`]({{< ref "services" >}})** | **Protocols** | HTTP/1.1 (Client/Server), SMTP, Mail Parsing |
 
-## 🛠️ Getting Started
+---
+
+## Getting Started
 
 New to Join? Start with our [Quick Start Guide]({{< ref "quickstart" >}}) to get up and running in minutes.
 
-## 📊 Quality & Performance
+---
 
-* **1000+ Unit Tests** covering networking, concurrency, and data parsing
-* **Security:** Continuous scanning via Codacy and GitHub Security workflows
+## Quality
 
-## 📚 Resources
+Every commit is validated against an extensive test suite to ensure stability in concurrent environments:
 
-- **API Documentation**: [Doxygen](https://joinframework.github.io/join/index.html)
-- **GitHub**: [joinframework/join](https://github.com/joinframework/join)
-- **Issues**: [Report bugs and request features](https://github.com/joinframework/join/issues)
+- **1000+ unit tests** covering networking, concurrency, and data parsing
+- **Continuous security scanning** via Codacy and GitHub Security workflows
 
-## License
+---
 
-Join Framework is released under the [MIT License](https://choosealicense.com/licenses/mit/), making it free for both personal and commercial use.
+## Resources
+
+- **API Reference:** [Doxygen](https://joinframework.github.io/join/index.html)
+- **GitHub:** [joinframework/join](https://github.com/joinframework/join)
+- **Issues:** [Report bugs and request features](https://github.com/joinframework/join/issues)
+- **License:** [MIT](https://choosealicense.com/licenses/mit/)

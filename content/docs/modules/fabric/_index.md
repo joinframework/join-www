@@ -1,12 +1,12 @@
 ---
 title: "Fabric"
-weight: 2
+weight: 20
 bookCollapseSection: true
 ---
 
 # Fabric Module
 
-The **Fabric** module provides network control and Linux network fabric management capabilities, allowing applications to interact with and manage the Linux network stack.
+The **Fabric** module provides network control and Linux network fabric management, allowing applications to interact with and manage the Linux network stack via Netlink.
 
 ---
 
@@ -14,66 +14,43 @@ The **Fabric** module provides network control and Linux network fabric manageme
 
 ### Interface
 
-Network interface representation and information:
+Network interface representation with access to properties and configuration:
 
-**Features:**
-- Interface enumeration and queries
-- IP address assignment information
-- MTU (Maximum Transmission Unit) queries
-- Interface flags and status
-- Link-layer address information
+- Name, index, flags, MTU, MAC address
+- Assigned IP addresses and routes
+- Administrative and operational state (`isEnabled`, `isRunning`)
+- Bridge membership
 
-**Operations:**
-- Query interface properties
-- Get assigned IP addresses
-- Check interface state (up/down)
-- Access hardware (MAC) addresses
+### InterfaceManager
 
-### Interface Manager
+System-wide network interface management built on Linux Netlink sockets.
 
-System-wide network interface management using Netlink:
+**Discovery and lookup:**
+- Enumerate all interfaces
+- Find by index or name
 
-**Features:**
-- Interface discovery and enumeration
-- Real-time interface monitoring
-- Address family filtering (IPv4/IPv6)
-- Interface status tracking
-- Event-based notifications
+**Virtual interface creation:**
+- Dummy, bridge, VLAN, veth pairs, GRE tunnels
+- Synchronous and asynchronous modes
 
-**Operations:**
-- List all network interfaces
-- Monitor interface changes
-- Filter by address family
-- Query interface capabilities
+**Real-time monitoring via event listeners:**
+- Link events (add, delete, admin/oper state, MTU, MAC, rename, bridge membership)
+- Address events (add, delete, modify)
+- Route events (add, delete, modify)
 
-**Implementation:**
-- Built on Linux Netlink sockets
-- Efficient kernel communication
-- Event-driven updates
+**Reactor integration:** registers itself on construction, unregisters on destruction. Supports a custom `Reactor*` or defaults to `ReactorThread`.
+
+See [Interface Manager]({{< ref "interfacemanager" >}}) for full documentation.
 
 ---
 
-## 🔍 ARP (Address Resolution Protocol)
+## 🔍 ARP
 
 ARP protocol implementation for mapping IP addresses to MAC addresses:
 
-**Features:**
 - ARP request/reply handling
-- MAC address resolution from IP
-- Network layer utilities
-- Broadcast and unicast ARP
-
-**Operations:**
-- Send ARP requests
-- Parse ARP replies
-- Resolve IP to MAC address
-- Build ARP packets
-
-**Use Cases:**
-- Network discovery
-- Address verification
-- Custom network tools
-- Security monitoring
+- IP-to-MAC resolution
+- Broadcast and unicast ARP packets
 
 ---
 
@@ -81,29 +58,13 @@ ARP protocol implementation for mapping IP addresses to MAC addresses:
 
 DNS resolver for hostname and service name resolution:
 
-**Features:**
-- Hostname to IP address resolution
-- Service name resolution
-- IPv4 and IPv6 support
-- Forward and reverse lookups
-- Multiple address results
-
-**Operations:**
-- Resolve hostnames to IP addresses
-- Resolve service names to port numbers
-- Reverse DNS lookups (IP to hostname)
-- Query multiple addresses per hostname
-
-**Protocol Support:**
-- IPv4 (A records)
-- IPv6 (AAAA records)
-- PTR records (reverse lookup)
-- Service/protocol resolution
+- Forward lookups (hostname → IPv4/IPv6)
+- Reverse lookups (IP → hostname)
+- Service name to port number resolution
+- Multiple address results per query
 
 ---
 
 ## 📚 API Reference
-
-For detailed API documentation, see:
 
 [Doxygen Reference](https://joinframework.github.io/join/)

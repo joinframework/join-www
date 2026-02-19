@@ -1,6 +1,6 @@
 ---
 title: "Semaphore"
-weight: 12
+weight: 130
 ---
 
 # Semaphore

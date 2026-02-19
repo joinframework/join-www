@@ -1,7 +1,7 @@
 ---
 
 title: "Socket Stream"
-weight: 8
+weight: 90
 ---
 
 # Socket Stream
@@ -32,7 +32,7 @@ Standard iostream wrapper for stream sockets.
 ```cpp
 #include <join/socketstream.hpp>
 
-using join;
+using namespace join;
 
 Tcp::Stream stream;
 Tcp::Endpoint server("example.com", 80);
@@ -102,7 +102,7 @@ Encrypted iostream wrapper for TLS/SSL connections.
 ```cpp
 #include <join/socketstream.hpp>
 
-using join;
+using namespace join;
 
 Tls::Stream stream;
 
@@ -117,7 +117,7 @@ stream.connectEncrypted(server);
 The `connectEncrypted()` method:
 * Establishes TCP connection
 * Performs TLS handshake
-* Waits for encryption to complete (using timeout)
+* Waits for encryption to complete (using the stream timeout)
 
 ### STARTTLS pattern
 
@@ -187,15 +187,9 @@ stream.timeout(0);
 
 ```cpp
 int ms = stream.timeout();
-std::cout << "Timeout: " << ms << " ms" << std::endl;
 ```
 
-Timeouts apply to:
-* Connection establishment
-* Read operations
-* Write operations
-* TLS handshake
-* Graceful disconnect
+Timeouts apply to connection establishment, read and write operations, TLS handshake, and graceful disconnect.
 
 ---
 
@@ -211,7 +205,7 @@ stream.connect(server);
 
 if (stream.fail())
 {
-    std::cerr << "Connection failed" << std::endl;
+    std::cerr << "Connection failed\n";
 }
 ```
 
@@ -219,73 +213,44 @@ if (stream.fail())
 
 ```cpp
 Tcp::Stream stream;
-Tcp::Endpoint local("0.0.0.0", 5000);
-stream.bind(local);
-
-Tcp::Endpoint server("example.com", 80);
-stream.connect(server);
+stream.bind(Tcp::Endpoint("0.0.0.0", 5000));
+stream.connect(Tcp::Endpoint("example.com", 80));
 ```
 
 ### Disconnecting
 
 ```cpp
-// Graceful shutdown
+// Graceful shutdown: flushes buffer, shuts down socket, waits for peer
 stream.disconnect();
 
 // Immediate close
 stream.close();
 ```
 
-The `disconnect()` method:
-* Flushes buffered data
-* Performs graceful shutdown
-* Waits for peer acknowledgment (up to timeout)
-
 ### Connection state
 
 ```cpp
-if (stream.opened())
-{
-    // Socket is open
-}
-
-if (stream.connected())
-{
-    // Socket is connected
-}
-
-if (stream.encrypted())
-{
-    // Connection is encrypted (TLS streams only)
-}
+if (stream.opened())    { /* socket fd is open */ }
+if (stream.connected()) { /* socket is connected */ }
+if (stream.encrypted()) { /* TLS handshake completed (TLS streams only) */ }
 ```
 
 ---
 
 ## Buffering
 
-Streams use **4 KB buffers** for both input and output operations.
+Streams use **4 KB buffers** for both input and output.
 
 ### Flushing output
 
 ```cpp
 stream << "Hello\n";
-stream.flush();  // Ensure data is sent immediately
+stream.flush();  // ensure data is sent immediately
 ```
 
-Automatic flushing occurs when:
-* Buffer is full
-* `std::endl` is used
-* `flush()` is called
-* `sync()` is called
-* Stream is destroyed
+Automatic flushing occurs when the buffer is full, `std::endl` is used, `flush()` or `sync()` is called, or the stream is destroyed.
 
-### Synchronizing
-
-```cpp
-// Flush and sync with underlying socket
-stream.sync();
-```
+> **Note:** On I/O errors, `underflow()` and `overflow()` close the underlying socket in addition to setting `failbit`.
 
 ---
 
@@ -297,25 +262,21 @@ stream.sync();
 #include <join/socketstream.hpp>
 #include <iostream>
 
-using join;
+using namespace join;
 
 Tcp::Stream stream;
-Tcp::Endpoint server("example.com", 80);
+stream.connect(Tcp::Endpoint("example.com", 80));
 
-stream.connect(server);
-
-// Send request
 stream << "GET / HTTP/1.1\r\n"
        << "Host: example.com\r\n"
        << "Connection: close\r\n"
        << "\r\n"
        << std::flush;
 
-// Read response
 std::string line;
 while (std::getline(stream, line))
 {
-    std::cout << line << std::endl;
+    std::cout << line << "\n";
 }
 ```
 
@@ -325,27 +286,23 @@ while (std::getline(stream, line))
 #include <join/socketstream.hpp>
 #include <iostream>
 
-using join;
+using namespace join;
 
 Tls::Stream stream;
 stream.setVerify(true);
 stream.setCaFile("/etc/ssl/certs/ca-bundle.crt");
+stream.connectEncrypted(Tls::Endpoint("example.com", 443));
 
-Tls::Endpoint server("example.com", 443);
-stream.connectEncrypted(server);
-
-// Send request
 stream << "GET / HTTP/1.1\r\n"
        << "Host: example.com\r\n"
        << "Connection: close\r\n"
        << "\r\n"
        << std::flush;
 
-// Read response
 std::string line;
 while (std::getline(stream, line))
 {
-    std::cout << line << std::endl;
+    std::cout << line << "\n";
 }
 ```
 
@@ -355,12 +312,10 @@ while (std::getline(stream, line))
 #include <join/socketstream.hpp>
 #include <iostream>
 
-using join;
+using namespace join;
 
 Tcp::Stream stream;
-Tcp::Endpoint server("localhost", 9000);
-
-stream.connect(server);
+stream.connect(Tcp::Endpoint("localhost", 9000));
 stream.timeout(5000);
 
 std::string message;
@@ -370,7 +325,7 @@ while (std::getline(std::cin, message))
 
     std::string response;
     std::getline(stream, response);
-    std::cout << "Echo: " << response << std::endl;
+    std::cout << "Echo: " << response << "\n";
 }
 ```
 
@@ -379,12 +334,10 @@ while (std::getline(std::cin, message))
 ```cpp
 #include <join/socketstream.hpp>
 
-using join;
+using namespace join;
 
 UnixStream::Stream stream;
-UnixStream::Endpoint server("/tmp/server.sock");
-
-stream.connect(server);
+stream.connect(UnixStream::Endpoint("/tmp/server.sock"));
 
 stream << "Hello from client\n" << std::flush;
 
@@ -395,18 +348,13 @@ std::getline(stream, response);
 ### Line‑based protocol
 
 ```cpp
-#include <join/socketstream.hpp>
-#include <sstream>
-
-using join;
+using namespace join;
 
 Tcp::Stream stream;
 stream.connect(server);
 
-// Send command
 stream << "COMMAND arg1 arg2\n" << std::flush;
 
-// Parse response
 std::string line;
 std::getline(stream, line);
 
@@ -434,7 +382,7 @@ try
 }
 catch (const std::ios_base::failure& e)
 {
-    std::cerr << "Stream error: " << e.what() << std::endl;
+    std::cerr << "Stream error: " << e.what() << "\n";
 }
 ```
 
@@ -445,7 +393,7 @@ stream.connect(server);
 
 if (stream.fail())
 {
-    std::cerr << "Connection failed" << std::endl;
+    std::cerr << "Connection failed\n";
     return;
 }
 
@@ -453,7 +401,7 @@ stream << "Hello\n" << std::flush;
 
 if (stream.fail())
 {
-    std::cerr << "Write failed" << std::endl;
+    std::cerr << "Write failed\n";
 }
 ```
 
@@ -461,164 +409,39 @@ if (stream.fail())
 
 ## Endpoint queries
 
-### Local endpoint
-
 ```cpp
-auto local = stream.localEndpoint();
-std::cout << "Local: " << local.ip()
-          << ":" << local.port() << std::endl;
-```
-
-### Remote endpoint
-
-```cpp
+auto local  = stream.localEndpoint();
 auto remote = stream.remoteEndpoint();
-std::cout << "Remote: " << remote.ip()
-          << ":" << remote.port() << std::endl;
 ```
 
 ---
 
-## Accessing underlying socket
-
-Direct access to the socket is available when low‑level operations are needed.
+## Accessing the underlying socket
 
 ```cpp
-// Get socket reference
 Tcp::Socket& sock = stream.socket();
 
-// Use socket methods
 sock.setOption(BasicSocket<Tcp>::Option::NoDelay, 1);
 sock.setOption(BasicSocket<Tcp>::Option::KeepAlive, 1);
-
-// Check connection state
-if (sock.connected())
-{
-    // ...
-}
 ```
 
 ---
 
 ## Binary I/O
 
-Streams support binary data transfer.
-
-### Writing binary data
-
 ```cpp
-struct Header
-{
-    uint32_t length;
-    uint16_t type;
-};
+struct Header { uint32_t length; uint16_t type; };
 
+// Write
 Header hdr = {1024, 42};
 stream.write(reinterpret_cast<char*>(&hdr), sizeof(hdr));
 stream.flush();
+
+// Read
+Header in;
+stream.read(reinterpret_cast<char*>(&in), sizeof(in));
+if (stream.gcount() == sizeof(in)) { /* success */ }
 ```
-
-### Reading binary data
-
-```cpp
-Header hdr;
-stream.read(reinterpret_cast<char*>(&hdr), sizeof(hdr));
-
-if (stream.gcount() == sizeof(hdr))
-{
-    // Successfully read header
-}
-```
-
----
-
-## Formatted I/O
-
-Streams support all standard formatting manipulators.
-
-```cpp
-#include <iomanip>
-
-stream << std::hex << std::setw(8) << std::setfill('0') << 255 << "\n";
-stream << std::fixed << std::setprecision(2) << 3.14159 << "\n";
-stream << std::boolalpha << true << "\n";
-stream << std::flush;
-```
-
----
-
-## Performance considerations
-
-### Buffering
-
-* Default buffer size is **4 KB**
-* Automatic buffering reduces system calls
-* Manual flushing provides control over latency
-
-### Timeout tuning
-
-```cpp
-// High-latency networks
-stream.timeout(60000);  // 60 seconds
-
-// Low-latency networks
-stream.timeout(1000);   // 1 second
-
-// Real-time applications
-stream.timeout(100);    // 100 ms
-```
-
-### TCP options
-
-```cpp
-// Disable Nagle for low-latency
-stream.socket().setOption(
-    BasicSocket<Tcp>::Option::NoDelay, 1
-);
-
-// Increase buffer sizes for throughput
-stream.socket().setOption(
-    BasicSocket<Tcp>::Option::SndBuffer, 262144
-);
-stream.socket().setOption(
-    BasicSocket<Tcp>::Option::RcvBuffer, 262144
-);
-```
-
----
-
-## Move semantics
-
-Streams are movable but not copyable.
-
-```cpp
-Tcp::Stream createStream()
-{
-    Tcp::Stream stream;
-    stream.connect(server);
-    return stream;  // Move
-}
-
-Tcp::Stream stream1;
-Tcp::Stream stream2 = std::move(stream1);  // Move assignment
-
-std::vector<Tcp::Stream> streams;
-streams.push_back(std::move(stream2));  // Move into container
-```
-
----
-
-## Best practices
-
-* Use **streams for text‑based protocols** (HTTP, SMTP, etc.)
-* Use **raw sockets for binary protocols** or when you need precise control
-* Always check stream state after I/O operations
-* Set appropriate timeouts for your use case
-* Enable exceptions for cleaner error handling
-* Flush explicitly when immediate sending is required
-* Use `disconnect()` instead of `close()` for graceful shutdown
-* For TLS, always enable peer verification in production
-* Consider socket buffer sizes for high‑throughput applications
 
 ---
 
@@ -640,39 +463,64 @@ std::string receiveResponse(Tcp::Stream& stream)
 }
 ```
 
-### Chunked reading
+### Read all available data
 
 ```cpp
 std::string readAll(Tcp::Stream& stream)
 {
-    std::ostringstream buffer;
-    buffer << stream.rdbuf();
-    return buffer.str();
+    std::ostringstream buf;
+    buf << stream.rdbuf();
+    return buf.str();
 }
 ```
 
-### Timeout‑based reading
+---
+
+## Performance considerations
+
+* Default buffer size is **4 KB** — reduces system calls automatically
+* Flush explicitly when low latency matters
+* Disable Nagle for latency-sensitive applications via `stream.socket().setOption(Option::NoDelay, 1)`
+* Increase socket buffer sizes for high-throughput via `SndBuffer` / `RcvBuffer` options
+
+---
+
+## Move semantics
+
+Streams are movable but not copyable:
 
 ```cpp
-bool readWithTimeout(Tcp::Stream& stream, std::string& line, int ms)
-{
-    stream.timeout(ms);
-    std::getline(stream, line);
-    return stream.good();
-}
+Tcp::Stream s1;
+Tcp::Stream s2 = std::move(s1);
+
+std::vector<Tcp::Stream> v;
+v.push_back(std::move(s2));
 ```
+
+---
+
+## Best practices
+
+* Use **streams for text‑based protocols** (HTTP, SMTP, etc.)
+* Use **raw sockets** for binary protocols or when precise control is needed
+* Always check stream state after I/O operations
+* Set appropriate timeouts for your use case
+* Enable exceptions for cleaner error handling in small programs
+* Flush explicitly when immediate sending is required
+* Use `disconnect()` instead of `close()` for graceful shutdown
+* For TLS, always enable peer verification in production
 
 ---
 
 ## Summary
 
 | Feature                  | BasicSocketStream | BasicTlsStream |
-| ------------------------ | ----------------- | -------------- |
+| ------------------------ | :---------------: | :------------: |
 | Text I/O                 | ✅                 | ✅              |
 | Binary I/O               | ✅                 | ✅              |
 | Stream operators         | ✅                 | ✅              |
-| Buffering                | ✅                 | ✅              |
-| Timeouts                 | ✅                 | ✅              |
+| Buffering (4 KB)         | ✅                 | ✅              |
+| Timeouts (default 30s)   | ✅                 | ✅              |
 | TLS/SSL encryption       | ❌                 | ✅              |
 | Certificate verification | ❌                 | ✅              |
 | STARTTLS                 | ❌                 | ✅              |

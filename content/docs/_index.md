@@ -5,7 +5,7 @@ weight: 1
 
 # Documentation
 
-Welcome to the **Join framework** documentation. Join is a modular C++ network runtime framework for Linux designed for building high-performance, low-latency networked applications.
+Welcome to the **Join framework** documentation. Join is a modular C++ network runtime framework for Linux designed for building networked applications and system-level services.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Network Endpoints"
-weight: 6
+weight: 70
 ---
 
 # Network Endpoints

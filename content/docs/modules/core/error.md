@@ -1,6 +1,6 @@
 ---
 title: "Error Handling"
-weight: 1
+weight: 10
 ---
 
 # Error Handling
@@ -21,21 +21,21 @@ Error handling features:
 
 Join defines common error conditions in the `Errc` enum:
 
-| Error Code              | Description                                    |
-| ----------------------- | ---------------------------------------------- |
-| `InUse`                 | Resource already in use                        |
-| `InvalidParam`          | Invalid parameters provided                    |
-| `ConnectionRefused`     | Connection was refused                         |
-| `ConnectionClosed`      | Connection closed by peer                      |
-| `TimedOut`              | Operation timed out                            |
-| `PermissionDenied`      | Operation not permitted                        |
-| `OutOfMemory`           | Cannot allocate memory                         |
-| `OperationFailed`       | Operation failed                               |
-| `NotFound`              | Resource not found                             |
-| `MessageUnknown`        | Message unknown                                |
-| `MessageTooLong`        | Message too long                               |
-| `TemporaryError`        | Temporary error, retry later                   |
-| `UnknownError`          | Unknown error occurred                         |
+| Error Code          | Message                  | Description                                       |
+| ------------------- | ------------------------ | ------------------------------------------------- |
+| `InUse`             | already in use           | Resource already in use                           |
+| `InvalidParam`      | invalid parameters       | Invalid parameters provided                       |
+| `ConnectionRefused` | connection refused       | Connection was refused                            |
+| `ConnectionClosed`  | connection closed        | Connection closed by peer                         |
+| `TimedOut`          | timer expired            | Operation timed out                               |
+| `PermissionDenied`  | operation not permitted  | Operation not permitted                           |
+| `OutOfMemory`       | cannot allocate memory   | Memory allocation failed                          |
+| `OperationFailed`   | operation failed         | Operation failed                                  |
+| `NotFound`          | resource not found       | Resource not found                                |
+| `MessageUnknown`    | message unknown          | Message unknown                                   |
+| `MessageTooLong`    | message too long         | Message too long                                  |
+| `TemporaryError`    | temporary error          | Temporary error, retry later                      |
+| `UnknownError`      | unknown error            | Unknown error occurred                            |
 
 ---
 
@@ -48,7 +48,7 @@ Most Join functions return `-1` on failure. Check the thread-local `lastError` f
 ```cpp
 #include <join/error.hpp>
 
-using join;
+using namespace join;
 
 if (operation() == -1)
 {
@@ -58,15 +58,17 @@ if (operation() == -1)
 
 ### Comparing error codes
 
+`Errc` is registered as `std::is_error_condition_enum`, so comparisons with `==` work directly:
+
 ```cpp
 if (lastError == Errc::TimedOut)
 {
-    // Handle timeout
+    // handle timeout
 }
 
 if (lastError == Errc::TemporaryError)
 {
-    // Retry operation
+    // retry operation
 }
 ```
 
@@ -75,7 +77,7 @@ if (lastError == Errc::TemporaryError)
 ```cpp
 if (lastError.category() == join::getErrorCategory())
 {
-    // This is a Join error
+    // this is a Join error
 }
 ```
 
@@ -83,15 +85,9 @@ if (lastError.category() == join::getErrorCategory())
 
 ## Creating error codes
 
-### Using `make_error_code`
-
 ```cpp
 std::error_code ec = join::make_error_code(Errc::InvalidParam);
-```
 
-### Setting `lastError`
-
-```cpp
 lastError = join::make_error_code(Errc::ConnectionClosed);
 ```
 
@@ -99,66 +95,30 @@ lastError = join::make_error_code(Errc::ConnectionClosed);
 
 ## Error equivalence
 
-Join errors map to standard system error codes. The `equivalent` function provides automatic mapping:
+Join errors map to standard system error codes via the `equivalent()` method.
+This allows comparing a raw `errno`-based `std::error_code` against a `join::Errc` condition directly.
 
-```cpp
-// System error
-std::error_code sysErr = std::make_error_code(std::errc::connection_refused);
+### Complete mappings
 
-// Equivalent to Join error
-if (join::getErrorCategory().equivalent(sysErr, static_cast<int>(Errc::ConnectionRefused)))
-{
-    // true
-}
-```
-
-### Common mappings
-
-* `Errc::InUse` ← `already_connected`, `address_in_use`, `file_exists`
-* `Errc::InvalidParam` ← `invalid_argument`, `not_a_socket`, `bad_address`
-* `Errc::ConnectionRefused` ← `connection_refused`, `network_unreachable`
-* `Errc::ConnectionClosed` ← `connection_reset`, `broken_pipe`, `not_connected`
-* `Errc::TimedOut` ← `timed_out`
-* `Errc::TemporaryError` ← `interrupted`, `resource_unavailable_try_again`
-
----
-
-## Error messages
-
-### Getting human-readable messages
-
-```cpp
-std::error_code ec = join::make_error_code(Errc::ConnectionRefused);
-std::cout << ec.message() << "\n";  // "connection refused"
-```
-
-### Custom error handling
-
-```cpp
-void handleError(const std::error_code& ec)
-{
-    if (ec.category() == join::getErrorCategory())
-    {
-        switch (static_cast<Errc>(ec.value()))
-        {
-            case Errc::TimedOut:
-                // Retry logic
-                break;
-            case Errc::ConnectionClosed:
-                // Reconnect logic
-                break;
-            default:
-                std::cerr << "Error: " << ec.message() << "\n";
-        }
-    }
-}
-```
+| Join error          | Equivalent system errors                                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `InUse`             | `already_connected`, `connection_already_in_progress`, `address_in_use`, `file_exists`                                                     |
+| `InvalidParam`      | `no_such_file_or_directory`, `address_family_not_supported`, `invalid_argument`, `protocol_not_supported`, `not_a_socket`, `bad_address`, `no_protocol_option`, `destination_address_required`, `operation_not_supported` |
+| `ConnectionRefused` | `connection_refused`, `network_unreachable`                                                                                                 |
+| `ConnectionClosed`  | `connection_reset`, `not_connected`, `broken_pipe`                                                                                          |
+| `TimedOut`          | `timed_out`                                                                                                                                 |
+| `PermissionDenied`  | `permission_denied`, `operation_not_permitted`                                                                                              |
+| `OutOfMemory`       | `too_many_files_open`, `too_many_files_open_in_system`, `no_buffer_space`, `not_enough_memory`, `no_lock_available`                         |
+| `OperationFailed`   | `bad_file_descriptor`                                                                                                                       |
+| `MessageUnknown`    | `no_message`, `bad_message`, `no_message_available`                                                                                         |
+| `MessageTooLong`    | `message_size`                                                                                                                              |
+| `TemporaryError`    | `interrupted`, `resource_unavailable_try_again`, `operation_in_progress`                                                                    |
 
 ---
 
 ## Thread safety
 
-`lastError` is **thread-local**, meaning each thread has its own error state:
+`lastError` is **thread-local** — each thread has its own independent error state:
 
 ```cpp
 void threadFunction()
@@ -182,7 +142,6 @@ std::thread t2(threadFunction);
 * **Inspect `lastError` immediately** — error state may be overwritten by subsequent calls
 * **Handle `TemporaryError`** — these errors indicate retry is appropriate
 * **Use error equivalence** — leverage automatic mapping to system errors
-* **Clear errors explicitly** — set `lastError` to default state when recovering
 
 ---
 
@@ -191,24 +150,22 @@ std::thread t2(threadFunction);
 ### Basic error handling
 
 ```cpp
-#include <join/shared.hpp>
 #include <join/error.hpp>
 
-using join;
+using namespace join;
 
-Spsc::Producer producer("channel", 1024, 64);
+Tcp::Socket socket;
 
-if (producer.open() == -1)
+if (socket.connect(endpoint) == -1)
 {
-    if (lastError == Errc::InUse)
+    if (lastError == Errc::ConnectionRefused)
     {
-        std::cerr << "Channel already open\n";
+        std::cerr << "Connection refused\n";
     }
     else
     {
-        std::cerr << "Failed to open: " << lastError.message() << "\n";
+        std::cerr << "Failed: " << lastError.message() << "\n";
     }
-    return;
 }
 ```
 
@@ -217,23 +174,41 @@ if (producer.open() == -1)
 ```cpp
 int retryOperation()
 {
-    int attempts = 0;
-    while (attempts < 3)
+    for (int attempts = 0; attempts < 3; ++attempts)
     {
         if (producer.tryPush(&msg) == 0)
         {
-            return 0;  // Success
+            return 0;  // success
         }
 
         if (lastError != Errc::TemporaryError)
         {
-            return -1;  // Permanent error
+            return -1;  // permanent error
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        attempts++;
     }
     return -1;
+}
+```
+
+### Custom error dispatch
+
+```cpp
+void handleError(const std::error_code& ec)
+{
+    if (ec == Errc::TimedOut)
+    {
+        // retry logic
+    }
+    else if (ec == Errc::ConnectionClosed)
+    {
+        // reconnect logic
+    }
+    else
+    {
+        std::cerr << "Error: " << ec.message() << "\n";
+    }
 }
 ```
 
@@ -241,10 +216,10 @@ int retryOperation()
 
 ## Summary
 
-| Feature                     | Supported |
-| --------------------------- | --------- |
-| Thread-local error state    | ✅         |
-| Standard error integration  | ✅         |
-| Human-readable messages     | ✅         |
-| Error equivalence mapping   | ✅         |
-| Custom error category       | ✅         |
+| Feature                    | Supported |
+| -------------------------- | :-------: |
+| Thread-local error state   | ✅         |
+| Standard error integration | ✅         |
+| Human-readable messages    | ✅         |
+| Error equivalence mapping  | ✅         |
+| Custom error category      | ✅         |

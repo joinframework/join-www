@@ -1,11 +1,11 @@
 ---
 title: "Quick Start"
-weight: 1
+weight: 10
 ---
 
 # Quick Start Guide
 
-This guide will help you get Join framework up and running on your system in few minutes.
+This guide will help you get Join framework up and running on your system in a few minutes.
 
 ---
 
@@ -25,11 +25,12 @@ Join relies on the following libraries:
 | Library | Package | Purpose |
 |---------|---------|---------|
 | **OpenSSL** | `libssl-dev` | TLS support and cryptographic operations |
+| **libnuma** | `libnuma-dev` | Memory pinning and NUMA affinity in `join-core` |
 | **zlib** | `zlib1g-dev` | Compression capabilities |
 | **Google Test** | `libgtest-dev` | Unit testing (optional) |
 | **Google Mock** | `libgmock-dev` | Mocking in tests (optional) |
 
-> **Note:** OpenSSL is required by `join_core` as TLS support is part of the core runtime.
+> **Note:** Both `OpenSSL` and `libnuma` are required by `join-core`. OpenSSL provides the TLS runtime; libnuma enables memory pinning and NUMA affinity for the lock-free queues and memory backends.
 
 ---
 
@@ -38,7 +39,7 @@ Join relies on the following libraries:
 **On Ubuntu/Debian:**
 
 ```bash
-sudo apt update && sudo apt install libssl-dev zlib1g-dev libgtest-dev libgmock-dev
+sudo apt update && sudo apt install libssl-dev libnuma-dev zlib1g-dev libgtest-dev libgmock-dev
 ```
 
 ---
@@ -93,8 +94,6 @@ Available CMake options:
 
 ## Build
 
-Build Join using CMake:
-
 ```bash
 cmake --build build
 ```
@@ -103,15 +102,8 @@ cmake --build build
 
 ## Installation
 
-Install Join to your system:
-
 ```bash
 sudo cmake --install build
-```
-
-After installation, you may need to update the library cache:
-
-```bash
 sudo ldconfig
 ```
 
@@ -119,7 +111,7 @@ sudo ldconfig
 
 ## Running Tests
 
-If you configured with tests enabled (`-DJOIN_ENABLE_TESTS=ON`), run the test suite:
+If you configured with tests enabled (`-DJOIN_ENABLE_TESTS=ON`):
 
 ```bash
 ctest --test-dir build --output-on-failure
@@ -129,22 +121,17 @@ ctest --test-dir build --output-on-failure
 
 ## Using Join in Your Project
 
-Once installed, you can use Join in your CMake projects:
-
-### CMakeLists.txt
+Once installed, use Join in your CMake projects:
 
 ```cmake
 cmake_minimum_required(VERSION 3.14)
 project(MyApp)
 
-# Find the join package
 find_package(join REQUIRED)
 
-# Create your executable
 add_executable(myapp main.cpp)
 
-# Link against Join modules
-target_link_libraries(myapp PRIVATE 
+target_link_libraries(myapp PRIVATE
     join::core
     join::crypto
     join::data
@@ -152,7 +139,6 @@ target_link_libraries(myapp PRIVATE
     join::services
 )
 
-# Set C++ standard
 set_target_properties(myapp PROPERTIES
     CXX_STANDARD 14
     CXX_STANDARD_REQUIRED ON
@@ -163,21 +149,19 @@ set_target_properties(myapp PROPERTIES
 
 ## Next Steps
 
-Now that you have Join installed and working, explore the modules:
-
-- **[Core Module]({{< ref "core" >}})** - Reactor, sockets, threads, timers
-- **[Fabric Module]({{< ref "fabric" >}})** - Interface management, ARP, DNS
-- **[Crypto Module]({{< ref "crypto" >}})** - Hashing, signatures, TLS
-- **[Data Module]({{< ref "data" >}})** - JSON, MessagePack, compression
-- **[Services Module]({{< ref "services" >}})** - HTTP/HTTPS, SMTP/SMTPS
+- **[Core Module]({{< ref "core" >}})** — Reactor, sockets, threads, timers
+- **[Fabric Module]({{< ref "fabric" >}})** — Interface management, ARP, DNS
+- **[Crypto Module]({{< ref "crypto" >}})** — Hashing, signatures, TLS
+- **[Data Module]({{< ref "data" >}})** — JSON, MessagePack, compression
+- **[Services Module]({{< ref "services" >}})** — HTTP/HTTPS, SMTP/SMTPS
 
 ---
 
 ## Additional Resources
 
-- **[API Documentation](https://joinframework.github.io/join/)** - Complete Doxygen reference
-- **[GitHub Repository](https://github.com/joinframework/join)** - Source code
-- **[Issue Tracker](https://github.com/joinframework/join/issues)** - Report bugs or request features
+- **[API Documentation](https://joinframework.github.io/join/)** — Complete Doxygen reference
+- **[GitHub Repository](https://github.com/joinframework/join)** — Source code
+- **[Issue Tracker](https://github.com/joinframework/join/issues)** — Report bugs or request features
 
 ---
 
@@ -187,11 +171,7 @@ If you encounter issues:
 
 1. Search [existing issues](https://github.com/joinframework/join/issues)
 2. Review the [API documentation](https://joinframework.github.io/join/)
-3. Open a [new issue](https://github.com/joinframework/join/issues/new) with:
-   - Your system information (OS, compiler version)
-   - CMake configuration command
-   - Complete error messages
-   - Minimal reproducible example
+3. Open a [new issue](https://github.com/joinframework/join/issues/new) with your system information, CMake configuration, complete error messages, and a minimal reproducible example
 
 ---
 

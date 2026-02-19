@@ -1,6 +1,6 @@
 ---
 title: "Core"
-weight: 1
+weight: 10
 bookCollapseSection: true
 ---
 
@@ -14,70 +14,51 @@ The **Core** module provides the fundamental building blocks and runtime primiti
 
 ### MAC Address
 
-Media Access Control address handling:
-
-- 48-bit MAC address representation
-- Parsing and formatting
-- Address comparison
+48-bit MAC address representation with parsing, formatting, and comparison.
 
 ### IP Address
 
-IP address abstraction supporting both IPv4 and IPv6:
-
-- Address parsing and formatting
-- Network/broadcast address calculation
-- Address comparison
+IP address abstraction supporting both IPv4 and IPv6: parsing, formatting, network and broadcast address calculation, and comparison.
 
 ### Endpoints
 
-Network endpoint representation (IP address + port):
-
-- IPv4 and IPv6 support
-- Address family handling
-- Endpoint comparison and formatting
+Network endpoint representation combining an IP address and a port, with support for both address families.
 
 ### Protocol
 
-Protocol definitions and type system for different socket types.
+Protocol definitions and type system for the different socket kinds.
 
 ### Sockets
 
-Comprehensive socket abstractions for various protocols:
+Socket abstractions for various protocols:
 
-- **TCP Sockets** - Stream-oriented reliable connections
-- **UDP Sockets** - Connectionless datagram protocol
-- **TLS/SSL Sockets** - Encrypted secure communications
-- **Unix Domain Sockets** - Inter-process communication (stream and datagram)
-- **Raw Sockets** - Direct IP packet access
-- **ICMP Sockets** - Internet Control Message Protocol
-- **Netlink Sockets** - Linux kernel communication
+- **TCP** — stream-oriented reliable connections
+- **UDP** — connectionless datagram protocol
+- **TLS/SSL** — encrypted secure communications
+- **Unix Domain** — inter-process communication (stream and datagram)
+- **Raw** — direct IP packet access
+- **ICMP** — Internet Control Message Protocol
+- **Netlink** — Linux kernel communication
 
 ### Acceptors
 
-Server socket abstractions for accepting incoming connections:
-
-- TCP Acceptor
-- TLS Acceptor
-- Unix Stream Acceptor
+Server-side socket abstractions for accepting incoming connections: TCP, TLS, and Unix stream.
 
 ### Socket Streams
 
-Stream interface for sockets with std::iostream integration:
-
-- Buffered I/O
-- Stream operators (<<, >>)
-- Compatible with standard stream algorithms
+Buffered stream interface for sockets with `std::iostream` integration, including stream operators (`<<`, `>>`).
 
 ---
 
-## ⚡ Reactor Pattern
+## ⚡ Reactor
 
-Event-driven I/O multiplexing using Linux epoll:
+Event-driven I/O multiplexing built on Linux `epoll`:
 
-- **Reactor** - Singleton event loop with automatic dispatcher thread
-- **EventHandler** - Interface for I/O event callbacks
-- Non-blocking I/O event handling
-- Event callbacks: onReceive, onClose, onError
+- **`Reactor`** — embeddable event loop; call `run()` to start, `stop()` to terminate
+- **`ReactorThread`** — singleton wrapper that owns a `Reactor` on a dedicated background thread
+- **`EventHandler`** — interface for I/O event callbacks (`onReceive`, `onClose`, `onError`)
+
+See [Reactor]({{< ref "reactor" >}}) for full documentation.
 
 ---
 
@@ -85,82 +66,64 @@ Event-driven I/O multiplexing using Linux epoll:
 
 ### Thread
 
-POSIX thread wrapper with modern C++ semantics:
+POSIX thread wrapper with core affinity, real-time priority, move semantics, non-blocking join (`tryJoin`), and running state query.
 
-- Move semantics (non-copyable)
-- Join, tryJoin, cancel operations
-- Running state queries
+See [Thread]({{< ref "thread" >}}) for full documentation.
 
 ### Thread Pool
 
-Worker pool for parallel task execution:
+Worker pool for parallel task execution. Default worker count is based on `CpuTopology` (physical core count). Provides `distribute()` and `parallelForEach()` parallel algorithms.
 
-- Configurable worker count (default: hardware_concurrency)
-- Task queue with condition variables
-- Template-based task submission
+See [Thread Pool]({{< ref "threadpool" >}}) for full documentation.
 
-**Utilities:**
-- `distribute` - Distribute work across threads
-- `parallelForEach` - Parallel iteration
+### CPU Topology
+
+Runtime detector for the physical CPU layout: sockets, cores, hardware threads (SMT/HT), and NUMA nodes. Read from Linux sysfs. Used internally by `ThreadPool` and `distribute()`.
+
+See [CPU Topology]({{< ref "cpu" >}}) for full documentation.
 
 ### Mutex
 
-Mutual exclusion locks for protecting shared data:
-
-- **Mutex** - Standard mutex
-- **RecursiveMutex** - Recursive locking (same thread can lock multiple times)
-- **SharedMutex** - Inter-process synchronization via shared memory
+- **`Mutex`** — standard mutual exclusion lock
+- **`RecursiveMutex`** — re-entrant locking for the same thread
+- **`SharedMutex`** — inter-process synchronization via shared memory
 
 ### Condition Variables
 
-Thread synchronization primitives:
-
-- **Condition** - Standard condition variable
-- **SharedCondition** - Condition variable for shared memory
+- **`Condition`** — standard condition variable
+- **`SharedCondition`** — condition variable for shared memory
 
 ### Semaphore
 
-Counting semaphore for resource management:
-
-- **Semaphore** - Named and unnamed semaphores
-- **SharedSemaphore** - Semaphore for shared memory
+- **`Semaphore`** — counting semaphore (named and unnamed)
+- **`SharedSemaphore`** — semaphore for shared memory
 
 ---
 
 ## 🔄 Lock-Free Queues
 
-High-performance lock-free ring buffer implementations for inter-process communication:
+High-performance lock-free ring buffer queues built on top of the memory backends:
 
-### Queue Types
+- **`Spsc`** — single-producer / single-consumer (lowest overhead)
+- **`Mpsc`** — multi-producer / single-consumer
+- **`Mpmc`** — multi-producer / multi-consumer
 
-- **SPSC** (Single Producer, Single Consumer) - Highest performance
-- **MPSC** (Multiple Producer, Single Consumer) - Lock-free enqueue
-- **MPMC** (Multiple Producer, Multiple Consumer) - Fully lock-free
+Backed by either **`LocalMem`** (anonymous private memory) or **`ShmMem`** (POSIX shared memory). Supports blocking and non-blocking push/pop, NUMA binding, and memory locking.
 
-### Features
-
-- Shared memory based (shm_open/mmap)
-- Bidirectional endpoints for IPC
-- Blocking and non-blocking operations
-- Zero-copy semantics where possible
+See [Memory]({{< ref "memory" >}}), [Queue]({{< ref "queue" >}}), and [Backoff]({{< ref "backoff" >}}) for full documentation.
 
 ---
 
 ## ⏱️ Timers
 
-High-precision timers using timerfd with reactor integration:
+High-resolution timers built on Linux `timerfd`, integrated with the reactor:
 
-### Timer Types
+- **`Monotonic::Timer`** — uses `CLOCK_MONOTONIC`, unaffected by system clock changes
+- **`RealTime::Timer`** — uses `CLOCK_REALTIME`, follows wall-clock adjustments
 
-- **Monotonic Timer** - Elapsed time, unaffected by clock changes
-- **RealTime Timer** - Wall-clock time for absolute scheduling
+Supports one-shot, absolute time-point, and periodic modes. Nanosecond precision.
 
-### Features
-
-- One-shot and periodic timers
-- Callback-based expiration handling
-- Nanosecond precision
-- Integration with reactor event loop
+See [Timer]({{< ref "timer" >}}) for full documentation.
 
 ---
 
@@ -168,56 +131,32 @@ High-precision timers using timerfd with reactor integration:
 
 ### File System
 
-File system utilities and operations:
-
-- File I/O helpers
-- Path manipulation
-- File status queries
+File I/O helpers, path manipulation, and file status queries.
 
 ### Variant
 
-Type-safe union implementation supporting multiple types:
-
-- Type-safe value storage
-- Exception-safe operations
-- Comparison operators
+Type-safe union implementation with exception-safe operations and comparison operators.
 
 ### Traits
 
-Type traits and compile-time utilities for template metaprogramming:
-
-- Parameter pack manipulation (find_index, find_element, match_t)
-- Type checking (is_unique, is_alternative, count)
-- Constructor control (EnableDefault)
+Compile-time type utilities: parameter pack manipulation (`find_index`, `find_element`, `match_t`), type checking (`is_unique`, `is_alternative`, `count`), and constructor control (`EnableDefault`).
 
 ### Utils
 
-General-purpose utility functions:
-
-- Byte order swapping (endianness conversion)
-- String manipulation (trim, split, replace, case-insensitive compare)
-- Utilities (dump, benchmark, random generation)
-
+General-purpose utilities: byte order conversion, string manipulation (`trim`, `split`, `replace`, case-insensitive compare), benchmarking, and random generation.
 
 ### OpenSSL
 
-OpenSSL library management and smart pointers.
+OpenSSL library management and RAII smart pointer wrappers.
 
 ---
 
 ## 🚨 Error Handling
 
-Custom error handling system with error codes and conditions:
-
-- Custom error category
-- Thread-local error state
-- Integration with std::error_code
-- OpenSSL error integration
+Custom error handling system: error category, thread-local error state (`join::lastError`), integration with `std::error_code`, and OpenSSL error integration.
 
 ---
 
 ## 📚 API Reference
-
-For detailed API documentation, see:
 
 [Doxygen Reference](https://joinframework.github.io/join/)

@@ -1,6 +1,6 @@
 ---
 title: "Crypto"
-weight: 3
+weight: 30
 bookCollapseSection: true
 ---
 
