@@ -2,7 +2,7 @@
 title: "Join Framework"
 ---
 
-# Welcome to Join Framework
+# ✨ Welcome to Join Framework
 
 **Join** is a **modular C++ network runtime framework for Linux**, designed for optimized throughput and latency in system-level networking.
 
@@ -10,7 +10,7 @@ It provides a set of composable libraries covering networking primitives, concur
 
 ---
 
-## Design Goals
+## 🚀 Design Goals
 
 - Linux-native networking (sockets, netlink, raw sockets)
 - Event-driven and reactor-based architecture
@@ -20,7 +20,7 @@ It provides a set of composable libraries covering networking primitives, concur
 
 ---
 
-## Target Use Cases
+## 🎯 Target Use Cases
 
 **Designed for:**
 - Network services and microservices
@@ -35,7 +35,7 @@ It provides a set of composable libraries covering networking primitives, concur
 
 ---
 
-## Modular Architecture
+## 🏗 Modular Architecture
 
 The framework is a collection of specialized modules that build upon one another:
 
@@ -49,13 +49,13 @@ The framework is a collection of specialized modules that build upon one another
 
 ---
 
-## Getting Started
+## 🛠️ Getting Started
 
 New to Join? Start with our [Quick Start Guide]({{< ref "quickstart" >}}) to get up and running in minutes.
 
 ---
 
-## Quality
+## 📊 Quality
 
 Every commit is validated against an extensive test suite to ensure stability in concurrent environments:
 
@@ -64,7 +64,7 @@ Every commit is validated against an extensive test suite to ensure stability in
 
 ---
 
-## Resources
+## 📖 Resources
 
 - **API Reference:** [Doxygen](https://joinframework.github.io/join/index.html)
 - **GitHub:** [joinframework/join](https://github.com/joinframework/join)
