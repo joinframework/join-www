@@ -100,17 +100,18 @@ See [CPU Topology]({{< ref "cpu" >}}) for full documentation.
 
 ---
 
-## 🔄 Lock-Free Queues
+## 🔄 Lock-Free Queues & Allocator
 
-High-performance lock-free ring buffer queues built on top of the memory backends:
+High-performance lock-free primitives built on top of the memory backends:
 
-- **`Spsc`** — single-producer / single-consumer (lowest overhead)
-- **`Mpsc`** — multi-producer / single-consumer
-- **`Mpmc`** — multi-producer / multi-consumer
+- **`Spsc`** — single-producer / single-consumer queue (lowest overhead)
+- **`Mpsc`** — multi-producer / single-consumer queue
+- **`Mpmc`** — multi-producer / multi-consumer queue
+- **`BasicArena`** — lock-free slab allocator with multiple fixed-size pools
 
 Backed by either **`LocalMem`** (anonymous private memory) or **`ShmMem`** (POSIX shared memory). Supports blocking and non-blocking push/pop, NUMA binding, and memory locking.
 
-See [Memory]({{< ref "memory" >}}), [Queue]({{< ref "queue" >}}), and [Backoff]({{< ref "backoff" >}}) for full documentation.
+See [Memory]({{< ref "memory" >}}), [Queue]({{< ref "queue" >}}), [Allocator]({{< ref "allocator" >}}), and [Backoff]({{< ref "backoff" >}}) for full documentation.
 
 ---
 

@@ -212,6 +212,26 @@ queue.mlock();
 
 ---
 
+## Move semantics
+
+`BasicQueue` is **neither copyable nor movable** — copy and move constructors and assignment operators are all explicitly deleted.
+Queues must be constructed in-place and cannot be transferred.
+
+```cpp
+// ❌ Does not compile
+LocalMem::Spsc::Queue<Sample> a(1024);
+LocalMem::Spsc::Queue<Sample> b = std::move(a);
+```
+
+If you need to share a queue between scopes, use a reference, a pointer, or wrap it in a `std::unique_ptr`.
+
+```cpp
+// ✅ Share via pointer
+auto queue = std::make_unique<LocalMem::Spsc::Queue<Sample>>(1024);
+```
+
+---
+
 ## Error handling
 
 Functions returning `-1` set `join::lastError`:
@@ -243,6 +263,7 @@ if (queue.tryPush(s) == -1)
 * Use `tryPush` / `tryPop` in real-time contexts to avoid unbounded spin
 * Use `push` / `pop` when latency is not a concern and blocking is acceptable
 * Use **ShmMem** backends for inter-process queues; call `ShmMem::unlink()` on teardown
+* Construct queues in-place or wrap them in `std::unique_ptr` — they cannot be moved or copied
 
 ---
 
@@ -260,3 +281,4 @@ if (queue.tryPush(s) == -1)
 | Memory locking             | ✅    | ✅    | ✅    |
 | Blocking push/pop          | ✅    | ✅    | ✅    |
 | Non-blocking push/pop      | ✅    | ✅    | ✅    |
+| Move semantics             | ❌    | ❌    | ❌    |

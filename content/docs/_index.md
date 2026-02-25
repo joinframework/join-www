@@ -1,6 +1,6 @@
 ---
 title: "Documentation"
-weight: 1
+weight: 10
 ---
 
 # Documentation
@@ -30,7 +30,7 @@ Explore the framework's modular architecture.
 
 **Discover:**
 
-* **Core** - Foundation components: reactor, sockets, threads, concurrency primitives
+* **Core** - Foundation components: reactor, sockets, threads, lock-free queues, arena allocator, concurrency primitives
 * **Fabric** - Network control: interface management, ARP, DNS resolution
 * **Crypto** - Security: encryption, hashing, signatures, Base64
 * **Data** - Serialization: JSON, MessagePack, compression

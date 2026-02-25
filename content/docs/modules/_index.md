@@ -19,13 +19,14 @@ This modular organization provides:
 
 **Foundation components and runtime primitives**
 
-The core module provides essential building blocks including the epoll-based reactor, socket abstractions (TCP, UDP, TLS, Unix), threading primitives, lock-free queues, timers, and utilities.
+The core module provides essential building blocks including the epoll-based reactor, socket abstractions (TCP, UDP, TLS, Unix), threading primitives, lock-free queues, a lock-free arena allocator, timers, and utilities.
 
 **Key Components:**
 - Reactor pattern with epoll
 - TCP/UDP/TLS sockets
 - Thread pools and synchronization
 - Lock-free shared memory queues
+- Lock-free arena allocator (slab pools)
 - High-precision timers
 
 👉 See: [Core Module]({{< ref "core" >}})
