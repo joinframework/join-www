@@ -1,6 +1,6 @@
 ---
 title: "MessagePack"
-weight: 4
+weight: 40
 ---
 
 # MessagePack
@@ -125,6 +125,28 @@ Binary values are exposed as strings containing raw bytes.
 
 ---
 
+## Object keys
+
+MessagePack supports **any scalar type as object key**:
+
+```cpp
+Value obj;
+PackReader reader(obj);
+
+// String key
+reader.deserialize(data);  // {"name": "Alice"}
+
+// Integer key
+reader.deserialize(data);  // {1: "one"}
+
+// Boolean key
+reader.deserialize(data);  // {true: "yes"}
+```
+
+Array and object keys are **not supported** and will produce an `InvalidKey` error during serialization.
+
+---
+
 ## Error handling
 
 MessagePack parsing errors are reported through the SAX error system.
@@ -133,6 +155,7 @@ Common error conditions include:
 
 | Error Condition | Description                              |
 |-----------------|------------------------------------------|
+| `InvalidKey`    | Invalid key type (array or object)       |
 | `InvalidValue`  | Invalid or unsupported MessagePack value |
 | `ExtraData`     | Trailing data after root value           |
 | `RangeError`    | Truncated or incomplete input            |

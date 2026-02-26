@@ -1,6 +1,6 @@
 ---
 title: "SAX API"
-weight: 2
+weight: 20
 ---
 
 # SAX API
@@ -172,11 +172,11 @@ int stopArray();                     // End array
 ### Objects
 
 ```cpp
-int startObject(uint32_t size = 0);    // Begin object (optional size hint)
-int setKey(const std::string& key);    // Set next member key
+int startObject(uint32_t size = 0);  // Begin object (optional size hint)
+int setKey(const Value& key);        // Set next member key
 // ... set member value ...
 // ... repeat for each member ...
-int stopObject();                      // End object
+int stopObject();                    // End object
 ```
 
 ---
@@ -209,12 +209,13 @@ append("hello", 5);    // Array
 
 ### SAX error codes
 
-| Error Code         | Description                              |
-| ------------------ | ---------------------------------------- |
-| `StackOverflow`    | Nesting depth exceeded (max 19 levels)   |
-| `InvalidParent`    | Value has no parent array/object         |
-| `InvalidValue`     | Value cannot be parsed                   |
-| `ExtraData`        | Unexpected data after document end       |
+| Error Code      | Description                            |
+|-----------------|----------------------------------------|
+| `StackOverflow` | Nesting depth exceeded (max 19 levels) |
+| `InvalidParent` | Value has no parent array/object       |
+| `InvalidKey`    | Key type is invalid                    |
+| `InvalidValue`  | Value cannot be parsed                 |
+| `ExtraData`     | Unexpected data after document end     |
 
 ### Checking errors
 
@@ -280,9 +281,9 @@ public:
         return 0;
     }
 
-    int setKey(const std::string& key) override
+    int setKey(const Value& key) override
     {
-        append(key.c_str(), key.size());
+        append(key.getString().c_str(), key.getString().size());
         append('=');
         return 0;
     }
