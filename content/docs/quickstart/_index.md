@@ -86,6 +86,7 @@ Available CMake options:
 | `JOIN_ENABLE_DATA` | Enable data module | `ON` |
 | `JOIN_ENABLE_FABRIC` | Enable fabric module | `ON` |
 | `JOIN_ENABLE_SERVICES` | Enable services module | `ON` |
+| `JOIN_ENABLE_SAMPLES` | Build sample applications | `OFF` |
 | `JOIN_ENABLE_TESTS` | Enable unit tests | `OFF` |
 | `JOIN_ENABLE_COVERAGE` | Enable code coverage reporting | `OFF` |
 | `CMAKE_INSTALL_PREFIX` | Installation directory | `/usr/local` |
