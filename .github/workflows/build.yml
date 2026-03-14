@@ -1,9 +1,20 @@
 name: build
 
 on:
-  push:
-    branches:
-      - main
+  workflow_call:
+    inputs:
+      deploy:
+        type: boolean
+        default: false
+
+  workflow_dispatch:
+    inputs:
+      deploy:
+        type: boolean
+        default: false
+      dry_run:
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -25,8 +36,20 @@ jobs:
       - name: Build
         run: hugo --minify
 
-      - name: Upload Artifacts to GitHub
+      - name: Upload to GitHub
         uses: actions/upload-artifact@v4
         with:
           name: join-www
           path: public/
+
+      - name: Deploy
+        if: inputs.deploy
+        run: |
+          mkdir -p /root/.ssh
+          echo "${{ secrets.JOIN_DEPLOY_KNOWN_HOST }}" >> /root/.ssh/known_hosts
+          chmod 600 /root/.ssh/known_hosts
+          eval $(ssh-agent)
+          echo "${{ secrets.JOIN_DEPLOY_KEY }}" | ssh-add -
+          rsync -avz --delete ${{ inputs.dry_run && '--dry-run' || '' }} \
+            -e "ssh -p ${{ secrets.JOIN_DEPLOY_PORT }}" \
+            public/ ${{ secrets.JOIN_DEPLOY_DEST }}
