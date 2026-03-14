@@ -40,7 +40,6 @@ jobs:
           path: public/
 
       - name: Deploy
-        if: inputs.deploy
         run: |
           mkdir -p /root/.ssh
           echo "${{ secrets.JOIN_DEPLOY_KNOWN_HOST }}" >> /root/.ssh/known_hosts
