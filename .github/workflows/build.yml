@@ -40,7 +40,6 @@ jobs:
           path: public/
 
       - name: Deploy
-        if: inputs.deploy
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.JOIN_DEPLOY_KEY }}" > ~/.ssh/id_ed25519
