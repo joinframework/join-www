@@ -12,6 +12,9 @@ on:
       deploy:
         type: boolean
         default: false
+      dry_run:
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -40,12 +43,13 @@ jobs:
           path: public/
 
       - name: Deploy
+        if: inputs.deploy
         run: |
           mkdir -p /root/.ssh
           echo "${{ secrets.JOIN_DEPLOY_KNOWN_HOST }}" >> /root/.ssh/known_hosts
           chmod 600 /root/.ssh/known_hosts
           eval $(ssh-agent)
           echo "${{ secrets.JOIN_DEPLOY_KEY }}" | ssh-add -
-          rsync -avz --delete \
+          rsync -avz --delete ${{ inputs.dry_run && '--dry-run' || '' }} \
             -e "ssh -p ${{ secrets.JOIN_DEPLOY_PORT }}" \
             public/ ${{ secrets.JOIN_DEPLOY_DEST }}
