@@ -40,17 +40,12 @@ jobs:
           path: public/
 
       - name: Deploy
-        env:
-          DEPLOY_DEST: ${{ secrets.JOIN_DEPLOY_DEST }}
-          DEPLOY_PORT: ${{ secrets.JOIN_DEPLOY_PORT }}
-          DEPLOY_KEY: ${{ secrets.JOIN_DEPLOY_KEY }}
-          DEPLOY_KNOWN_HOST: ${{ secrets.JOIN_DEPLOY_KNOWN_HOST }}
         run: |
           mkdir -p /root/.ssh
-          echo "$DEPLOY_KNOWN_HOST" >> /root/.ssh/known_hosts
+          echo "${{ secrets.JOIN_DEPLOY_KNOWN_HOST }}" >> /root/.ssh/known_hosts
           chmod 600 /root/.ssh/known_hosts
           eval $(ssh-agent)
-          echo "$DEPLOY_KEY" | ssh-add -
+          echo "${{ secrets.JOIN_DEPLOY_KEY }}" | ssh-add -
           rsync -avz --delete \
-            -e "ssh -p $DEPLOY_PORT" \
-            public/ $DEPLOY_DEST
+            -e "ssh -p ${{ secrets.JOIN_DEPLOY_PORT }}" \
+            public/ ${{ secrets.JOIN_DEPLOY_DEST }}
