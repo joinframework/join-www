@@ -46,9 +46,9 @@ jobs:
           DEPLOY_KEY: ${{ secrets.JOIN_DEPLOY_KEY }}
           DEPLOY_KNOWN_HOST: ${{ secrets.JOIN_DEPLOY_KNOWN_HOST }}
         run: |
-          mkdir -p ~/.ssh
-          echo "$DEPLOY_KNOWN_HOST" >> ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
+          mkdir -p /root/.ssh
+          echo "$DEPLOY_KNOWN_HOST" >> /root/.ssh/known_hosts
+          chmod 600 /root/.ssh/known_hosts
           eval $(ssh-agent)
           echo "$DEPLOY_KEY" | ssh-add -
           DEPLOY_HOST=$(echo "$DEPLOY_DEST" | sed 's|:.*||')
