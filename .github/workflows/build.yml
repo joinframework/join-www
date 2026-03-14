@@ -46,6 +46,7 @@ jobs:
           chmod 600 ~/.ssh/known_hosts
           eval $(ssh-agent)
           echo "${{ secrets.JOIN_DEPLOY_KEY }}" | ssh-add -
-          rsync -avz --delete \
-            -e "ssh -p ${{ secrets.JOIN_DEPLOY_PORT }}" \
-            public/ ${{ secrets.JOIN_DEPLOY_DEST }}
+          ssh -p ${{ secrets.JOIN_DEPLOY_PORT }} \
+            -vvv \
+            $(echo "${{ secrets.JOIN_DEPLOY_DEST }}" | sed 's|:.*||') \
+            echo "connexion ok
