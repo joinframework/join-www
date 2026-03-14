@@ -51,5 +51,6 @@ jobs:
           chmod 600 /root/.ssh/known_hosts
           eval $(ssh-agent)
           echo "$DEPLOY_KEY" | ssh-add -
-          DEPLOY_HOST=$(echo "$DEPLOY_DEST" | sed 's|:.*||')
-          ssh -p "$DEPLOY_PORT" -vvv "$DEPLOY_HOST" echo "connexion ok"
+          rsync -avz --delete \
+            -e "ssh -p $DEPLOY_PORT" \
+            public/ $DEPLOY_DEST
