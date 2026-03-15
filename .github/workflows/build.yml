@@ -45,6 +45,12 @@ jobs:
           name: join-www
           path: public/
 
+      - name: Debug
+        run: |
+          echo "HOME=$HOME"
+          echo "whoami=$(whoami)"
+          ls -la $HOME/.ssh/ || echo "no .ssh"
+
       - name: Deploy
         if: inputs.deploy
         run: |
