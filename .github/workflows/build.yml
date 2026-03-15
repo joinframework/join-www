@@ -61,5 +61,5 @@ jobs:
           eval $(ssh-agent)
           echo "${{ secrets.JOIN_DEPLOY_KEY }}" | ssh-add -
           rsync -avz --delete ${{ inputs.dry_run && '--dry-run' || '' }} \
-            -e "ssh -p ${{ secrets.JOIN_DEPLOY_PORT }}" \
+            -e "ssh -p ${{ secrets.JOIN_DEPLOY_PORT }} -o UserKnownHostsFile=$HOME/.ssh/known_hosts" \
             public/ ${{ secrets.JOIN_DEPLOY_DEST }}
