@@ -26,6 +26,10 @@ jobs:
     container:
       image: joinframework/join-ci:latest
 
+    permissions:
+      contents: read
+      actions: write
+
     defaults:
       run:
         shell: bash
