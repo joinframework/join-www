@@ -42,7 +42,7 @@ The framework is a collection of specialized modules that build upon one another
 | Module | Purpose | Highlights |
 | :--- | :--- | :--- |
 | **[`core`]({{< ref "core" >}})** | **Foundation** | Epoll Reactor, TCP/UDP/TLS, Unix Sockets, Thread Pools, Lock-Free Queues & Allocator |
-| **[`fabric`]({{< ref "fabric" >}})** | **Network Control** | Netlink Interface Manager, ARP client, DNS Resolver |
+| **[`fabric`]({{< ref "fabric" >}})** | **Network Control** | Netlink Interface/Route/Neighbor Managers, ARP, DNS/DoT Resolver, DNS NameServer, mDNS Peer |
 | **[`crypto`]({{< ref "crypto" >}})** | **Security** | OpenSSL Wrappers, HMAC, Digital Signatures, Base64 |
 | **[`data`]({{< ref "data" >}})** | **Serialization** | High-perf JSON (DOM/SAX), MessagePack, Zlib Streams |
 | **[`services`]({{< ref "services" >}})** | **Protocols** | HTTP/1.1 (Client/Server), SMTP, Mail Parsing |
