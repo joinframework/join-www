@@ -17,6 +17,7 @@ It provides a set of composable libraries covering networking primitives, concur
 - Low-jitter event processing
 - Strong separation of concerns via modular libraries
 - High test coverage and correctness-first design
+- Suitable for infrastructure, control-plane, and runtime components
 
 ---
 
@@ -32,6 +33,17 @@ It provides a set of composable libraries covering networking primitives, concur
 - Sub-microsecond latency requirements (HFT, market data)
 - Kernel-bypass networking (use DPDK or RDMA instead)
 - Data plane packet processing at 100 Gbps
+
+---
+
+## ✨ Why join?
+
+join focuses on providing **robust, efficient building blocks** for:
+- network runtimes
+- system services
+- control planes
+- high-performance servers
+- infrastructure tooling
 
 ---
 
