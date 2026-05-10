@@ -1,18 +1,12 @@
 ---
 
-title: "Mdns Peer"
-weight: 47
+title: "mDNS Peer"
+weight: 65
 ---
 
-# Mdns::Peer
+# mDNS Peer
 
-`Mdns::Peer` is an abstract base class for participating in multicast DNS (mDNS / RFC 6762). It handles multicast group membership, message framing, service announcement, probing, browsing, goodbye, and unicast resolution. Two pure virtual methods must be implemented: `onQuery` (incoming queries) and `onAnnouncement` (incoming announcements from other peers).
-
-```cpp
-#include <join/nameserver.hpp>
-
-using namespace join;
-```
+The **Mdns::Peer** class is an abstract base class for participating in multicast DNS (mDNS / RFC 6762). It handles multicast group membership, message framing, service announcement, probing, browsing, goodbye, and unicast resolution. Two pure virtual methods must be implemented: `onQuery` (incoming queries) and `onAnnouncement` (incoming announcements from other peers).
 
 ---
 
@@ -39,7 +33,7 @@ public:
                 rr.type     = DnsMessage::RecordType::A;
                 rr.dnsclass = DnsMessage::RecordClass::IN;
                 rr.ttl      = 4500;
-                rr.addr     = IpAddress("192.168.1.42");
+                rr.addr     = "192.168.1.42";
 
                 reply(query, {rr});
             }
@@ -107,7 +101,7 @@ rr.host     = "myhost.local";
 rr.type     = DnsMessage::RecordType::A;
 rr.dnsclass = DnsMessage::RecordClass::IN;
 rr.ttl      = 4500;
-rr.addr     = IpAddress("192.168.1.42");
+rr.addr     = "192.168.1.42";
 
 peer.probe({rr});
 ```
@@ -159,8 +153,8 @@ IpAddressList all = peer.resolveAllAddress("myhost.local");
 IpAddressList v6  = peer.resolveAllAddress("myhost.local", AF_INET6);
 
 // Reverse lookup
-std::string   name    = peer.resolveName(IpAddress("192.168.1.42"));
-AliasList     aliases = peer.resolveAllName(IpAddress("192.168.1.42"));
+std::string   name    = peer.resolveName("192.168.1.42");
+AliasList     aliases = peer.resolveAllName("192.168.1.42");
 
 // Custom timeout
 IpAddress ip = peer.resolveAddress("myhost.local", AF_INET,

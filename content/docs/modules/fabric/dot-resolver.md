@@ -1,18 +1,12 @@
 ---
 
-title: "Dot Resolver"
-weight: 41
+title: "DoT Resolver"
+weight: 55
 ---
 
-# Dot::Resolver
+# DoT Resolver
 
-`Dot::Resolver` is a DNS-over-TLS resolver. It shares the full instance API of `Dns::Resolver` but transports queries over a persistent TLS connection with RFC 7858 framing (2-byte length prefix). All static `lookup*` methods are deleted — system name servers are reached over plain UDP by `Dns::Resolver`.
-
-```cpp
-#include <join/resolver.hpp>
-
-using namespace join;
-```
+The **Dot::Resolver** class is a DNS-over-TLS resolver. It shares the full instance API of `Dns::Resolver` but transports queries over a persistent TLS connection with RFC 7858 framing (2-byte length prefix). System name servers are reached over plain UDP by `Dns::Resolver`.
 
 ---
 
@@ -60,8 +54,8 @@ IpAddress ip = resolver.resolveAddress("example.com", AF_INET,
 ## Reverse DNS (PTR)
 
 ```cpp
-std::string name    = resolver.resolveName(IpAddress("1.1.1.1"));
-AliasList   aliases = resolver.resolveAllName(IpAddress("1.1.1.1"));
+std::string name    = resolver.resolveName("1.1.1.1");
+AliasList   aliases = resolver.resolveAllName("1.1.1.1");
 ```
 
 ---

@@ -1,14 +1,14 @@
 ---
 
 title: "Interface Manager"
-weight: 30
+weight: 15
 ---
 
-# InterfaceManager
+# Interface Manager
 
-The **InterfaceManager** provides centralized management of network interfaces in Join. It monitors system interfaces, handles creation and deletion, and notifies listeners of network changes through an event-driven architecture.
+The **InterfaceManager** class provides centralized management of network interfaces in Join. It monitors system interfaces, handles creation and deletion, and notifies listeners of network changes through an event-driven architecture.
 
-`InterfaceManager` is integrated with the Join reactor and automatically tracks interface and address changes via Linux Netlink. Route management is handled separately by `RouteManager`.
+`InterfaceManager` is integrated with the Join reactor and automatically tracks interface and address changes via Linux Netlink.
 
 ---
 
@@ -310,7 +310,6 @@ Synchronous operations time out after 5 seconds and set `Errc::TimedOut`.
 - **Keep callbacks short and non-blocking** — they run on the reactor dispatcher thread.
 - **Store the returned id** from `addLinkListener` / `addAddressListener` to be able to unregister.
 - **Call `refresh()`** after external tools (e.g. `ip`, `ifconfig`) modify interfaces.
-- **Use `RouteManager`** for all route management — routes are no longer tracked here.
 
 ---
 

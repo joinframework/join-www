@@ -1,18 +1,12 @@
 ---
 
-title: "Dns Resolver"
-weight: 40
+title: "DNS Resolver"
+weight: 50
 ---
 
-# Dns::Resolver
+# DNS Resolver
 
-`Dns::Resolver` is a DNS resolver over UDP. It sends standard DNS queries to a specific server and returns parsed results. Each instance is connected to one server; static `lookup*` methods iterate over the system-configured servers from `/etc/resolv.conf`.
-
-```cpp
-#include <join/resolver.hpp>
-
-using namespace join;
-```
+The **Dns::Resolver** class is a DNS resolver over UDP. It sends standard DNS queries to a specific server and returns parsed results. Each instance is connected to one server; static `lookup*` methods iterate over the system-configured servers from `/etc/resolv.conf`.
 
 ---
 
@@ -83,21 +77,20 @@ Static `lookup*` methods try each system name server in order and return on the 
 
 ```cpp
 // First hostname for an IP
-std::string name = resolver.resolveName(IpAddress("8.8.8.8"));
+std::string name = resolver.resolveName("8.8.8.8");
 
 // All hostnames
-AliasList aliases = resolver.resolveAllName(IpAddress("8.8.8.8"));
+AliasList aliases = resolver.resolveAllName("8.8.8.8");
 
 // Custom timeout
-std::string name = resolver.resolveName(IpAddress("8.8.8.8"),
-                                         std::chrono::milliseconds(2000));
+std::string name = resolver.resolveName("8.8.8.8", std::chrono::milliseconds(2000));
 ```
 
 ### Static methods
 
 ```cpp
-std::string name   = Dns::Resolver::lookupName(IpAddress("8.8.8.8"));
-AliasList aliases  = Dns::Resolver::lookupAllName(IpAddress("8.8.8.8"));
+std::string name   = Dns::Resolver::lookupName("8.8.8.8");
+AliasList aliases  = Dns::Resolver::lookupAllName("8.8.8.8");
 ```
 
 ---

@@ -6,7 +6,7 @@ bookCollapseSection: true
 
 # Fabric Module
 
-The **Fabric** module provides network control and Linux network fabric management, allowing applications to interact with and manage the Linux network stack via Netlink.
+The **Fabric** module provides network control and Linux network fabric management, allowing applications to interact with and manage the Linux network stack.
 
 ---
 
@@ -42,7 +42,7 @@ System-wide network interface management built on Linux Netlink sockets.
 
 **Reactor integration:** registers itself on construction, unregisters on destruction. Supports a custom `Reactor*` or defaults to `ReactorThread`.
 
-See [Interface Manager]({{< ref "interfacemanager" >}}) for full documentation.
+See [Interface Manager]({{< ref "interface-manager" >}}) for full documentation.
 
 ---
 
@@ -69,7 +69,7 @@ System-wide IPv4/IPv6 routing table management built on Linux Netlink sockets.
 **Real-time monitoring via event listeners:**
 - Route events (add, delete, gateway/metric/type/scope/protocol changed)
 
-See [Route Manager]({{< ref "routemanager" >}}) for full documentation.
+See [Route Manager]({{< ref "route-manager" >}}) for full documentation.
 
 ---
 
@@ -96,7 +96,7 @@ System-wide ARP/NDP neighbor cache management built on Linux Netlink sockets.
 **Real-time monitoring via event listeners:**
 - Neighbor events (add, delete, MAC changed, NUD state changed)
 
-See [Neighbor Manager]({{< ref "neighbormanager" >}}) for full documentation.
+See [Neighbor Manager]({{< ref "neighbor-manager" >}}) for full documentation.
 
 ---
 
@@ -116,7 +116,7 @@ See [ARP]({{< ref "arp" >}}) for full documentation.
 
 ## 🌐 DNS / DoT / mDNS
 
-### Dns Resolver
+### DNS Resolver
 
 DNS resolver over UDP. Queries a specific server (instance methods) or iterates over system name servers from `/etc/resolv.conf` (static `lookup*` methods).
 
@@ -127,25 +127,25 @@ DNS resolver over UDP. Queries a specific server (instance methods) or iterates 
 - Mail exchangers: MX
 - Service port resolution
 
-See [Dns::Resolver]({{< ref "dns-resolver" >}}) for full documentation.
+See [DNS Resolver]({{< ref "dns-resolver" >}}) for full documentation.
 
-### Dot Resolver
+### DoT Resolver
 
-DNS-over-TLS resolver. Identical instance API to `Dns::Resolver` but transports queries over a persistent TLS connection with RFC 7858 framing. All static `lookup*` methods are deleted.
+DNS-over-TLS resolver. Identical instance API to DNS resolver but transports queries over a persistent TLS connection with RFC 7858 framing.
 
-See [Dot::Resolver]({{< ref "dot-resolver" >}}) for full documentation.
+See [DoT Resolver]({{< ref "dot-resolver" >}}) for full documentation.
 
-### Dns NameServer
+### DNS Name Server
 
 Abstract base class for building UDP DNS servers. Handles socket binding, reactor integration, message parsing, and reply serialization. Derive and implement `onQuery()`.
 
-See [Dns::NameServer]({{< ref "dns-nameserver" >}}) for full documentation.
+See [DNS Name Server]({{< ref "dns-nameserver" >}}) for full documentation.
 
-### Mdns Peer
+### mDNS Peer
 
-Abstract base class for participating in multicast DNS (RFC 6762). Handles multicast group membership, probing, announcing, browsing, goodbye, and unicast resolution. Derive and implement `onQuery()` and `onAnnouncement()`.
+Abstract base class for participating in multicast DNS. Handles multicast group membership, probing, announcing, browsing, goodbye, and unicast resolution. Derive and implement `onQuery()` and `onAnnouncement()`.
 
-See [Mdns::Peer]({{< ref "mdns-peer" >}}) for full documentation.
+See [mDNS Peer]({{< ref "mdns-peer" >}}) for full documentation.
 
 ---
 

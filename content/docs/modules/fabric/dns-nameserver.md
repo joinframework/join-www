@@ -1,18 +1,12 @@
 ---
 
-title: "Dns NameServer"
-weight: 45
+title: "DNS Name Server"
+weight: 60
 ---
 
-# Dns::NameServer
+# DNS Name Server
 
-`Dns::NameServer` is an abstract base class for building DNS servers over UDP. It handles socket binding, reactor registration, message parsing, and reply serialization. The only method to implement is `onQuery()`.
-
-```cpp
-#include <join/nameserver.hpp>
-
-using namespace join;
-```
+The **Dns::NameServer** class is an abstract base class for building DNS servers over UDP. It handles socket binding, reactor registration, message parsing, and reply serialization. The only method to implement is `onQuery()`.
 
 ---
 

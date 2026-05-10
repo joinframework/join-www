@@ -1,12 +1,12 @@
 ---
 
 title: "Neighbor Manager"
-weight: 31
+weight: 35
 ---
 
-# NeighborManager
+# Neighbor Manager
 
-The **NeighborManager** provides centralized management of the kernel ARP/NDP neighbor cache in Join. It monitors neighbor table changes via Linux Netlink, maintains an in-memory cache of all IPv4 and IPv6 entries, and notifies listeners of any change.
+The **NeighborManager** class provides centralized management of the kernel ARP/NDP neighbor cache in Join. It monitors neighbor table changes via Linux Netlink, maintains an in-memory cache of all IPv4 and IPv6 entries, and notifies listeners of any change.
 
 `NeighborManager` is independent of `InterfaceManager` and `RouteManager` — the managers can be used together or separately.
 

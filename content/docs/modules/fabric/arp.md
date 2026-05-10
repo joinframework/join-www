@@ -1,12 +1,12 @@
 ---
 
 title: "ARP"
-weight: 10
+weight: 40
 ---
 
 # ARP
 
-Join provides an **ARP (Address Resolution Protocol)** implementation for discovering MAC addresses from IPv4 addresses on local networks.
+Join provides an **Arp** class implementation for discovering MAC addresses from IPv4 addresses on local networks.
 
 The `Arp` class handles:
 
@@ -240,27 +240,7 @@ sudo setcap cap_net_raw,cap_net_admin+ep ./your_program
 
 ---
 
-## Protocol details
-
-### ARP packet structure
-
-```
-Ethernet Header (14 bytes):
-  Destination MAC  6 bytes  (ff:ff:ff:ff:ff:ff for requests)
-  Source MAC       6 bytes
-  EtherType        2 bytes  (0x0806)
-
-ARP Payload (28 bytes):
-  Hardware Type    2 bytes  (1 = Ethernet)
-  Protocol Type    2 bytes  (0x0800 = IPv4)
-  Hardware Size    1 byte   (6)
-  Protocol Size    1 byte   (4)
-  Opcode           2 bytes  (1 = request, 2 = reply)
-  Sender MAC       6 bytes
-  Sender IP        4 bytes
-  Target MAC       6 bytes  (00:00:00:00:00:00 for requests)
-  Target IP        4 bytes
-```
+## Details
 
 ### BPF filter
 

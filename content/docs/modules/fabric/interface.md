@@ -1,7 +1,7 @@
 ---
 
 title: "Interface"
-weight: 20
+weight: 10
 ---
 
 # Interface
@@ -9,8 +9,6 @@ weight: 20
 The **Interface** class provides a high-level abstraction for managing network interfaces in Join. It offers methods to configure IP addresses, MTU, MAC addresses, and bridge membership through a clean C++ API.
 
 Interfaces are managed by `InterfaceManager` and are represented as shared pointers. They provide both synchronous and asynchronous operations for network configuration.
-
-Route management is handled separately by `RouteManager`.
 
 ---
 
@@ -302,7 +300,6 @@ if (eth0->mtu(1500, true) == -1)
 - Use **asynchronous** mode for fire-and-forget batch operations.
 - Always check return values in synchronous mode.
 - Use `InterfaceManager` listeners to react to interface changes.
-- Route management is separate — use `RouteManager` for route operations.
 
 ---
 

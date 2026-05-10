@@ -1,12 +1,12 @@
 ---
 
 title: "Route Manager"
-weight: 31
+weight: 25
 ---
 
-# RouteManager
+# Route Manager
 
-The **RouteManager** provides centralized management of the kernel IPv4/IPv6 routing table in Join. It monitors route changes via Linux Netlink, maintains an in-memory cache of all `RT_TABLE_MAIN` routes, and notifies listeners of any change.
+The **RouteManager** class provides centralized management of the kernel IPv4/IPv6 routing table in Join. It monitors route changes via Linux Netlink, maintains an in-memory cache of all `RT_TABLE_MAIN` routes, and notifies listeners of any change.
 
 `RouteManager` is independent of `InterfaceManager` — the two managers can be used together or separately.
 

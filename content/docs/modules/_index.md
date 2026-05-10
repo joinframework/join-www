@@ -44,9 +44,9 @@ The fabric module provides full control over the Linux network stack via Netlink
 - Route manager with route notifications
 - Neighbor (ARP/NDP) cache manager with neighbor notifications
 - ARP client (IPv4 MAC resolution)
-- DNS/DoT resolver (`Dns::Resolver`, `Dot::Resolver`)
-- DNS name server (`Dns::NameServer`)
-- mDNS peer (`Mdns::Peer`)
+- DNS/DoT resolver
+- DNS name server
+- mDNS peer
 
 👉 See: [Fabric Module]({{< ref "fabric" >}})
 

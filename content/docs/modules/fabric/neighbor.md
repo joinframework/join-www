@@ -1,7 +1,7 @@
 ---
 
 title: "Neighbor"
-weight: 22
+weight: 30
 ---
 
 # Neighbor
