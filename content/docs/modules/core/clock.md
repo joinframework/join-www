@@ -8,12 +8,6 @@ weight: 170
 
 Join provides **clock policies** that abstract time sources for use with `BasicTimer` and `BasicStats`. Each policy exposes a consistent interface so that timers and statistics collectors can be parameterized independently of the underlying hardware or OS clock.
 
-```cpp
-#include <join/clock.hpp>
-
-using namespace join;
-```
-
 ---
 
 ## Available policies
