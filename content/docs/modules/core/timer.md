@@ -1,7 +1,7 @@
 ---
 
 title: "Timer"
-weight: 170
+weight: 172
 ---
 
 # Timer
@@ -17,8 +17,10 @@ Timers are:
 
 They are available through two clock policies:
 
-* **Monotonic** — unaffected by system time changes
-* **RealTime** — tracks the wall clock
+* **Monotonic** — `CLOCK_MONOTONIC`, unaffected by system time changes (recommended)
+* **RealTime** — `CLOCK_REALTIME`, tracks the wall clock
+
+Only `Monotonic` and `RealTime` provide a `Timer` alias. `MonotonicRaw` and `Rdtsc` are measurement-only policies. See [Clock]({{< ref "clock" >}}) for details.
 
 ---
 
@@ -26,15 +28,11 @@ They are available through two clock policies:
 
 ### Monotonic timers
 
-Monotonic timers use `CLOCK_MONOTONIC` and are the recommended choice for delays and intervals.
-
 ```cpp
 Monotonic::Timer timer;
 ```
 
 ### Real-time timers
-
-Real-time timers use `CLOCK_REALTIME` and follow system clock adjustments.
 
 ```cpp
 RealTime::Timer timer;
@@ -79,7 +77,7 @@ timer.setOneShot(std::chrono::seconds(1), []() {
 
 ---
 
-## One-shot timer (absolute time)
+## One-shot timer (absolute time point)
 
 A one-shot timer can also be armed at an **absolute time point**.
 
@@ -93,14 +91,14 @@ timer.setOneShot(deadline, []() {
 });
 ```
 
-⚠️ The clock type **must match** the timer policy — enforced at compile time:
+The clock type **must match** the timer policy — enforced at compile time via `static_assert`:
 
-| Policy     | Expected clock                    |
-| ---------- | --------------------------------- |
+| Policy      | Required clock                   |
+| ----------- | -------------------------------- |
 | `Monotonic` | `std::chrono::steady_clock`      |
 | `RealTime`  | `std::chrono::system_clock`      |
 
-A mismatch produces a `static_assert` error.
+A mismatch produces a compile error.
 
 ---
 
@@ -116,11 +114,11 @@ timer.setInterval(std::chrono::milliseconds(500), []() {
 });
 ```
 
-The callback is invoked **once per expiration**. If the reactor is delayed and multiple expirations have accumulated, the callback is called once for each missed expiration.
+The callback is invoked **once per expiration**. If the reactor is delayed and multiple expirations have accumulated, the callback is called once for each missed expiration in sequence.
 
 ---
 
-## Cancel a timer
+## Cancelling a timer
 
 ```cpp
 timer.cancel();
@@ -132,7 +130,7 @@ After cancellation the timer is disarmed, the callback is cleared, and no furthe
 
 ## Timer state inspection
 
-### Check if the timer is armed
+### Check if armed
 
 ```cpp
 if (timer.active())
@@ -141,7 +139,7 @@ if (timer.active())
 }
 ```
 
-`active()` queries the kernel via `timerfd_gettime` — it returns `true` if either the initial value or the interval is non-zero.
+`active()` queries the kernel via `timerfd_gettime`. Returns `true` if either the initial value or the interval is non-zero.
 
 ### Remaining time before next expiration
 
@@ -149,7 +147,7 @@ if (timer.active())
 std::chrono::nanoseconds rem = timer.remaining();
 ```
 
-### Interval of a periodic timer
+### Interval (periodic timers)
 
 ```cpp
 std::chrono::nanoseconds iv = timer.interval();
@@ -157,7 +155,7 @@ std::chrono::nanoseconds iv = timer.interval();
 
 Returns zero for one-shot timers or after cancellation.
 
-### Check if the timer is one-shot
+### Check if one-shot
 
 ```cpp
 bool os = timer.oneShot();
@@ -173,10 +171,10 @@ int clockId = timer.type();  // CLOCK_MONOTONIC or CLOCK_REALTIME
 
 ## Best practices
 
-* Prefer **Monotonic timers** for delays and intervals — immune to NTP or `settimeofday` adjustments
-* Use **RealTime timers** only for wall-clock scheduling
-* Keep callbacks **short and non-blocking** — they execute on the reactor dispatcher thread
-* **Cancel timers explicitly** when no longer needed, before their owning object is destroyed
+* Prefer **Monotonic timers** for delays and intervals — immune to NTP or `settimeofday` adjustments.
+* Use **RealTime timers** only for wall-clock scheduling.
+* Keep callbacks **short and non-blocking** — they execute on the reactor dispatcher thread.
+* **Cancel timers explicitly** before their owning object is destroyed if there is any risk of the callback firing after destruction.
 
 ---
 
@@ -184,11 +182,11 @@ int clockId = timer.type();  // CLOCK_MONOTONIC or CLOCK_REALTIME
 
 | Feature                  | Supported |
 | ------------------------ | :-------: |
-| One-shot timers          | ✅         |
-| Periodic timers          | ✅         |
-| Absolute time point      | ✅         |
-| Clock/policy type check  | ✅ (static_assert) |
-| Reactor integration      | ✅         |
-| Custom reactor           | ✅         |
-| Nanosecond resolution    | ✅         |
-| Missed expiration replay | ✅         |
+| One-shot timers          | ✅        |
+| Periodic timers          | ✅        |
+| Absolute time point      | ✅        |
+| Clock/policy type check  | ✅ (`static_assert`) |
+| Reactor integration      | ✅        |
+| Custom reactor           | ✅        |
+| Nanosecond resolution    | ✅        |
+| Missed expiration replay | ✅        |

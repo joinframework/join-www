@@ -33,8 +33,9 @@ This ordering guarantees that a handler is fully registered before any of its ev
 
 ## Event handler interface
 
-Custom event handlers inherit from `EventHandler` and implement event callbacks.
-The only pure virtual method is `handle()` — all callbacks have default no-op implementations.
+Custom event handlers inherit from `EventHandler` and override the relevant callbacks.
+All callbacks have default no-op implementations — override only what you need.
+Each callback receives the file descriptor that triggered the event.
 
 ```cpp
 #include <join/reactor.hpp>
@@ -43,30 +44,21 @@ using namespace join;
 
 class MyHandler : public EventHandler
 {
-public:
-    int handle() const noexcept override
-    {
-        return _fd;
-    }
-
 protected:
-    void onReceive() override
+    void onReceive(int fd) override
     {
         // called when data is ready to read (EPOLLIN)
     }
 
-    void onClose() override
+    void onClose(int fd) override
     {
         // called when peer closed the connection (EPOLLRDHUP | EPOLLHUP)
     }
 
-    void onError() override
+    void onError(int fd) override
     {
-        // called when an error occurred (EPOLLERR)
+        // called when an error occurred on the fd (EPOLLERR)
     }
-
-private:
-    int _fd = -1;
 };
 ```
 
@@ -85,11 +77,11 @@ The singleton is created on first access and destroyed on program exit.
 
 using namespace join;
 
-// Register a handler
-ReactorThread::reactor()->addHandler(&myHandler);
+// Register a handler for file descriptor fd
+ReactorThread::reactor()->addHandler(fd, &myHandler);
 
-// Remove a handler
-ReactorThread::reactor()->delHandler(&myHandler);
+// Remove the handler
+ReactorThread::reactor()->delHandler(fd);
 ```
 
 ### Thread configuration
@@ -112,7 +104,7 @@ pthread_t h = ReactorThread::handle();
 The internal command queue memory can be bound to a NUMA node or locked in RAM:
 
 ```cpp
-ReactorThread::mbind(0);   // bind to NUMA node 0
+ReactorThread::mbind(0);   // bind to NUMA node 0 (requires JOIN_HAS_NUMA)
 ReactorThread::mlock();    // lock queue memory in RAM
 ```
 
@@ -138,12 +130,12 @@ reactor.stop();
 
 ```cpp
 // synchronous (default): caller spins until the dispatcher confirms
-reactor.addHandler(&handler);        // sync = true
-reactor.delHandler(&handler);        // sync = true
+reactor.addHandler(fd, &handler);   // sync = true
+reactor.delHandler(fd);             // sync = true
 
 // fire-and-forget: returns immediately
-reactor.addHandler(&handler, false);
-reactor.delHandler(&handler, false);
+reactor.addHandler(fd, &handler, false);
+reactor.delHandler(fd, false);
 ```
 
 In synchronous mode the caller busy-waits using `Backoff` until the dispatcher thread signals completion.
@@ -152,13 +144,13 @@ In synchronous mode the caller busy-waits using `Backoff` until the dispatcher t
 
 ## Event dispatching
 
-The reactor monitors two `epoll` event types on registered handlers:
+The reactor monitors registered file descriptors and dispatches `epoll` events to their handlers:
 
-| epoll event             | Callback triggered |
-| ----------------------- | ------------------ |
-| `EPOLLIN`               | `onReceive()`      |
-| `EPOLLRDHUP / EPOLLHUP` | `onClose()`        |
-| `EPOLLERR`              | `onError()`        |
+| epoll event              | Callback triggered  |
+| ------------------------ | ------------------- |
+| `EPOLLIN`                | `onReceive(int fd)` |
+| `EPOLLRDHUP / EPOLLHUP`  | `onClose(int fd)`   |
+| `EPOLLERR`               | `onError(int fd)`   |
 
 Events are dispatched **after** all pending commands have been processed in the same `epoll_wait` cycle. A handler that has been removed but still appears in the event batch is silently skipped via the `_deleted` set.
 
@@ -172,12 +164,11 @@ Events are dispatched **after** all pending commands have been processed in the 
 
 ```cpp
 {
-    // ReactorThread singleton stays alive for the process lifetime
-    ReactorThread::reactor()->addHandler(&handler);
+    ReactorThread::reactor()->addHandler(fd, &handler);
 
     // ... application runs ...
 
-    ReactorThread::reactor()->delHandler(&handler);
+    ReactorThread::reactor()->delHandler(fd);
 
     // singleton destroyed on exit: stop() + join()
 }
@@ -188,7 +179,7 @@ Events are dispatched **after** all pending commands have been processed in the 
 ## Using Reactor with a thread pool
 
 `Reactor` can be run from a worker thread pushed into a `ThreadPool`.
-This lets you configure affinity and priority from inside the lambda before handing control to the event loop, without managing a separate `Thread` object.
+This lets you configure affinity and priority from inside the lambda before handing control to the event loop.
 
 ```cpp
 #include <join/reactor.hpp>
@@ -199,10 +190,10 @@ using namespace join;
 Reactor reactor;
 
 // register handlers before starting the loop (fire-and-forget, no dispatcher yet)
-reactor.addHandler(&handler1, false);
-reactor.addHandler(&handler2, false);
+reactor.addHandler(fd1, &handler1, false);
+reactor.addHandler(fd2, &handler2, false);
 
-// push the event loop into the pool — one worker is dedicated to the reactor
+// push the event loop into the pool
 pool.push([&reactor]() {
     Thread::affinity(pthread_self(), 2);   // pin this worker to core 2
     Thread::priority(pthread_self(), 60);  // SCHED_FIFO priority 60
@@ -211,20 +202,33 @@ pool.push([&reactor]() {
 
 // ... application runs ...
 
-// stop from any thread — signals the loop via the command queue
 reactor.stop();
 ```
 
-`reactor.run()` blocks the worker thread for the lifetime of the event loop, so that slot in the pool is permanently dedicated to the reactor. The remaining workers stay available for normal task processing.
+`reactor.run()` blocks the worker for the lifetime of the event loop.
+`reactor.stop()` can be called from any thread — it uses the same lock-free command queue as `addHandler` / `delHandler`.
 
-`reactor.stop()` can be called from any thread — it is safe and uses the same lock-free command queue as `addHandler` / `delHandler`.
+---
+
+## isReactorThread
+
+`Reactor::isReactorThread()` returns `true` when called from the dispatcher thread itself.
+This is used internally to bypass the command queue when `addHandler` / `delHandler` are called from within a callback:
+
+```cpp
+void onReceive(int fd) override
+{
+    // safe to call addHandler/delHandler here — bypass is automatic
+    _reactor->addHandler(newFd, &anotherHandler);
+}
+```
 
 ---
 
 ## Best practices
 
 * **Keep callbacks short and non-blocking** — all callbacks run on the single dispatcher thread; blocking stalls the entire reactor
-* **Remove handlers before destroying them** — call `delHandler` (sync mode) to ensure the handler is no longer referenced before its destructor runs
+* **Remove handlers before destroying them** — call `delHandler(fd)` in sync mode to ensure the handler is no longer referenced before its destructor runs
 * **Use `ReactorThread` for most cases** — it handles thread lifetime automatically
 * **Use `Reactor::run()` directly** when you need to embed the event loop in your own thread
 * **Pin the dispatcher thread** with `ReactorThread::affinity()` on latency-sensitive systems
@@ -236,14 +240,14 @@ reactor.stop();
 
 | Feature                         | Supported |
 | ------------------------------- | :-------: |
-| `epoll`-based I/O multiplexing  | ✅         |
-| Lock-free command queue (Mpsc)  | ✅         |
-| Synchronous add/del             | ✅         |
-| Fire-and-forget add/del         | ✅         |
-| Safe removal during dispatch    | ✅         |
+| `epoll`-based I/O multiplexing  | ✅        |
+| Lock-free command queue (Mpsc)  | ✅        |
+| Synchronous add/del             | ✅        |
+| Fire-and-forget add/del         | ✅        |
+| Safe removal during dispatch    | ✅        |
 | Dedicated background thread     | ✅ (`ReactorThread`) |
 | Embeddable event loop           | ✅ (`Reactor::run()`) |
-| Core affinity control           | ✅         |
-| Real-time priority control      | ✅         |
-| NUMA binding                    | ✅         |
-| Memory locking                  | ✅         |
+| Core affinity control           | ✅        |
+| Real-time priority control      | ✅        |
+| NUMA binding                    | ✅        |
+| Memory locking                  | ✅        |

@@ -7,7 +7,7 @@ weight: 30
 # Queue
 
 Join provides **lock-free ring buffer queues** built on top of the memory backends.
-Queues are built on top of atomic operations and expose a modern **C++ template-based API**.
+Queues are built on atomic operations and expose a modern **C++ template-based API**.
 
 Queues are:
 
@@ -27,7 +27,7 @@ They are available through three synchronization policies:
 
 ### Spsc — single-producer / single-consumer
 
-The fastest policy. No atomic contention on either side.
+The fastest policy. No atomic contention on either side. Uses `QueueSlotLight` (no sequence number overhead).
 
 ```cpp
 LocalMem::Spsc::Queue<MyStruct> queue(capacity);
@@ -54,22 +54,22 @@ LocalMem::Mpmc::Queue<MyStruct> queue(capacity);
 ## Memory backends
 
 Queues are decoupled from the memory backend.
-Any memory provider can be combined with any sync policy via the type aliases defined on the backend:
+Any memory provider can be combined with any sync policy:
 
-| Backend alias         | Underlying memory        |
-| --------------------- | ------------------------ |
-| `LocalMem::Spsc`      | Anonymous private memory |
-| `LocalMem::Mpsc`      | Anonymous private memory |
-| `LocalMem::Mpmc`      | Anonymous private memory |
-| `ShmMem::Spsc`        | POSIX shared memory      |
-| `ShmMem::Mpsc`        | POSIX shared memory      |
-| `ShmMem::Mpmc`        | POSIX shared memory      |
+| Backend alias    | Underlying memory        |
+| ---------------- | ------------------------ |
+| `LocalMem::Spsc` | Anonymous private memory |
+| `LocalMem::Mpsc` | Anonymous private memory |
+| `LocalMem::Mpmc` | Anonymous private memory |
+| `ShmMem::Spsc`   | POSIX shared memory      |
+| `ShmMem::Mpsc`   | POSIX shared memory      |
+| `ShmMem::Mpmc`   | POSIX shared memory      |
 
 ---
 
 ## Type constraints
 
-The element type must satisfy two requirements:
+The element type must be:
 
 * **trivially copyable** — elements are copied by value into slots
 * **trivially destructible** — no destructor is called on eviction
@@ -98,20 +98,13 @@ LocalMem::Spsc::Queue<Sample> queue(1024);
 
 The capacity is automatically rounded up to the **next power of 2** for fast modulo via bitmask.
 
----
-
 ### Shared queue (inter-process)
 
 ```cpp
-#include <join/queue.hpp>
-
-using namespace join;
-
 ShmMem::Mpmc::Queue<Sample> queue(1024, "/my_queue");
 ```
 
-The first process to attach initializes the queue.
-Subsequent processes verify that the capacity matches and wait for initialization to complete.
+The first process to attach initializes the queue. Subsequent processes verify that the capacity matches and wait for initialization to complete.
 
 ⚠️ Call `ShmMem::unlink("/my_queue")` during application teardown to remove the segment.
 
@@ -119,20 +112,20 @@ Subsequent processes verify that the capacity matches and wait for initializatio
 
 ## Pushing elements
 
-### Non-blocking push
+### Single element — non-blocking
 
-Returns immediately with `-1` if the queue is full.
+Returns immediately with `-1` if the queue is full (`Errc::TemporaryError`).
 
 ```cpp
 Sample s{1, 3.14f};
 
 if (queue.tryPush(s) == -1)
 {
-    // check join::lastError — Errc::TemporaryError means full
+    // lastError == Errc::TemporaryError → queue full, retry later
 }
 ```
 
-### Blocking push
+### Single element — blocking
 
 Spins with exponential backoff until a slot is available.
 
@@ -143,24 +136,54 @@ if (queue.push(s) == -1)
 }
 ```
 
+### Batch — non-blocking
+
+Pushes as many elements as fit in one call. Returns the number of elements actually written, or `-1` on error.
+
+```cpp
+Sample buf[64];
+// ... fill buf ...
+
+ssize_t n = queue.tryPush(buf, 64);
+if (n == -1)
+{
+    // lastError == Errc::TemporaryError → queue full
+}
+else
+{
+    // n elements pushed (may be < 64 if queue was nearly full)
+}
+```
+
+### Batch — blocking
+
+Loops until all `size` elements have been pushed, backing off when the queue is temporarily full.
+
+```cpp
+if (queue.push(buf, 64) == -1)
+{
+    // fatal error
+}
+```
+
 ---
 
 ## Popping elements
 
-### Non-blocking pop
+### Single element — non-blocking
 
-Returns immediately with `-1` if the queue is empty.
+Returns immediately with `-1` if the queue is empty (`Errc::TemporaryError`).
 
 ```cpp
 Sample out;
 
 if (queue.tryPop(out) == -1)
 {
-    // check join::lastError — Errc::TemporaryError means empty
+    // lastError == Errc::TemporaryError → queue empty, retry later
 }
 ```
 
-### Blocking pop
+### Single element — blocking
 
 Spins with exponential backoff until an element is available.
 
@@ -173,25 +196,45 @@ if (queue.pop(out) == -1)
 }
 ```
 
+### Batch — non-blocking
+
+Pops up to `size` elements in one call. Returns the number actually read, or `-1` on error.
+
+```cpp
+Sample out[64];
+
+ssize_t n = queue.tryPop(out, 64);
+if (n == -1)
+{
+    // lastError == Errc::TemporaryError → queue empty
+}
+else
+{
+    // n elements popped (may be < 64)
+}
+```
+
+### Batch — blocking
+
+Loops until all `size` elements have been popped.
+
+```cpp
+Sample out[64];
+
+if (queue.pop(out, 64) == -1)
+{
+    // fatal error
+}
+```
+
 ---
 
 ## Queue state inspection
 
-### Number of elements pending
-
 ```cpp
-uint64_t n = queue.pending();
-```
+uint64_t n = queue.pending();    // elements waiting to be consumed
+uint64_t n = queue.available();  // slots available for writing
 
-### Number of slots available for writing
-
-```cpp
-uint64_t n = queue.available();
-```
-
-### Check if full or empty
-
-```cpp
 if (queue.full())  { /* no room to push */ }
 if (queue.empty()) { /* nothing to pop  */ }
 ```
@@ -200,13 +243,11 @@ if (queue.empty()) { /* nothing to pop  */ }
 
 ## NUMA binding and memory locking
 
-These methods delegate directly to the underlying memory backend.
-
 ```cpp
-// bind queue memory to NUMA node 0
+// bind queue memory to NUMA node 0 (requires JOIN_HAS_NUMA)
 queue.mbind(0);
 
-// lock queue memory in RAM
+// lock queue memory in RAM (prevent paging)
 queue.mlock();
 ```
 
@@ -214,18 +255,13 @@ queue.mlock();
 
 ## Move semantics
 
-`BasicQueue` is **neither copyable nor movable** — copy and move constructors and assignment operators are all explicitly deleted.
-Queues must be constructed in-place and cannot be transferred.
+`BasicQueue` is **neither copyable nor movable**. Queues must be constructed in-place.
 
 ```cpp
 // ❌ Does not compile
 LocalMem::Spsc::Queue<Sample> a(1024);
 LocalMem::Spsc::Queue<Sample> b = std::move(a);
-```
 
-If you need to share a queue between scopes, use a reference, a pointer, or wrap it in a `std::unique_ptr`.
-
-```cpp
 // ✅ Share via pointer
 auto queue = std::make_unique<LocalMem::Spsc::Queue<Sample>>(1024);
 ```
@@ -236,8 +272,8 @@ auto queue = std::make_unique<LocalMem::Spsc::Queue<Sample>>(1024);
 
 Functions returning `-1` set `join::lastError`:
 
-* `Errc::TemporaryError` — queue is full (push) or empty (pop); retry is safe
-* `Errc::InvalidParam` — internal segment pointer is null (should not occur in normal use)
+* `Errc::TemporaryError` — queue full (push) or empty (pop); retry is safe
+* `Errc::InvalidParam` — null buffer pointer or zero size passed to batch variants
 
 ```cpp
 if (queue.tryPush(s) == -1)
@@ -257,28 +293,31 @@ if (queue.tryPush(s) == -1)
 
 ## Best practices
 
-* Prefer **Spsc** whenever the producer/consumer pattern allows it — it has zero atomic contention
+* Prefer **Spsc** whenever the producer/consumer pattern allows it — zero atomic contention
 * Use **Mpsc** when multiple threads feed a single processing thread
 * Use **Mpmc** only when both sides need to scale across threads
+* Use **batch push/pop** (`tryPush(buf, n)` / `tryPop(buf, n)`) to amortize atomic operations in throughput-oriented paths
 * Use `tryPush` / `tryPop` in real-time contexts to avoid unbounded spin
-* Use `push` / `pop` when latency is not a concern and blocking is acceptable
+* Use `push` / `pop` when blocking is acceptable
 * Use **ShmMem** backends for inter-process queues; call `ShmMem::unlink()` on teardown
-* Construct queues in-place or wrap them in `std::unique_ptr` — they cannot be moved or copied
+* Construct queues in-place or wrap in `std::unique_ptr` — they cannot be moved or copied
 
 ---
 
 ## Summary
 
-| Feature                    | Spsc | Mpsc | Mpmc |
-| -------------------------- | :--: | :--: | :--: |
-| Lock-free                  | ✅    | ✅    | ✅    |
-| Multiple producers         | ❌    | ✅    | ✅    |
-| Multiple consumers         | ❌    | ❌    | ✅    |
-| Lowest overhead            | ✅    | ➖    | ➖    |
-| Local memory backend       | ✅    | ✅    | ✅    |
-| Shared memory backend      | ✅    | ✅    | ✅    |
-| NUMA binding               | ✅    | ✅    | ✅    |
-| Memory locking             | ✅    | ✅    | ✅    |
-| Blocking push/pop          | ✅    | ✅    | ✅    |
-| Non-blocking push/pop      | ✅    | ✅    | ✅    |
-| Move semantics             | ❌    | ❌    | ❌    |
+| Feature               | Spsc | Mpsc | Mpmc |
+| --------------------- | :--: | :--: | :--: |
+| Lock-free             | ✅   | ✅   | ✅   |
+| Multiple producers    | ❌   | ✅   | ✅   |
+| Multiple consumers    | ❌   | ❌   | ✅   |
+| Lowest overhead       | ✅   | ➖   | ➖   |
+| Single push/pop       | ✅   | ✅   | ✅   |
+| Batch push/pop        | ✅   | ✅   | ✅   |
+| Blocking push/pop     | ✅   | ✅   | ✅   |
+| Non-blocking push/pop | ✅   | ✅   | ✅   |
+| Local memory backend  | ✅   | ✅   | ✅   |
+| Shared memory backend | ✅   | ✅   | ✅   |
+| NUMA binding          | ✅   | ✅   | ✅   |
+| Memory locking        | ✅   | ✅   | ✅   |
+| Move semantics        | ❌   | ❌   | ❌   |

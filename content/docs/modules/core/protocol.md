@@ -20,7 +20,7 @@ Available protocols span multiple network layers:
 * **Unix domain** (local IPC)
 * **Internet protocols** (TCP, UDP, ICMP)
 * **Secure protocols** (TLS, HTTPS, SMTPS)
-* **Application protocols** (HTTP, SMTP)
+* **Application protocols** (HTTP, SMTP, DNS, DoT, mDNS)
 * **Low‑level protocols** (Netlink, Raw packets)
 
 ---
@@ -36,9 +36,8 @@ Connectionless datagram protocol using `AF_UNIX` and `SOCK_DGRAM`.
 ```cpp
 #include <join/protocol.hpp>
 
-using join;
+using namespace join;
 
-UnixDgram protocol;
 UnixDgram::Socket socket;
 UnixDgram::Endpoint endpoint("/tmp/socket");
 ```
@@ -48,13 +47,8 @@ UnixDgram::Endpoint endpoint("/tmp/socket");
 Connection‑oriented stream protocol using `AF_UNIX` and `SOCK_STREAM`.
 
 ```cpp
-#include <join/protocol.hpp>
-
-using join;
-
-UnixStream protocol;
-UnixStream::Socket socket;
-UnixStream::Stream stream;
+UnixStream::Socket   socket;
+UnixStream::Stream   stream;
 UnixStream::Acceptor acceptor;
 ```
 
@@ -67,56 +61,32 @@ UnixStream::Acceptor acceptor;
 User Datagram Protocol for **connectionless** packet transmission.
 
 ```cpp
-#include <join/protocol.hpp>
-
-using join;
-
-// IPv4 UDP
 Udp::Socket socket4(Udp::v4());
-
-// IPv6 UDP
 Udp::Socket socket6(Udp::v6());
 ```
-
-UDP supports both IPv4 and IPv6 address families.
 
 ### TCP
 
 Transmission Control Protocol for **reliable stream** communication.
 
 ```cpp
-#include <join/protocol.hpp>
+Tcp::Socket   socket4(Tcp::v4());
+Tcp::Stream   stream;
+Tcp::Acceptor acceptor;
 
-using join;
-
-// IPv4 TCP
-Tcp::Socket socket4(Tcp::v4());
-Tcp::Stream stream4;
-Tcp::Acceptor acceptor4;
-
-// IPv6 TCP
-Tcp::Socket socket6(Tcp::v6());
+Tcp::Socket   socket6(Tcp::v6());
 ```
-
-TCP provides connection‑oriented, ordered, and error‑checked delivery.
 
 ### ICMP
 
 Internet Control Message Protocol for **network diagnostics** (ping, traceroute).
 
 ```cpp
-#include <join/protocol.hpp>
-
-using join;
-
-// IPv4 ICMP
 Icmp::Socket icmp4(Icmp::v4());
-
-// IPv6 ICMP (ICMPv6)
 Icmp::Socket icmp6(Icmp::v6());
 ```
 
-⚠️ ICMP sockets typically require elevated privileges.
+⚠️ ICMP sockets typically require `CAP_NET_RAW`.
 
 ---
 
@@ -127,76 +97,76 @@ Icmp::Socket icmp6(Icmp::v6());
 Transport Layer Security for **encrypted TCP** connections.
 
 ```cpp
-#include <join/protocol.hpp>
-
-using join;
-
-Tls::Socket socket(Tls::v4());
-Tls::Stream stream;
+Tls::Socket   socket(Tls::v4());
+Tls::Stream   stream;
 Tls::Acceptor acceptor;
 ```
-
-TLS wraps TCP with encryption, authentication, and integrity verification.
 
 ---
 
 ## Application protocols
 
-### HTTP
-
-Hypertext Transfer Protocol for **web communication**.
+### HTTP / HTTPS
 
 ```cpp
-#include <join/protocol.hpp>
+Http::Client  client;
+Http::Server  server;
+Http::Worker  worker;
 
-using join;
-
-Http::Client client;
-Http::Server server;
-Http::Worker worker;
+Https::Client secureClient;
+Https::Server secureServer;
 ```
 
-HTTP provides request/response semantics over TCP.
-
-### HTTPS
-
-HTTP over TLS for **secure web communication**.
+### SMTP / SMTPS
 
 ```cpp
-#include <join/protocol.hpp>
-
-using join;
-
-Https::Client client;
-Https::Server server;
-Https::Worker worker;
+Smtp::Client  client(Smtp::v4());
+Smtps::Client secureClient(Smtps::v4());
 ```
 
-### SMTP
+### DNS (over UDP)
 
-Simple Mail Transfer Protocol for **email transmission**.
+DNS protocol over UDP. Default port 53, max message size 8192 bytes.
 
 ```cpp
-#include <join/protocol.hpp>
-
-using join;
-
-Smtp::Client client(Smtp::v4());
+Dns::Socket     socket(Dns::v4());
+Dns::Resolver   resolver("8.8.8.8");      // BasicDatagramResolver<Dns>
+Dns::NameServer nameServer;               // BasicDatagramNameServer<Dns>
 ```
 
-SMTP supports STARTTLS for opportunistic encryption.
+Both IPv4 and IPv6 are supported via `Dns::v4()` / `Dns::v6()`.
 
-### SMTPS
+See [Dns::Resolver]({{< ref "dns-resolver" >}}) and [Dns::NameServer]({{< ref "dns-nameserver" >}}) for full documentation.
 
-SMTP over TLS for **secure email transmission**.
+### DoT — DNS over TLS
+
+DNS-over-TLS protocol. Default port 853, max message size 16384 bytes, RFC 7858 framing.
 
 ```cpp
-#include <join/protocol.hpp>
-
-using join;
-
-Smtps::Client client(Smtps::v4());
+Dot::Socket   socket(Dot::v4());
+Dot::Resolver resolver("1.1.1.1");        // BasicTlsResolver<Dot>
 ```
+
+`Dot` uses `SOCK_STREAM` / `IPPROTO_TCP` under the hood. Both IPv4 and IPv6 are supported.
+
+See [Dot::Resolver]({{< ref "dot-resolver" >}}) for full documentation.
+
+### mDNS (Multicast DNS)
+
+Multicast DNS protocol. Default port 5353, max message size 8192 bytes.
+
+```cpp
+Mdns::Socket socket(Mdns::v4());
+Mdns::Peer   peer("eth0");                // BasicDatagramPeer<Mdns>
+
+// Multicast group addresses
+IpAddress v4group = Mdns::multicastAddress(AF_INET);   // 224.0.0.251
+IpAddress v6group = Mdns::multicastAddress(AF_INET6);  // ff02::fb
+```
+
+Both IPv4 and IPv6 multicast groups are supported via `Mdns::v4()` / `Mdns::v6()`.
+
+See [Mdns::Peer]({{< ref "mdns-peer" >}}) for full documentation.
 
 ---
 
@@ -207,86 +177,61 @@ Smtps::Client client(Smtps::v4());
 Linux kernel communication protocol for **routing, netfilter, and more**.
 
 ```cpp
-#include <join/protocol.hpp>
+Netlink::Socket routeSocket(Netlink::rt());   // NETLINK_ROUTE
+Netlink::Socket nfSocket(Netlink::nf());      // NETLINK_NETFILTER
 
-using join;
-
-// Route subsystem (default)
-Netlink::Socket routeSocket(Netlink::rt());
-
-// Netfilter subsystem
-Netlink::Socket nfSocket(Netlink::nf());
-
-// Custom subsystem
 Netlink custom(NETLINK_USERSOCK);
 ```
-
-Netlink provides kernel‑to‑userspace communication for network configuration.
 
 ### Raw
 
 Raw packet protocol using `AF_PACKET` for **link‑layer access**.
 
 ```cpp
-#include <join/protocol.hpp>
-
-using join;
-
-Raw protocol;
-Raw::Socket socket;
+Raw::Socket   socket;
 Raw::Endpoint endpoint;
 ```
 
-⚠️ Raw sockets require elevated privileges and handle Ethernet frames directly.
+⚠️ Raw sockets require `CAP_NET_RAW` and handle Ethernet frames directly.
 
 ---
 
 ## IPv4 vs IPv6
 
-Internet protocols support both address families through **static factory methods**:
+Internet protocols support both address families through static factory methods:
 
 ```cpp
-// IPv4
-Tcp::v4()
-Udp::v4()
-Icmp::v4()
-Tls::v4()
-Http::v4()
-
-// IPv6
-Tcp::v6()
-Udp::v6()
-Icmp::v6()
-Tls::v6()
-Http::v6()
+Tcp::v4()   Tcp::v6()
+Udp::v4()   Udp::v6()
+Icmp::v4()  Icmp::v6()
+Tls::v4()   Tls::v6()
+Dns::v4()   Dns::v6()
+Dot::v4()   Dot::v6()
+Mdns::v4()  Mdns::v6()
+Http::v4()  Http::v6()
 ```
 
 Protocols can also be constructed with an explicit family:
 
 ```cpp
-Tcp tcpv4(AF_INET);
-Tcp tcpv6(AF_INET6);
+Tcp  tcpv4(AF_INET);
+Tcp  tcpv6(AF_INET6);
+Dns  dnsv4(AF_INET);
+Mdns mdnsv6(AF_INET6);
 ```
 
 ---
 
 ## Protocol comparison
 
-Protocols can be compared for equality:
+Protocols with family selection support `==` and `!=`:
 
 ```cpp
-if (Tcp::v4() == Tcp::v4())
-{
-    // Same protocol
-}
-
-if (Tcp::v4() != Tcp::v6())
-{
-    // Different address families
-}
+assert(Tcp::v4() == Tcp::v4());
+assert(Tcp::v4() != Tcp::v6());
+assert(Dns::v4() != Dns::v6());
+assert(Netlink::rt() != Netlink::nf());
 ```
-
-⚠️ Only protocols with family selection (TCP, UDP, ICMP, TLS, HTTP, HTTPS, SMTP, SMTPS, Netlink) support comparison operators.
 
 ---
 
@@ -295,12 +240,23 @@ if (Tcp::v4() != Tcp::v6())
 All protocol classes expose three core methods:
 
 ```cpp
-protocol.family();    // Address family (AF_INET, AF_UNIX, etc.)
-protocol.type();      // Socket type (SOCK_STREAM, SOCK_DGRAM, etc.)
-protocol.protocol();  // Protocol number (IPPROTO_TCP, etc.)
+protocol.family();    // AF_INET, AF_UNIX, AF_NETLINK, AF_PACKET…
+protocol.type();      // SOCK_STREAM, SOCK_DGRAM, SOCK_RAW
+protocol.protocol();  // IPPROTO_TCP, IPPROTO_UDP, 0…
 ```
 
-These values are used internally when creating sockets.
+DNS and mDNS also expose protocol-level constants:
+
+```cpp
+Dns::defaultPort   // 53
+Dns::maxMsgSize    // 8192
+
+Dot::defaultPort   // 853
+Dot::maxMsgSize    // 16384
+
+Mdns::defaultPort  // 5353
+Mdns::maxMsgSize   // 8192
+```
 
 ---
 
@@ -308,54 +264,43 @@ These values are used internally when creating sockets.
 
 Each protocol defines type aliases for related components:
 
-| Protocol   | Endpoint | Socket | Stream | Acceptor | Client | Server |
-| ---------- | -------- | ------ | ------ | -------- | ------ | ------ |
-| UnixDgram  | ✅        | ✅      | ❌      | ❌        | ❌      | ❌      |
-| UnixStream | ✅        | ✅      | ✅      | ✅        | ❌      | ❌      |
-| Udp        | ✅        | ✅      | ❌      | ❌        | ❌      | ❌      |
-| Tcp        | ✅        | ✅      | ✅      | ✅        | ❌      | ❌      |
-| Tls        | ✅        | ✅      | ✅      | ✅        | ❌      | ❌      |
-| Http       | ✅        | ✅      | ✅      | ✅        | ✅      | ✅      |
-| Https      | ✅        | ✅      | ✅      | ✅        | ✅      | ✅      |
-| Smtp       | ✅        | ✅      | ✅      | ❌        | ✅      | ❌      |
-| Smtps      | ✅        | ✅      | ✅      | ❌        | ✅      | ❌      |
-
-Example usage:
-
-```cpp
-Http::Endpoint endpoint("example.com", 80);
-Http::Socket socket;
-Http::Client client;
-```
-
----
-
-## Best practices
-
-* Use **Tcp** or **Tls** for reliable data transfer
-* Use **Udp** for low‑latency, lossy‑tolerant communication
-* Use **UnixStream** for local IPC when possible (faster than TCP loopback)
-* Prefer **v4()** and **v6()** factory methods over direct construction
-* Use **Https/Smtps** instead of HTTP/SMTP for sensitive data
-* Be aware that **ICMP** and **Raw** sockets require root privileges
+| Protocol   | Endpoint | Socket | Stream | Acceptor | Resolver | NameServer | Peer | Client | Server |
+| ---------- | :------: | :----: | :----: | :------: | :------: | :--------: | :--: | :----: | :----: |
+| UnixDgram  | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| UnixStream | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Udp        | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Tcp        | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Tls        | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Dns        | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Dot        | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Mdns       | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| Http       | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Https      | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Smtp       | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Smtps      | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Netlink    | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Raw        | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ---
 
 ## Summary
 
-| Protocol   | Family     | Type        | Use Case                   |
-| ---------- | ---------- | ----------- | -------------------------- |
-| UnixDgram  | AF_UNIX    | SOCK_DGRAM  | Local datagram IPC         |
-| UnixStream | AF_UNIX    | SOCK_STREAM | Local stream IPC           |
-| Udp        | AF_INET*   | SOCK_DGRAM  | Internet datagrams         |
-| Tcp        | AF_INET*   | SOCK_STREAM | Reliable internet streams  |
-| Icmp       | AF_INET*   | SOCK_RAW    | Network diagnostics        |
-| Tls        | AF_INET*   | SOCK_STREAM | Encrypted TCP              |
-| Http       | AF_INET*   | SOCK_STREAM | Web requests               |
-| Https      | AF_INET*   | SOCK_STREAM | Secure web requests        |
-| Smtp       | AF_INET*   | SOCK_STREAM | Email transmission         |
-| Smtps      | AF_INET*   | SOCK_STREAM | Secure email transmission  |
-| Netlink    | AF_NETLINK | SOCK_RAW    | Kernel communication       |
-| Raw        | AF_PACKET  | SOCK_RAW    | Link‑layer packet access   |
+| Protocol   | Family     | Type        | Use Case                        |
+| ---------- | ---------- | ----------- | ------------------------------- |
+| UnixDgram  | AF_UNIX    | SOCK_DGRAM  | Local datagram IPC              |
+| UnixStream | AF_UNIX    | SOCK_STREAM | Local stream IPC                |
+| Udp        | AF_INET*   | SOCK_DGRAM  | Internet datagrams              |
+| Tcp        | AF_INET*   | SOCK_STREAM | Reliable internet streams       |
+| Icmp       | AF_INET*   | SOCK_RAW    | Network diagnostics             |
+| Tls        | AF_INET*   | SOCK_STREAM | Encrypted TCP                   |
+| Dns        | AF_INET*   | SOCK_DGRAM  | DNS over UDP                    |
+| Dot        | AF_INET*   | SOCK_STREAM | DNS over TLS                    |
+| Mdns       | AF_INET*   | SOCK_DGRAM  | Multicast DNS                   |
+| Http       | AF_INET*   | SOCK_STREAM | Web requests                    |
+| Https      | AF_INET*   | SOCK_STREAM | Secure web requests             |
+| Smtp       | AF_INET*   | SOCK_STREAM | Email transmission              |
+| Smtps      | AF_INET*   | SOCK_STREAM | Secure email transmission       |
+| Netlink    | AF_NETLINK | SOCK_RAW    | Kernel communication            |
+| Raw        | AF_PACKET  | SOCK_RAW    | Link‑layer packet access        |
 
 \* Supports both AF_INET (IPv4) and AF_INET6 (IPv6)
