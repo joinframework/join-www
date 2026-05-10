@@ -37,12 +37,16 @@ The core module provides essential building blocks including the epoll-based rea
 
 **Network control and Linux fabric management**
 
-The fabric module provides network interface management, ARP protocol implementation, and DNS resolution for controlling and monitoring the Linux network stack.
+The fabric module provides full control over the Linux network stack via Netlink: interface, route, and neighbor cache management, ARP resolution, and DNS/mDNS resolution and serving.
 
 **Key Components:**
-- Netlink-based interface manager
-- ARP client implementation
-- DNS resolver
+- Netlink-based interface manager with link and address notifications
+- Route manager with route notifications
+- Neighbor (ARP/NDP) cache manager with neighbor notifications
+- ARP client (IPv4 MAC resolution)
+- DNS/DoT resolver
+- DNS name server
+- mDNS peer
 
 👉 See: [Fabric Module]({{< ref "fabric" >}})
 

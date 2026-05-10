@@ -1,12 +1,12 @@
 ---
 
 title: "Interface"
-weight: 20
+weight: 10
 ---
 
 # Interface
 
-The **Interface** class provides a high-level abstraction for managing network interfaces in Join. It offers methods to configure IP addresses, routes, MTU, MAC addresses, and bridge membership through a clean C++ API.
+The **Interface** class provides a high-level abstraction for managing network interfaces in Join. It offers methods to configure IP addresses, MTU, MAC addresses, and bridge membership through a clean C++ API.
 
 Interfaces are managed by `InterfaceManager` and are represented as shared pointers. They provide both synchronous and asynchronous operations for network configuration.
 
@@ -19,10 +19,10 @@ Interfaces cannot be created directly. Use `InterfaceManager` to find or create 
 ```cpp
 #include <join/interface.hpp>
 
-using join;
+using namespace join;
 
-auto manager = InterfaceManager::instance();
-Interface::Ptr eth0 = manager->findByName("eth0");
+InterfaceManager& manager = InterfaceManager::instance();
+Interface::Ptr eth0 = manager.findByName("eth0");
 ```
 
 ---
@@ -38,15 +38,15 @@ uint32_t idx = eth0->index();
 ### Get interface name
 
 ```cpp
-const std::string& name = eth0->name();
+std::string name = eth0->name();
 ```
 
 ### Get interface kind
 
-Returns the interface type (e.g., "dummy", "bridge", "vlan", "veth", "gre", "tun").
+Returns the interface type (e.g., `"dummy"`, `"bridge"`, `"vlan"`, `"veth"`, `"gre"`, `"tun"`).
 
 ```cpp
-const std::string& kind = eth0->kind();
+std::string kind = eth0->kind();
 ```
 
 ### Get master interface
@@ -96,7 +96,7 @@ eth0->mac(mac, true);
 ### Get MAC address
 
 ```cpp
-const MacAddress& mac = eth0->mac();
+MacAddress mac = eth0->mac();
 ```
 
 ---
@@ -105,13 +105,15 @@ const MacAddress& mac = eth0->mac();
 
 ### Address representation
 
-Addresses are represented as tuples containing:
-- IP address
-- Prefix length
-- Broadcast address (for IPv4)
+Addresses are represented as a struct containing:
 
 ```cpp
-using Address = std::tuple<IpAddress, uint32_t, IpAddress>;
+struct Address
+{
+    IpAddress ip;        // IP address
+    uint32_t prefix = 0; // prefix length
+    IpAddress broadcast; // broadcast address (IPv4)
+};
 ```
 
 ### Add IP address
@@ -126,8 +128,12 @@ eth0->addAddress(ip, 24, broadcast);
 // Synchronous
 eth0->addAddress(ip, 24, broadcast, true);
 
-// Using Address tuple
-Interface::Address addr = std::make_tuple(ip, 24, broadcast);
+// Using Address struct
+Interface::Address addr;
+addr.ip        = ip;
+addr.prefix    = 24;
+addr.broadcast = broadcast;
+
 eth0->addAddress(addr, true);
 ```
 
@@ -140,7 +146,7 @@ eth0->removeAddress(ip, 24, broadcast);
 // Synchronous
 eth0->removeAddress(ip, 24, broadcast, true);
 
-// Using Address tuple
+// Using Address struct
 eth0->removeAddress(addr, true);
 ```
 
@@ -149,10 +155,9 @@ eth0->removeAddress(addr, true);
 ```cpp
 for (const auto& addr : eth0->addressList())
 {
-    const IpAddress& ip        = std::get<0>(addr);
-    uint32_t prefix            = std::get<1>(addr);
-    const IpAddress& broadcast = std::get<2>(addr);
-    // Process address...
+    addr.ip;        // IpAddress
+    addr.prefix;    // uint32_t
+    addr.broadcast; // IpAddress (IPv4 broadcast)
 }
 ```
 
@@ -167,80 +172,6 @@ if (eth0->hasAddress(IpAddress("192.168.1.100")))
 if (eth0->hasLocalAddress())
 {
     // Has link-local address
-}
-```
-
----
-
-## Route management
-
-### Route representation
-
-Routes are represented as tuples containing:
-- Destination network
-- Prefix length
-- Gateway address
-- Metric
-
-```cpp
-using Route = std::tuple<IpAddress, uint32_t, IpAddress, uint32_t>;
-```
-
-### Add route
-
-```cpp
-IpAddress dest("10.0.0.0");
-IpAddress gateway("192.168.1.1");
-uint32_t metric = 100;
-
-// Asynchronous
-eth0->addRoute(dest, 8, gateway, metric);
-
-// Synchronous
-eth0->addRoute(dest, 8, gateway, metric, true);
-
-// Using Route tuple
-Interface::Route route = std::make_tuple(dest, 8, gateway, metric);
-eth0->addRoute(route, true);
-```
-
-### Remove route
-
-```cpp
-// Asynchronous
-eth0->removeRoute(dest, 8, gateway, metric);
-
-// Synchronous
-eth0->removeRoute(dest, 8, gateway, metric, true);
-
-// Using Route tuple
-eth0->removeRoute(route, true);
-```
-
-### List routes
-
-```cpp
-for (const auto& route : eth0->routeList())
-{
-    const IpAddress& dest    = std::get<0>(route);
-    uint32_t prefix          = std::get<1>(route);
-    const IpAddress& gateway = std::get<2>(route);
-    uint32_t metric          = std::get<3>(route);
-    // Process route...
-}
-```
-
-### Check for specific route
-
-```cpp
-if (eth0->hasRoute(dest, 8, gateway, metric))
-{
-    // Route exists
-}
-
-if (eth0->hasRoute(route))
-{
-    // Route exists
 }
 ```
 
@@ -303,45 +234,14 @@ if (eth0->isRunning())
 ## Interface type checks
 
 ```cpp
-if (eth0->isLoopback())
-{
-    // Loopback interface
-}
-
-if (eth0->isPointToPoint())
-{
-    // Point-to-point interface
-}
-
-if (eth0->isDummy())
-{
-    // Dummy interface
-}
-
-if (eth0->isBridge())
-{
-    // Bridge interface
-}
-
-if (eth0->isVlan())
-{
-    // VLAN interface
-}
-
-if (eth0->isVeth())
-{
-    // Virtual Ethernet interface
-}
-
-if (eth0->isGre())
-{
-    // GRE tunnel interface
-}
-
-if (eth0->isTun())
-{
-    // TUN/TAP interface
-}
+if (eth0->isLoopback())     { /* Loopback interface */ }
+if (eth0->isPointToPoint()) { /* Point-to-point interface */ }
+if (eth0->isDummy())        { /* Dummy interface */ }
+if (eth0->isBridge())       { /* Bridge interface */ }
+if (eth0->isVlan())         { /* VLAN interface */ }
+if (eth0->isVeth())         { /* Virtual Ethernet interface */ }
+if (eth0->isGre())          { /* GRE tunnel interface (gre or ip6gre) */ }
+if (eth0->isTun())          { /* TUN/TAP interface */ }
 ```
 
 ---
@@ -349,25 +249,10 @@ if (eth0->isTun())
 ## Capability checks
 
 ```cpp
-if (eth0->supportsBroadcast())
-{
-    // Supports broadcast
-}
-
-if (eth0->supportsMulticast())
-{
-    // Supports multicast
-}
-
-if (eth0->supportsIpv4())
-{
-    // Has IPv4 addresses configured
-}
-
-if (eth0->supportsIpv6())
-{
-    // Has IPv6 addresses configured
-}
+if (eth0->supportsBroadcast())  { /* Supports broadcast */ }
+if (eth0->supportsMulticast())  { /* Supports multicast */ }
+if (eth0->supportsIpv4())       { /* Has IPv4 addresses configured */ }
+if (eth0->supportsIpv6())       { /* Has IPv6 addresses configured */ }
 ```
 
 ---
@@ -376,21 +261,21 @@ if (eth0->supportsIpv6())
 
 All configuration methods accept an optional `sync` parameter:
 
-- **Asynchronous** (`sync = false`, default): Operations return immediately without waiting for completion
-- **Synchronous** (`sync = true`): Operations block until the kernel confirms completion
+- **Asynchronous** (`sync = false`, default): returns immediately without waiting for kernel confirmation.
+- **Synchronous** (`sync = true`): blocks until the kernel acknowledges the operation.
 
 ```cpp
-// Non-blocking (fast but no confirmation)
+// Non-blocking
 eth0->addAddress(ip, 24, broadcast);
 
-// Blocking (wait for kernel acknowledgment)
-if (eth0->addAddress(ip, 24, broadcast, true) == 0)
+// Blocking — check return value
+if (eth0->addAddress(ip, 24, broadcast, true) == -1)
 {
-    // Address was successfully added
+    std::cerr << "Failed: " << lastError.message() << "\n";
 }
 ```
 
-⚠️ Synchronous operations have a default timeout of 5 seconds.
+⚠️ Synchronous operations time out after 5 seconds.
 
 ---
 
@@ -403,8 +288,7 @@ Configuration methods return:
 ```cpp
 if (eth0->mtu(1500, true) == -1)
 {
-    // Operation failed
-    std::cerr << "Failed to set MTU: " << lastError.message() << std::endl;
+    std::cerr << "Failed to set MTU: " << lastError.message() << "\n";
 }
 ```
 
@@ -412,25 +296,23 @@ if (eth0->mtu(1500, true) == -1)
 
 ## Best practices
 
-* Use **synchronous operations** for critical configuration where you need confirmation
-* Use **asynchronous operations** for batch configurations to improve performance
-* Always check return values when using synchronous mode
-* Use `InterfaceManager` listeners to track interface changes
-* Prefer the tuple-based methods when working with stored configurations
+- Use **synchronous** mode when confirmation is required before proceeding.
+- Use **asynchronous** mode for fire-and-forget batch operations.
+- Always check return values in synchronous mode.
+- Use `InterfaceManager` listeners to react to interface changes.
 
 ---
 
 ## Summary
 
-| Feature                   | Supported |
-| ------------------------- | --------- |
-| IP address management     | ✅         |
-| Route management          | ✅         |
-| MTU configuration         | ✅         |
-| MAC address change        | ✅         |
-| Bridge membership         | ✅         |
-| Interface enable/disable  | ✅         |
-| IPv4 support              | ✅         |
-| IPv6 support              | ✅         |
-| Sync/async operations     | ✅         |
-| Interface type checks     | ✅         |
+| Feature                  | Supported |
+| ------------------------ | :-------: |
+| IP address management    | ✅        |
+| MTU configuration        | ✅        |
+| MAC address change       | ✅        |
+| Bridge membership        | ✅        |
+| Interface enable/disable | ✅        |
+| IPv4 support             | ✅        |
+| IPv6 support             | ✅        |
+| Sync/async operations    | ✅        |
+| Interface type checks    | ✅        |
