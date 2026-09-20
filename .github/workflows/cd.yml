@@ -12,9 +12,12 @@ jobs:
 
     permissions:
       contents: read
-      actions: write
 
-    secrets: inherit
+    secrets:
+      JOIN_DEPLOY_KNOWN_HOST: ${{ secrets.JOIN_DEPLOY_KNOWN_HOST }}
+      JOIN_DEPLOY_KEY: ${{ secrets.JOIN_DEPLOY_KEY }}
+      JOIN_DEPLOY_DEST: ${{ secrets.JOIN_DEPLOY_DEST }}
+      JOIN_DEPLOY_PORT: ${{ secrets.JOIN_DEPLOY_PORT }}
 
     with:
       deploy: true

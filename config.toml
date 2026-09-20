@@ -1,7 +1,4 @@
-baseURL = "http://joinframework.net/"
+baseURL = "https://joinframework.net/"
 languageCode = "en-us"
 title = "Join Framework"
 theme = "hugo-book"
-
-[staticFiles]
-  include = ["**/.htaccess"]
