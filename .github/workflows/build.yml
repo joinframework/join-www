@@ -10,6 +10,16 @@ on:
         type: boolean
         default: false
 
+    secrets:
+      JOIN_DEPLOY_KNOWN_HOST:
+        required: false
+      JOIN_DEPLOY_KEY:
+        required: false
+      JOIN_DEPLOY_DEST:
+        required: false
+      JOIN_DEPLOY_PORT:
+        required: false
+
   workflow_dispatch:
     inputs:
       deploy:
@@ -28,7 +38,6 @@ jobs:
 
     permissions:
       contents: read
-      actions: write
 
     defaults:
       run:
@@ -51,13 +60,19 @@ jobs:
 
       - name: Deploy
         if: inputs.deploy
+        env:
+          KNOWN_HOST: ${{ secrets.JOIN_DEPLOY_KNOWN_HOST }}
+          DEPLOY_KEY: ${{ secrets.JOIN_DEPLOY_KEY }}
+          DEST: ${{ secrets.JOIN_DEPLOY_DEST }}
+          PORT: ${{ secrets.JOIN_DEPLOY_PORT }}
         run: |
-          mkdir -p $HOME/.ssh
-          chmod 700 $HOME/.ssh
-          echo "${{ secrets.JOIN_DEPLOY_KNOWN_HOST }}" >> $HOME/.ssh/known_hosts
-          chmod 600 $HOME/.ssh/known_hosts
-          eval $(ssh-agent)
-          echo "${{ secrets.JOIN_DEPLOY_KEY }}" | ssh-add -
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$KNOWN_HOST" >> "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+          eval "$(ssh-agent -s)"
+          trap 'ssh-agent -k > /dev/null 2>&1' EXIT
+          printf '%s\n' "$DEPLOY_KEY" | ssh-add -
           rsync -avz --delete ${{ inputs.dry_run && '--dry-run' || '' }} \
-            -e "ssh -p ${{ secrets.JOIN_DEPLOY_PORT }} -o UserKnownHostsFile=$HOME/.ssh/known_hosts" \
-            public/ ${{ secrets.JOIN_DEPLOY_DEST }}
+            -e "ssh -p $PORT -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=yes -o BatchMode=yes" \
+            public/ "$DEST"
