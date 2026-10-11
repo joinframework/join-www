@@ -22,6 +22,7 @@ The `Arp` class handles:
 ## Creating an ARP instance
 
 ```cpp
+// libjoin.
 #include <join/arp.hpp>
 
 using namespace join;

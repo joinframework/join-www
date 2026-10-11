@@ -64,6 +64,7 @@ Timers are neither copyable nor movable.
 A one-shot timer fires **once** after a given duration.
 
 ```cpp
+// libjoin.
 #include <join/timer.hpp>
 
 using namespace join;

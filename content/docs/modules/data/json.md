@@ -25,6 +25,7 @@ JSON features:
 Serialize `Value` objects to JSON format:
 
 ```cpp
+// libjoin.
 #include <join/json.hpp>
 
 using namespace join;
@@ -320,8 +321,9 @@ Join delivers **competitive parsing speed**, ranking among the fastest C++ JSON 
 ### Complete round-trip
 
 ```cpp
-#include <join/json.hpp>
+// libjoin.
 #include <join/value.hpp>
+#include <join/json.hpp>
 
 using namespace join;
 

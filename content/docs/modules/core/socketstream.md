@@ -362,7 +362,10 @@ while (std::getline(stream, line))
 ### Echo client
 
 ```cpp
+// libjoin.
 #include <join/socketstream.hpp>
+
+// C++.
 #include <iostream>
 
 using namespace join;
@@ -385,6 +388,7 @@ while (std::getline(std::cin, message))
 ### Unix domain stream
 
 ```cpp
+// libjoin.
 #include <join/socketstream.hpp>
 
 using namespace join;

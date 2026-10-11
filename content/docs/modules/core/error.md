@@ -46,6 +46,7 @@ Join defines common error conditions in the `Errc` enum:
 Most Join functions return `-1` on failure. Check the thread-local `lastError` for details:
 
 ```cpp
+// libjoin.
 #include <join/error.hpp>
 
 using namespace join;
@@ -150,6 +151,7 @@ std::thread t2(threadFunction);
 ### Basic error handling
 
 ```cpp
+// libjoin.
 #include <join/error.hpp>
 
 using namespace join;

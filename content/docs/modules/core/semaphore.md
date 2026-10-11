@@ -22,6 +22,7 @@ Semaphore types:
 Thread-local semaphore for intra-process synchronization:
 
 ```cpp
+// libjoin.
 #include <join/semaphore.hpp>
 
 using namespace join;
@@ -208,6 +209,7 @@ void useResource()
 ### Producer-consumer
 
 ```cpp
+// C++.
 #include <queue>
 
 Semaphore items(0);       // Count of items in queue
@@ -377,6 +379,7 @@ private:
 Named semaphores persist after process termination. Always clean up:
 
 ```cpp
+// C.
 #include <semaphore.h>
 
 // Create and use

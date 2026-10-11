@@ -89,6 +89,7 @@ LocalMem::Spsc::Queue<std::string> queue(64);
 ### Local queue (single process)
 
 ```cpp
+// libjoin.
 #include <join/queue.hpp>
 
 using namespace join;

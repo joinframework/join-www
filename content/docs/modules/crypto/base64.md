@@ -31,6 +31,7 @@ Use cases include:
 ### Encoding strings
 
 ```cpp
+// libjoin.
 #include <join/base64.hpp>
 
 using namespace join;
@@ -156,9 +157,12 @@ if (decoder.fail())
 ### Encoding binary file
 
 ```cpp
+// libjoin.
 #include <join/base64.hpp>
-#include <fstream>
+
+// C++.
 #include <iostream>
+#include <fstream>
 
 using namespace join;
 
@@ -184,7 +188,10 @@ std::string encodeFile(const std::string& filename)
 ### Decoding to file
 
 ```cpp
+// libjoin.
 #include <join/base64.hpp>
+
+// C++.
 #include <fstream>
 
 using namespace join;
@@ -217,6 +224,7 @@ bool decodeToFile(const std::string& encoded, const std::string& filename)
 ### Base64 data URL
 
 ```cpp
+// libjoin.
 #include <join/base64.hpp>
 
 using namespace join;
@@ -237,6 +245,7 @@ std::string dataUrl = createDataUrl("image/png", imageData);
 ### HTTP Basic Authentication
 
 ```cpp
+// libjoin.
 #include <join/base64.hpp>
 
 using namespace join;
@@ -256,7 +265,10 @@ std::string header = createAuthHeader("user", "pass");
 ### JSON Web Token (JWT) parsing
 
 ```cpp
+// libjoin.
 #include <join/base64.hpp>
+
+// C++.
 #include <sstream>
 
 using namespace join;
@@ -293,7 +305,10 @@ std::string decodeJWTPayload(const std::string& token)
 ### Email attachment encoding
 
 ```cpp
+// libjoin.
 #include <join/base64.hpp>
+
+// C++.
 #include <fstream>
 
 using namespace join;
@@ -323,7 +338,10 @@ std::string createMimeAttachment(const std::string& filename)
 ### Configuration file with binary data
 
 ```cpp
+// libjoin.
 #include <join/base64.hpp>
+
+// C++.
 #include <fstream>
 #include <sstream>
 
@@ -358,7 +376,10 @@ BytesArray loadConfig(const std::string& filename)
 ### Large file streaming
 
 ```cpp
+// libjoin.
 #include <join/base64.hpp>
+
+// C++.
 #include <fstream>
 
 using namespace join;
@@ -545,6 +566,7 @@ std::string encodeMessage(const Message& msg)
 ### Secure token generation
 
 ```cpp
+// libjoin.
 #include <join/base64.hpp>
 #include <join/utils.hpp>
 

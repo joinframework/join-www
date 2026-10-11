@@ -63,6 +63,7 @@ These expand to `BasicArena<LocalMem, Count, Sizes...>` and
 ### Local arena (single process)
 
 ```cpp
+// libjoin.
 #include <join/allocator.hpp>
 
 using namespace join;
@@ -78,6 +79,7 @@ Pool sizes must be provided in **ascending order** and each must be a **power of
 ### Shared arena (multi-process)
 
 ```cpp
+// libjoin.
 #include <join/allocator.hpp>
 
 using namespace join;

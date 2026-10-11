@@ -17,6 +17,7 @@ Interfaces are managed by `InterfaceManager` and are represented as shared point
 Interfaces cannot be created directly. Use `InterfaceManager` to find or create them.
 
 ```cpp
+// libjoin.
 #include <join/interface.hpp>
 
 using namespace join;

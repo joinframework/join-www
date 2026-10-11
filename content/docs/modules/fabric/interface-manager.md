@@ -18,6 +18,7 @@ The **InterfaceManager** class provides centralized management of network interf
 A custom `Reactor*` can be injected by constructing directly:
 
 ```cpp
+// libjoin.
 #include <join/interfacemanager.hpp>
 
 using namespace join;

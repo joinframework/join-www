@@ -52,6 +52,7 @@ Base classes for serializers and deserializers:
 Custom serializers inherit from `StreamWriter` and implement SAX callbacks:
 
 ```cpp
+// libjoin.
 #include <join/sax.hpp>
 
 using namespace join;

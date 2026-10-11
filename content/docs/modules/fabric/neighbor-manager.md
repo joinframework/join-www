@@ -18,6 +18,7 @@ The **NeighborManager** class provides centralized management of the kernel ARP/
 A custom `Reactor*` can be injected by constructing directly:
 
 ```cpp
+// libjoin.
 #include <join/neighbormanager.hpp>
 
 using namespace join;

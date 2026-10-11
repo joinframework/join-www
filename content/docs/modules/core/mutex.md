@@ -24,6 +24,7 @@ Mutex types:
 Basic mutex for thread synchronization:
 
 ```cpp
+// libjoin.
 #include <join/mutex.hpp>
 
 using namespace join;

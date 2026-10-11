@@ -11,6 +11,7 @@ Join provides a **lock-free, multi-producer-safe performance statistics collecto
 Three clock policies expose a `Stats` alias:
 
 ```cpp
+// libjoin.
 #include <join/statistics.hpp>
 
 using namespace join;

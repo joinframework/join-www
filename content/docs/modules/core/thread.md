@@ -26,6 +26,7 @@ Thread features:
 ### Basic thread creation
 
 ```cpp
+// libjoin.
 #include <join/thread.hpp>
 
 using namespace join;
