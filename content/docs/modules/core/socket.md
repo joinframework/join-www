@@ -182,11 +182,25 @@ Connection‑oriented stream sockets for TCP and Unix stream protocols.
 
 ### Creating a TCP client
 
+Endpoints take an IP address: to connect to a host name, resolve it first with
+`Dns::Resolver::lookupAddress()` (see [Endpoint]({{< ref "endpoint" >}})).
+
 ```cpp
+// libjoin.
+#include <join/resolver.hpp>
+#include <join/socket.hpp>
+
 using namespace join;
 
 Tcp::Socket socket;
-Tcp::Endpoint server("example.com", 80);
+
+IpAddress ip = Dns::Resolver::lookupAddress("example.com");
+if (ip.isWildcard())
+{
+    // resolution failed
+}
+
+Tcp::Endpoint server(ip, 80);
 
 if (socket.connect(server) == -1)
 {
@@ -255,10 +269,22 @@ Encrypted stream sockets using OpenSSL for TLS/SSL connections.
 ### Creating a TLS client
 
 ```cpp
+// libjoin.
+#include <join/resolver.hpp>
+#include <join/socket.hpp>
+
 using namespace join;
 
 Tls::Socket socket;
-Tls::Endpoint server("example.com", 443);
+
+IpAddress ip = Dns::Resolver::lookupAddress("example.com");
+if (ip.isWildcard())
+{
+    // resolution failed
+}
+
+Tls::Endpoint server(ip, 443);
+server.hostname("example.com");  // SNI and certificate verification
 
 // connect and initiate TLS handshake
 if (socket.connectEncrypted(server) == -1)
@@ -282,7 +308,15 @@ if (socket.waitEncrypted(5000))
 
 ```cpp
 Tls::Socket socket;
-Tls::Endpoint server("smtp.example.com", 587);
+
+IpAddress ip = Dns::Resolver::lookupAddress("smtp.example.com");
+if (ip.isWildcard())
+{
+    // resolution failed
+}
+
+Tls::Endpoint server(ip, 587);
+server.hostname("smtp.example.com");
 
 // connect without TLS
 if (socket.connect(server) == -1) { /* ... */ }
@@ -490,13 +524,26 @@ while (true)
 ### HTTPS GET request
 
 ```cpp
+// libjoin.
+#include <join/resolver.hpp>
+#include <join/socket.hpp>
+
 using namespace join;
 
 Tls::Socket socket;
 socket.setVerify(true);
 socket.setCaFile("/etc/ssl/certs/ca-bundle.crt");
 
-socket.connectEncrypted(Tls::Endpoint("example.com", 443));
+IpAddress ip = Dns::Resolver::lookupAddress("example.com");
+if (ip.isWildcard())
+{
+    // resolution failed
+}
+
+Tls::Endpoint server(ip, 443);
+server.hostname("example.com");
+
+socket.connectEncrypted(server);
 socket.waitEncrypted(5000);
 
 std::string request =

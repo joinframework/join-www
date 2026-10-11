@@ -12,7 +12,7 @@ Endpoint features:
 
 * **protocol-aware** — each protocol has its endpoint type
 * **type-safe** — compile-time endpoint validation
-* **URL parsing** — automatic hostname resolution
+* **TLS-ready** — optional host name for SNI and certificate verification
 * **comparison** — sortable for use in maps/sets
 
 ---
@@ -89,7 +89,7 @@ endpoint.ip(IpAddress("10.0.0.1"));
 uint16_t port = endpoint.port();
 endpoint.port(9090);
 
-// Hostname (if created from URL)
+// Hostname (used by TLS for SNI and certificate verification)
 std::string host = endpoint.hostname();
 endpoint.hostname("example.com");
 
@@ -187,7 +187,7 @@ std::map<Tcp::Endpoint, Connection> connections;
 Tcp::Endpoint endpoint("192.168.1.1", 8080);
 std::cout << endpoint << "\n";  // "192.168.1.1:8080"
 
-Tcp::Endpoint ipv6("[2001:db8::1]:443");
+Tcp::Endpoint ipv6("2001:db8::1", 443);
 std::cout << ipv6 << "\n";      // "[2001:db8::1]:443"
 
 UnixStream::Endpoint unix("/tmp/socket");
@@ -216,14 +216,42 @@ acceptor.bind(wildcard);
 ### Client connection
 
 ```cpp
-// Connect by hostname
 Tcp::Socket socket;
-Tcp::Endpoint endpoint("example.com", 80);
+Tcp::Endpoint endpoint("93.184.216.34", 80);
 socket.connect(endpoint);
+```
 
-// Connect by IP
-Tcp::Endpoint direct("93.184.216.34", 80);
-socket.connect(direct);
+### Connecting to a host name
+
+Endpoints are built from an **IP address**, not from a host name.
+Resolve the name first with `Dns::Resolver` from the [fabric]({{< ref "dns-resolver" >}}) module:
+
+```cpp
+// libjoin.
+#include <join/resolver.hpp>
+
+using namespace join;
+
+IpAddress ip = Dns::Resolver::lookupAddress("example.com");
+if (ip.isWildcard())
+{
+    // resolution failed
+}
+
+Tcp::Endpoint endpoint(ip, 80);
+```
+
+For TLS, also set the host name: it is sent to the server (SNI) and used to verify its certificate.
+
+```cpp
+IpAddress ip = Dns::Resolver::lookupAddress("example.com");
+if (ip.isWildcard())
+{
+    // resolution failed
+}
+
+Tls::Endpoint endpoint(ip, 443);
+endpoint.hostname("example.com");
 ```
 
 ### UDP sendto/recvfrom
@@ -274,9 +302,9 @@ const struct sockaddr* caddr = endpoint.addr();
 
 ## Best practices
 
-* **Use URLs** — simplifies hostname resolution
+* **Resolve host names first** — endpoints take IP addresses, use `Dns::Resolver::lookupAddress()`
 * **Wildcard for servers** — bind to all interfaces with `Protocol(family, port)`
-* **Check resolved IPs** — verify hostname resolution succeeded
+* **Check resolved IPs** — `lookupAddress()` returns a wildcard address on failure
 * **Specify device** — for link-local IPv6 addresses
 * **Store in containers** — endpoints are comparable and copyable
 
