@@ -55,7 +55,7 @@ Typical use cases:
 ```cpp
 #include <join/hmac.hpp>
 
-using join;
+using namespace join;
 
 std::string key  = "secret-key";
 std::string data = "Hello, World!";

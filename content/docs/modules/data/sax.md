@@ -54,7 +54,7 @@ Custom serializers inherit from `StreamWriter` and implement SAX callbacks:
 ```cpp
 #include <join/sax.hpp>
 
-using join;
+using namespace join;
 
 class MyWriter : public StreamWriter
 {

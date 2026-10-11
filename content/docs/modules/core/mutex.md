@@ -26,7 +26,7 @@ Basic mutex for thread synchronization:
 ```cpp
 #include <join/mutex.hpp>
 
-using join;
+using namespace join;
 
 Mutex mutex;
 
@@ -79,7 +79,7 @@ Synchronizes access across different processes via shared memory:
 #include <join/mutex.hpp>
 #include <join/shared.hpp>
 
-using join;
+using namespace join;
 
 // Create shared memory segment
 SharedMemory shm("my_mutex", sizeof(SharedMutex));
@@ -278,7 +278,7 @@ void processElement(int index)
 #include <join/shared.hpp>
 #include <join/mutex.hpp>
 
-using join;
+using namespace join;
 
 // Process A (creates shared memory and mutex)
 SharedMemory shm("my_mutex", sizeof(SharedMutex));

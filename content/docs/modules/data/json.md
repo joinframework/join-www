@@ -27,7 +27,7 @@ Serialize `Value` objects to JSON format:
 ```cpp
 #include <join/json.hpp>
 
-using join;
+using namespace join;
 
 Value data;
 data["name"] = "Alice";
@@ -323,7 +323,7 @@ Join delivers **competitive parsing speed**, ranking among the fastest C++ JSON 
 #include <join/json.hpp>
 #include <join/value.hpp>
 
-using join;
+using namespace join;
 
 // Create data
 Value data = Object{

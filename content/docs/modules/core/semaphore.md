@@ -24,7 +24,7 @@ Thread-local semaphore for intra-process synchronization:
 ```cpp
 #include <join/semaphore.hpp>
 
-using join;
+using namespace join;
 
 Semaphore sem(3);  // Initial count of 3
 
@@ -77,7 +77,7 @@ Process-shared semaphore using shared memory:
 ```cpp
 #include <join/shared.hpp>
 
-using join;
+using namespace join;
 
 // Create in shared memory
 SharedMemory shm("sem_data", sizeof(SharedSemaphore));

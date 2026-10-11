@@ -33,7 +33,7 @@ Use cases include:
 ```cpp
 #include <join/base64.hpp>
 
-using join;
+using namespace join;
 
 std::string data = "Hello, World!";
 std::string encoded = Base64::encode(data);
@@ -160,7 +160,7 @@ if (decoder.fail())
 #include <fstream>
 #include <iostream>
 
-using join;
+using namespace join;
 
 std::string encodeFile(const std::string& filename)
 {
@@ -187,7 +187,7 @@ std::string encodeFile(const std::string& filename)
 #include <join/base64.hpp>
 #include <fstream>
 
-using join;
+using namespace join;
 
 bool decodeToFile(const std::string& encoded, const std::string& filename)
 {
@@ -219,7 +219,7 @@ bool decodeToFile(const std::string& encoded, const std::string& filename)
 ```cpp
 #include <join/base64.hpp>
 
-using join;
+using namespace join;
 
 std::string createDataUrl(const std::string& mimeType, const BytesArray& data)
 {
@@ -239,7 +239,7 @@ std::string dataUrl = createDataUrl("image/png", imageData);
 ```cpp
 #include <join/base64.hpp>
 
-using join;
+using namespace join;
 
 std::string createAuthHeader(const std::string& username, const std::string& password)
 {
@@ -259,7 +259,7 @@ std::string header = createAuthHeader("user", "pass");
 #include <join/base64.hpp>
 #include <sstream>
 
-using join;
+using namespace join;
 
 struct JWT
 {
@@ -296,7 +296,7 @@ std::string decodeJWTPayload(const std::string& token)
 #include <join/base64.hpp>
 #include <fstream>
 
-using join;
+using namespace join;
 
 std::string createMimeAttachment(const std::string& filename)
 {
@@ -327,7 +327,7 @@ std::string createMimeAttachment(const std::string& filename)
 #include <fstream>
 #include <sstream>
 
-using join;
+using namespace join;
 
 void saveConfig(const std::string& filename, const BytesArray& binaryData)
 {
@@ -361,7 +361,7 @@ BytesArray loadConfig(const std::string& filename)
 #include <join/base64.hpp>
 #include <fstream>
 
-using join;
+using namespace join;
 
 void encodeFileStreaming(const std::string& inputFile, const std::string& outputFile)
 {

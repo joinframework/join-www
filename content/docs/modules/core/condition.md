@@ -27,7 +27,7 @@ Standard condition variable for thread synchronization:
 #include <join/condition.hpp>
 #include <join/mutex.hpp>
 
-using join;
+using namespace join;
 
 Mutex mutex;
 Condition cond;
@@ -69,7 +69,7 @@ Condition variable for inter-process synchronization:
 #include <join/mutex.hpp>
 #include <join/shared.hpp>
 
-using join;
+using namespace join;
 
 struct SyncData
 {

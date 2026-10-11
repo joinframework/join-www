@@ -50,7 +50,7 @@ Use cases include:
 ```cpp
 #include <join/digest.hpp>
 
-using join;
+using namespace join;
 
 std::string data = "Hello, World!";
 std::string hash = Digest::sha256hex(data);
@@ -198,7 +198,7 @@ if (digest.fail())
 #include <fstream>
 #include <iostream>
 
-using join;
+using namespace join;
 
 std::string sha256File(const std::string& filename)
 {
@@ -233,7 +233,7 @@ int main()
 #include <join/digest.hpp>
 #include <join/utils.hpp>
 
-using join;
+using namespace join;
 
 struct HashedPassword
 {
@@ -287,7 +287,7 @@ bool verifyPassword(const std::string& password, const HashedPassword& stored)
 ```cpp
 #include <join/digest.hpp>
 
-using join;
+using namespace join;
 
 class ContentStore
 {
@@ -319,7 +319,7 @@ private:
 ```cpp
 #include <join/digest.hpp>
 
-using join;
+using namespace join;
 
 struct DataPacket
 {
@@ -347,7 +347,7 @@ bool verifyPacket(const DataPacket& packet)
 ```cpp
 #include <join/digest.hpp>
 
-using join;
+using namespace join;
 
 class MerkleNode
 {
@@ -378,7 +378,7 @@ private:
 #include <join/digest.hpp>
 #include <sstream>
 
-using join;
+using namespace join;
 
 std::string hashGitObject(const std::string& type, const std::string& content)
 {
@@ -400,7 +400,7 @@ std::string commitHash = hashGitObject("commit", commitData);
 #include <join/digest.hpp>
 #include <set>
 
-using join;
+using namespace join;
 
 class Deduplicator
 {
@@ -428,7 +428,7 @@ private:
 ```cpp
 #include <join/digest.hpp>
 
-using join;
+using namespace join;
 
 std::string generateETag(const std::string& content)
 {

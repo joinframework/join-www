@@ -27,7 +27,7 @@ Serialize `Value` objects to MessagePack format:
 ```cpp
 #include <join/pack.hpp>
 
-using join;
+using namespace join;
 
 Value data;
 data["name"] = "Alice";
@@ -52,7 +52,7 @@ Parse MessagePack data into a `Value`:
 ```cpp
 #include <join/pack.hpp>
 
-using join;
+using namespace join;
 
 Value root;
 PackReader reader(root);
@@ -208,7 +208,7 @@ PackReader uses **on-the-fly parsing**:
 #include <join/pack.hpp>
 #include <join/value.hpp>
 
-using join;
+using namespace join;
 
 // Create data
 Value data = Object{
