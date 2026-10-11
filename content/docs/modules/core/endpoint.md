@@ -204,13 +204,15 @@ std::cout << nl << "\n";        // "pid=1234,groups=1"
 ### Server binding
 
 ```cpp
-// Bind to specific address
+// Listen on a specific address
 Tcp::Endpoint specific("192.168.1.10", 8080);
-acceptor.bind(specific);
+Tcp::Acceptor acceptor;
+acceptor.create(specific);
 
-// Bind to wildcard (all interfaces)
+// Listen on all interfaces (wildcard)
 Tcp::Endpoint wildcard(Tcp::v4(), 8080);
-acceptor.bind(wildcard);
+Tcp::Acceptor wildcardAcceptor;
+wildcardAcceptor.create(wildcard);
 ```
 
 ### Client connection
@@ -254,19 +256,21 @@ Tls::Endpoint endpoint(ip, 443);
 endpoint.hostname("example.com");
 ```
 
-### UDP sendto/recvfrom
+### UDP writeTo/readFrom
 
 ```cpp
-Udp::Socket socket;
+Udp::Socket socket(Udp::Socket::Mode::Blocking);
 Udp::Endpoint remote("8.8.8.8", 53);
 
 // Send to endpoint
-socket.sendTo("DNS query", remote);
+const char query[] = "DNS query";
+socket.writeTo(query, sizeof(query) - 1, remote);
 
 // Receive from endpoint
+char buffer[512];
 Udp::Endpoint sender;
-std::string data = socket.receiveFrom(sender);
-std::cout << "From: " << sender << "\n";
+int n = socket.readFrom(buffer, sizeof(buffer), &sender);
+std::cout << "Received " << n << " bytes from " << sender << "\n";
 ```
 
 ### Link-local IPv6
@@ -303,7 +307,7 @@ const struct sockaddr* caddr = endpoint.addr();
 ## Best practices
 
 * **Resolve host names first** — endpoints take IP addresses, use `Dns::Resolver::lookupAddress()`
-* **Wildcard for servers** — bind to all interfaces with `Protocol(family, port)`
+* **Wildcard for servers** — listen on all interfaces with `Tcp::Endpoint(Tcp::v4(), port)` or `Tcp::v6()`
 * **Check resolved IPs** — `lookupAddress()` returns a wildcard address on failure
 * **Specify device** — for link-local IPv6 addresses
 * **Store in containers** — endpoints are comparable and copyable
