@@ -90,13 +90,13 @@ Pure virtual interface for receiving parsing events:
 **Events:**
 - `setNull()` - Null value
 - `setBool(bool)` - Boolean value
-- `setInt(int64_t)` - Integer value
-- `setUint(uint64_t)` - Unsigned integer
+- `setInt(int32_t)` / `setInt64(int64_t)` - Signed integer
+- `setUint(uint32_t)` / `setUint64(uint64_t)` - Unsigned integer
 - `setDouble(double)` - Floating-point value
-- `setString(string)` - String value
-- `startObject()` / `endObject()` - Object boundaries
-- `startArray()` / `endArray()` - Array boundaries
-- `key(string)` - Object key
+- `setString(const std::string&)` - String value
+- `startObject(uint32_t size)` / `stopObject()` - Object boundaries
+- `startArray(uint32_t size)` / `stopArray()` - Array boundaries
+- `setKey(const Value&)` - Object key
 
 **Features:**
 - Stack-based parsing with depth limit (19 levels)
