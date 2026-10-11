@@ -23,7 +23,7 @@ making it ideal for serving static content or frequently accessed files.
 | Feature                    | Description                              |
 |----------------------------|------------------------------------------|
 | Memory mapping             | Uses `mmap()` for zero-copy access       |
-| Automatic invalidation     | Detects file changes by modification time|
+| Automatic invalidation     | Detects file changes by status change time|
 | Thread-safe operations     | Protected by internal mutex              |
 | Lazy loading               | Files mapped only when requested         |
 | Resource management        | Automatic cleanup on destruction         |
@@ -35,7 +35,16 @@ making it ideal for serving static content or frequently accessed files.
 ### Creating a cache
 
 ```cpp
+// libjoin.
 #include <join/cache.hpp>
+
+// C++.
+#include <iostream>
+
+// C.
+#include <cstdlib>
+
+using namespace join;
 
 Cache cache;
 ```
@@ -57,7 +66,7 @@ if (data != nullptr)
 
     // Access file contents directly
     const char* content = static_cast<const char*>(data);
-    processData(content, fileSize);
+    std::cout.write(content, fileSize);
 }
 ```
 
@@ -78,7 +87,7 @@ void* data2 = cache.get("file.txt", sbuf);
 
 // Next access - detects change, remaps file
 void* data3 = cache.get("file.txt", sbuf);
-// data3 != data1 (new mapping)
+// data1 and data2 are no longer valid: use data3
 ```
 
 ---
@@ -95,20 +104,20 @@ void* ptr = cache.get(filename, sbuf);
 
 if (ptr == nullptr)
 {
-    // File doesn't exist, is a directory, or mapping failed
-    handleError();
+    // File doesn't exist, is not readable, is a directory, is empty, or mapping failed
+    std::cerr << "cannot cache " << filename << "\n";
 }
 else
 {
     // Use cached data
-    processFile(ptr, sbuf.st_size);
+    std::cout.write(static_cast<const char*>(ptr), sbuf.st_size);
 }
 ```
 
 The `get()` method:
 1. Checks if file exists and is not a directory
 2. Looks for existing cache entry
-3. Validates entry against file modification time
+3. Validates entry against the file status change time (`st_ctim`)
 4. Returns cached data if valid
 5. Remaps file if changed or not cached
 6. Returns pointer to mapped memory
@@ -150,7 +159,9 @@ size_t count = cache.size();
 
 ## Modification tracking
 
-The cache automatically detects file changes using modification timestamps.
+The cache automatically detects file changes using the file status change time (`st_ctim`),
+which is updated whenever the file content changes (and also on `chmod` or `chown`),
+at the resolution of the filesystem timestamps.
 
 ### How it works
 
@@ -162,14 +173,14 @@ struct stat sbuf1;
 void* data1 = cache.get("file.txt", sbuf1);
 
 // File modified externally (via editor, build system, etc.)
-system("echo 'new content' > file.txt");
+std::system("echo 'new content' > file.txt");
 
 // Next access detects change
 struct stat sbuf2;
 void* data2 = cache.get("file.txt", sbuf2);
 
 // Cache automatically:
-// 1. Detected modification time changed
+// 1. Detected status change time changed
 // 2. Unmapped old version
 // 3. Mapped new version
 // 4. Returned pointer to new data
@@ -205,14 +216,14 @@ Cache cache;  // Shared across threads
 std::thread t1([&cache]() {
     struct stat sbuf;
     void* data = cache.get("file1.txt", sbuf);
-    process(data, sbuf.st_size);
+    // use data (sbuf.st_size bytes) right away
 });
 
 // Thread 2
 std::thread t2([&cache]() {
     struct stat sbuf;
     void* data = cache.get("file2.txt", sbuf);
-    process(data, sbuf.st_size);
+    // use data (sbuf.st_size bytes) right away
 });
 
 // Thread 3
@@ -238,27 +249,41 @@ t3.join();
 
 ### Web server static files
 
+`Http::Server` already serves its static files through a `Cache`. To send a cached file
+on any output stream yourself:
+
 ```cpp
-class HttpServer
+// libjoin.
+#include <join/httpmessage.hpp>
+#include <join/cache.hpp>
+
+using namespace join;
+
+// Returns true if the response was written
+bool sendFile(Cache& cache, const std::string& path, std::ostream& out)
 {
-    Cache fileCache;
+    HttpResponse response;
 
-public:
-    void serveStaticFile(const std::string& path, HttpResponse& response)
+    struct stat sbuf;
+    void* data = cache.get(path, sbuf);
+    if (data == nullptr)
     {
-        struct stat sbuf;
-        void* data = fileCache.get(path, sbuf);
-        if (data == nullptr)
-        {
-            response.status(404);
-            return;
-        }
-
-        response.status(200);
-        response.header("Content-Length", std::to_string(sbuf.st_size));
-        response.write(data, sbuf.st_size);
+        // missing, unreadable or empty file (an empty file can't be mapped)
+        response.response("404", "Not Found");
+        response.header("Content-Length", "0");
+        return response.writeHeaders(out) == 0;
     }
-};
+
+    response.response("200", "OK");
+    response.header("Content-Length", std::to_string(sbuf.st_size));
+    if (response.writeHeaders(out) == -1)
+    {
+        return false;
+    }
+
+    out.write(static_cast<const char*>(data), sbuf.st_size);
+    return out.good();
+}
 ```
 
 ---
@@ -282,7 +307,7 @@ for (int i = 0; i < 1000; ++i)
 {
     std::ifstream file("data.txt");
     std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    process(content);
+    // use content
 }
 // 1000 file opens, 1000 reads
 
@@ -292,7 +317,7 @@ for (int i = 0; i < 1000; ++i)
 {
     struct stat sbuf;
     void* data = cache.get("data.txt", sbuf);
-    process(data, sbuf.st_size);
+    // use data (sbuf.st_size bytes)
 }
 // 1 file open, 1 mmap, 999 cache hits
 ```
@@ -316,19 +341,23 @@ Cache cache;
 struct stat sbuf;
 void* ptr1 = cache.get("file.txt", sbuf);
 
-// Pointer is valid...
-
 // File modified externally
-modifyFile("file.txt");
+std::system("echo 'new content' > file.txt");
 
-// Next get invalidates ptr1!
+// ptr1 must not be used anymore: the file changed under the mapping
 void* ptr2 = cache.get("file.txt", sbuf);
 
-// ptr1 is now DANGLING - do not use!
-// ptr2 points to new mapping
+// ptr2 points to the new mapping
 ```
 
-**Important:** Once a file is remapped, previous pointers become invalid.
+**Important:** as soon as a file changes on disk, previous pointers must not be used anymore.
+A file rewritten in place (truncated, then written) can even make a read through an old pointer
+crash with `SIGBUS`. Update cached files atomically instead: write a new file, then `rename()` it
+over the old one.
+
+```cpp
+std::system("echo 'new content' > file.txt.tmp && mv file.txt.tmp file.txt");
+```
 
 ### Safe usage pattern
 
@@ -343,7 +372,7 @@ void processFile(const std::string& path)
     if (data != nullptr)
     {
         // Use data immediately
-        process(data, sbuf.st_size);
+        std::cout.write(static_cast<const char*>(data), sbuf.st_size);
         // Don't store pointer for later use
     }
 }
@@ -358,6 +387,7 @@ void processFile(const std::string& path)
 ```cpp
 // Good: Read-only access to static content
 Cache cache;
+struct stat sbuf;
 void* data = cache.get("/var/www/index.html", sbuf);
 
 // Bad: Don't use for files you're actively writing to
@@ -389,7 +419,10 @@ class GoodExample
     {
         struct stat sbuf;
         void* data = cache.get(filename, sbuf);
-        if (data) use(data, sbuf.st_size);
+        if (data)
+        {
+            // use data (sbuf.st_size bytes) right away
+        }
     }
 };
 ```
@@ -413,21 +446,15 @@ if (data == nullptr)
 ### Share cache instance
 
 ```cpp
-// Good: Single shared cache
-class Application
+// Good: Single shared cache, each file is mapped once
+Cache sharedCache;
+
+void handleRequest(const std::string& path)
 {
-    Cache sharedCache;
-
-    void handleRequest1()
-    {
-        useCache(sharedCache);
-    }
-
-    void handleRequest2()
-    {
-        useCache(sharedCache);
-    }
-};
+    struct stat sbuf;
+    void* data = sharedCache.get(path, sbuf);
+    // ...
+}
 ```
 
 ---
@@ -437,11 +464,14 @@ class Application
 ### File type restrictions
 
 ```cpp
-// Won't cache directories
-void* data = cache.get("/path/to/dir", sbuf);  // Returns nullptr
+Cache cache;
+struct stat sbuf;
 
-// Only regular files are cached
-S_ISDIR(sbuf.st_mode) == false
+// Only regular files can be cached: don't pass directories, pipes or devices
+void* dir = cache.get("/path/to/dir", sbuf);  // Returns nullptr
+
+// Won't cache empty files (nothing to map)
+void* empty = cache.get("/path/to/empty.txt", sbuf);  // Returns nullptr
 ```
 
 ### Memory considerations
