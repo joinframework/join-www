@@ -54,9 +54,12 @@ The site will be available at `http://<machine-ip-address>:1313`.
 
 ```
 join-www/
+├── .github/workflows/    # CI (build on pull requests) and CD (deploy on main)
+├── archetypes/
+│   └── default.md        # Template used by `hugo new`
 ├── config.toml           # Hugo configuration
 ├── content/              # Documentation content (Markdown)
-│   ├── _index.md         # Documentation home page
+│   ├── _index.md         # Site home page
 │   └── docs/
 │       ├── _index.md     # Documentation overview
 │       ├── quickstart/
@@ -68,6 +71,8 @@ join-www/
 │           ├── data/     # Data module (JSON, MessagePack, compression)
 │           ├── fabric/   # Fabric module (interface mgmt, ARP, DNS)
 │           └── services/ # Services module (HTTP, SMTP, etc.)
+├── static/
+│   └── images/           # Images used by the pages
 ├── themes/
 │   └── hugo-book/        # Theme (Git submodule)
 └── public/               # Generated site (ignored by Git)
@@ -87,11 +92,14 @@ hugo new docs/new-section/_index.md
 hugo new docs/new-section/page1.md
 ```
 
+> **Note:** new pages are created with `draft: true`. Drafts are shown by `hugo server -D` but are **not**
+> published: remove the `draft` line once the page is ready.
+
 ### Edit an existing page
 
 Simply edit the `.md` files in `content/docs/`. Example:
 
-```markdown
+````markdown
 ---
 title: "Page Title"
 weight: 10
@@ -103,14 +111,22 @@ Content in Markdown...
 
 ## Code Example
 
-\`\`\`cpp
+```cpp
+// libjoin.
 #include <join/socket.hpp>
 
-int main() {
+using namespace join;
+
+int main()
+{
     // Your code
 }
-\`\`\`
 ```
+````
+
+Code examples should be complete and compile as shown. Use the protocol aliases
+(`Tcp::Socket`, `Http::Server`...) and group the includes like the Join sources:
+`// libjoin.`, `// Libraries.`, `// C++.` then `// C.`, each group sorted from the longest line to the shortest.
 
 ### Front matter parameters
 
@@ -172,6 +188,20 @@ hugo
 ```
 
 ## Deployment
+
+### Automatic deployment
+
+The site is built and deployed by GitHub Actions:
+
+* **CI** (`.github/workflows/ci.yml`) — every pull request to `main` is built with `hugo --minify`
+* **CD** (`.github/workflows/cd.yml`) — every push to `main` is built and deployed to the web server with `rsync`
+
+The deployment target and SSH key are provided by the repository secrets
+(`JOIN_DEPLOY_DEST`, `JOIN_DEPLOY_PORT`, `JOIN_DEPLOY_KEY`, `JOIN_DEPLOY_KNOWN_HOST`).
+Both workflows rely on the reusable `.github/workflows/build.yml` and can also be started manually
+(`workflow_dispatch`). Starting **CD** manually always deploys for real. To check a deployment without
+changing the server, start `build.yml` directly with `deploy` and `dry_run` both enabled
+(`rsync --dry-run`).
 
 ### Manual deployment
 
