@@ -137,13 +137,16 @@ is silently ignored (base case of the recursive ownership check).
 ## NUMA binding and memory locking
 
 These methods delegate directly to the underlying memory backend.
+`mbind()` requires NUMA support (`-DJOIN_ENABLE_NUMA=ON`, which defines `JOIN_HAS_NUMA`).
 
 ```cpp
+#ifdef JOIN_HAS_NUMA
 // bind arena memory to NUMA node 0
 if (arena.mbind(0) == -1)
 {
     std::cerr << join::lastError.message() << "\n";
 }
+#endif
 
 // lock arena memory in RAM
 if (arena.mlock() == -1)
@@ -204,7 +207,14 @@ LocalMem::Allocator<128, 64, 256> b = std::move(a);  // a is now empty
 ## Complete example
 
 ```cpp
+// libjoin.
 #include <join/allocator.hpp>
+
+// C++.
+#include <new>
+
+// C.
+#include <cstdint>
 
 using namespace join;
 
@@ -214,7 +224,7 @@ struct Sample
     float   value;
 };
 
-static_assert (sizeof (Sample) <= 64);
+static_assert (sizeof (Sample) <= 64, "Sample must fit in a 64 B chunk");
 
 int main ()
 {
@@ -222,7 +232,9 @@ int main ()
     LocalMem::Allocator<256, 64> arena;
 
     // pin to NUMA node 0 and lock in RAM
+#ifdef JOIN_HAS_NUMA
     arena.mbind (0);
+#endif
     arena.mlock ();
 
     // allocate and construct
@@ -248,7 +260,7 @@ int main ()
 * Choose `Size` values that match the actual types you store — oversized chunks waste pool capacity
 * Prefer `tryAllocate` in real-time paths to avoid silent promotion to a larger pool
 * Use `allocate` when graceful degradation under pressure is acceptable
-* On NUMA systems, call `mbind()` immediately after construction and before first use
+* On NUMA systems, call `mbind()` immediately after construction and before first use (requires `JOIN_HAS_NUMA`)
 * Use `mlock()` on latency-critical paths to prevent page faults
 * For shared arenas, always call `ShmMem::unlink()` on teardown
 

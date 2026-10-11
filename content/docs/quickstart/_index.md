@@ -25,12 +25,14 @@ Join relies on the following libraries:
 | Library | Package | Purpose |
 |---------|---------|---------|
 | **OpenSSL** | `libssl-dev` | TLS support and cryptographic operations |
-| **libnuma** | `libnuma-dev` | Memory pinning and NUMA affinity in `join-core` |
+| **libnuma** | `libnuma-dev` | NUMA memory binding in `join-core` (optional) |
 | **zlib** | `zlib1g-dev` | Compression capabilities |
 | **Google Test** | `libgtest-dev` | Unit testing (optional) |
 | **Google Mock** | `libgmock-dev` | Mocking in tests (optional) |
 
-> **Note:** Both `OpenSSL` and `libnuma` are required by `join-core`. OpenSSL provides the TLS runtime; libnuma enables memory pinning and NUMA affinity for the lock-free queues and memory backends.
+> **Note:** `OpenSSL` is required by `join-core` for the TLS runtime. `libnuma` is optional: it is only needed
+> when building with `-DJOIN_ENABLE_NUMA=ON`, which enables the `mbind()` NUMA binding methods of the memory
+> backends, queues and allocators (and defines `JOIN_HAS_NUMA`).
 
 ---
 
@@ -39,7 +41,10 @@ Join relies on the following libraries:
 **On Ubuntu/Debian:**
 
 ```bash
-sudo apt update && sudo apt install libssl-dev libnuma-dev zlib1g-dev libgtest-dev libgmock-dev
+sudo apt update && sudo apt install libssl-dev zlib1g-dev libgtest-dev libgmock-dev
+
+# Optional: NUMA support (-DJOIN_ENABLE_NUMA=ON)
+sudo apt install libnuma-dev
 ```
 
 ---
