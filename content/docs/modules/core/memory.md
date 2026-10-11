@@ -102,17 +102,24 @@ const void* ptr = mem.get(0);
 
 Memory can be bound to a specific NUMA node to reduce latency on multi-socket systems.
 
+`mbind()` is only available when Join is built with NUMA support (`-DJOIN_ENABLE_NUMA=ON`),
+which defines `JOIN_HAS_NUMA`:
+
 ```cpp
+#ifdef JOIN_HAS_NUMA
 if (mem.mbind(0) == -1)
 {
     // check join::lastError
 }
+#endif
 ```
 
 Alternatively, use the standalone function:
 
 ```cpp
+#ifdef JOIN_HAS_NUMA
 join::mbind(ptr, size, numaNode);
+#endif
 ```
 
 ---
@@ -183,7 +190,7 @@ ShmMem::Mpmc
 Functions that return `-1` on failure set `join::lastError` with a `std::error_code`.
 
 ```cpp
-if (mem.mbind(0) == -1)
+if (mem.mlock() == -1)
 {
     std::cerr << join::lastError.message() << "\n";
 }
@@ -198,7 +205,7 @@ Constructors throw `std::system_error` on `mmap` or `shm_open` failure.
 * Prefer **LocalMem** for single-process, low-latency buffers
 * Use **ShmMem** for inter-process communication
 * Always call `ShmMem::unlink()` during application teardown
-* Use `mbind()` on NUMA systems to pin memory close to the consuming CPU
+* Use `mbind()` on NUMA systems to pin memory close to the consuming CPU (requires `JOIN_HAS_NUMA`)
 * Use `mlock()` for latency-critical paths where page faults are unacceptable
 * Keep segment sizes **page-aligned** — the API handles rounding automatically
 
