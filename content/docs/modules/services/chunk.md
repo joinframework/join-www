@@ -23,7 +23,13 @@ implementing the HTTP/1.1 chunked transfer encoding specification.
 ### Writing chunked data
 
 ```cpp
+// libjoin.
 #include <join/chunkstream.hpp>
+
+// C++.
+#include <sstream>
+
+using namespace join;
 
 std::stringstream storage;
 Chunkstream stream(storage);
@@ -31,30 +37,25 @@ Chunkstream stream(storage);
 // Write data - automatically chunked
 stream << "Hello, ";
 stream << "World!";
-stream.flush();  // Sends final chunk
+stream.flush();  // Sends the pending data and the final chunk
 
 // Storage now contains:
-// 7\r\n
-// Hello, \r\n
-// 6\r\n
-// World!\r\n
+// d\r\n
+// Hello, World!\r\n
 // 0\r\n
 // \r\n
 ```
 
+Data is buffered: a chunk is sent each time the buffer is full (the chunk size), and `flush()` sends what remains followed by the **final chunk**.
+
 ### Reading chunked data
 
 ```cpp
-std::stringstream storage(chunkedData);
+std::stringstream storage("d\r\nHello, World!\r\n0\r\n\r\n");
 Chunkstream stream(storage);
 
 // Read data - automatically dechunked
-std::string line;
-std::getline(stream, line);
-
-// Or read entire stream
-std::string data;
-std::getline(stream, data, '\0');
+std::string data(std::istreambuf_iterator<char>(stream), {});  // "Hello, World!"
 ```
 
 ---
@@ -107,25 +108,27 @@ Chunkstream stream(storage);
 stream << "Data to send";
 
 // Write binary
-char buffer[1024] = {...};
+char buffer[1024] = {};
 stream.write(buffer, sizeof(buffer));
 
-// Flush to send final chunk
+// Flush once, at the end: sends the final chunk
 stream.flush();
 ```
+
+⚠️ `flush()` **ends the chunked body**: it always sends the final chunk. Call it only once, after the last write.
 
 ### Streaming data
 
 ```cpp
 Chunkstream stream(storage);
 
-// Stream data continuously
-for (const auto& chunk : dataChunks)
+// Stream data continuously: full chunks are sent as the buffer fills up
+for (const auto& part : parts)
 {
-    stream << chunk;
+    stream << part;
 }
 
-// Send terminating chunk
+// Send the remaining data and the final chunk
 stream.flush();
 ```
 
@@ -142,7 +145,7 @@ Chunkstream stream(storage);
 std::string line;
 while (std::getline(stream, line))
 {
-    process(line);
+    std::cout << line << "\n";
 }
 ```
 
@@ -152,61 +155,55 @@ while (std::getline(stream, line))
 Chunkstream stream(storage);
 
 char buffer[1024];
-while (stream.read(buffer, sizeof(buffer)))
+while (stream.read(buffer, sizeof(buffer)) || stream.gcount() > 0)
 {
-    size_t bytesRead = stream.gcount();
-    process(buffer, bytesRead);
+    std::streamsize bytesRead = stream.gcount();
+    // process bytesRead bytes from buffer
 }
 ```
+
+The last block is usually shorter than the buffer: `gcount()` gives its size even when `read()` reached the end.
 
 ---
 
 ## HTTP usage
 
+`Http::Server` and `Http::Client` handle chunked transfer encoding **automatically**:
+set the `Transfer-Encoding: chunked` header and write the body as usual.
+
 ### Server sending chunked response
 
 ```cpp
-// Send response headers
-HttpResponse res;
-res.response("200", "OK");
-res.header("Transfer-Encoding", "chunked");
-res.header("Content-Type", "text/plain");
-res.writeHeaders(clientStream);
+server.addExecute(HttpMethod::Get, "/api/", "report", [](Http::Worker* worker) {
+    worker->header("Content-Type", "text/plain");
+    worker->header("Transfer-Encoding", "chunked");
+    worker->sendHeaders();
 
-// Wrap stream with Chunkstream
-Chunkstream chunked(clientStream);
+    // Write the body - automatically chunked
+    *worker << "Processing...\n";
+    *worker << "Done!\n";
 
-// Send data in chunks
-chunked << "Processing...\n";
-chunked.flush();
-
-// More processing...
-chunked << "Still working...\n";
-chunked.flush();
-
-// Final data
-chunked << "Done!\n";
-chunked.flush();  // Sends terminating chunk
+    // Send the final chunk
+    worker->flush();
+});
 ```
 
 ### Client reading chunked response
 
 ```cpp
-// Read response headers
+Http::Client client("example.com");
+
+HttpRequest req(HttpMethod::Get);
+req.path("/api/report");
+
+client << req;
+
 HttpResponse res;
-res.readHeaders(serverStream);
+client >> res;
 
-if (res.header("Transfer-Encoding").find("chunked") != std::string::npos)
-{
-    // Wrap with Chunkstream
-    Chunkstream chunked(serverStream);
-
-    // Read all data
-    std::string data;
-    std::getline(chunked, data, '\0');
-
-    process(data);
-}
+// The body is automatically dechunked: read it until the final chunk
+std::string data(std::istreambuf_iterator<char>(client), {});
+client.clear();  // ready for the next request
 ```
 
 ---
@@ -236,10 +233,18 @@ Chunkstream stream(base);  // 16 KB
 
 ## Error handling
 
+A malformed chunk stops the reading like the end of the body does, and sets `join::lastError`
+(`Errc::InvalidParam` or `Errc::MessageTooLong`). Reset it before reading, then check it.
+Note that input cut short in the middle of a chunk simply ends the data, without error.
+
 ```cpp
 Chunkstream stream(storage);
 
-if (!stream)
+join::lastError = {};
+
+std::string data(std::istreambuf_iterator<char>(stream), {});
+
+if (join::lastError)
 {
     std::error_code ec = join::lastError;
 
@@ -249,7 +254,7 @@ if (!stream)
     }
     else if (ec == Errc::MessageTooLong)
     {
-        // Chunk exceeds maximum size
+        // Chunk exceeds the configured chunk size
     }
 }
 ```
@@ -258,91 +263,59 @@ if (!stream)
 
 ## Common patterns
 
-### Progressive response
+### Streaming a large response
 
 ```cpp
-void sendProgressiveData(std::iostream& client)
-{
-    HttpResponse res;
-    res.response("200", "OK");
-    res.header("Transfer-Encoding", "chunked");
-    res.header("Content-Type", "application/json");
-    res.writeHeaders(client);
+server.addExecute(HttpMethod::Get, "/api/", "items", [](Http::Worker* worker) {
+    worker->header("Content-Type", "application/json");
+    worker->header("Transfer-Encoding", "chunked");
+    worker->sendHeaders();
 
-    Chunkstream stream(client);
-
-    stream << "[\n";
-
-    bool first = true;
-    for (const auto& item : generateItems())
+    *worker << "[";
+    for (int i = 0; i < 1000; ++i)
     {
-        if (!first) stream << ",\n";
-        stream << "  " << item.toJson();
-        stream.flush();  // Send immediately
-        first = false;
+        if (i > 0) *worker << ",";
+        *worker << i;  // full chunks are sent as the buffer fills up
     }
+    *worker << "]";
 
-    stream << "\n]\n";
-    stream.flush();  // Final chunk
-}
+    worker->flush();  // Final chunk
+});
 ```
 
 ### Streaming file upload
 
 ```cpp
-void uploadFile(const std::string& filename, std::iostream& server)
-{
-    HttpRequest req(HttpMethod::Post);
-    req.path("/upload");
-    req.header("Transfer-Encoding", "chunked");
-    req.writeHeaders(server);
+Http::Client client("example.com");
 
-    Chunkstream stream(server);
+HttpRequest req(HttpMethod::Post);
+req.path("/upload/file");
+req.header("Transfer-Encoding", "chunked");
 
-    std::ifstream file(filename, std::ios::binary);
-    stream << file.rdbuf();
-    stream.flush();
-}
-```
+client << req;
 
-### Server-sent events
+// Write the file - automatically chunked
+std::ifstream file("data.bin", std::ios::binary);
+client << file.rdbuf();
+client.flush();  // Final chunk
 
-```cpp
-void sendEvents(std::iostream& client)
-{
-    HttpResponse res;
-    res.response("200", "OK");
-    res.header("Transfer-Encoding", "chunked");
-    res.header("Content-Type", "text/event-stream");
-    res.header("Cache-Control", "no-cache");
-    res.writeHeaders(client);
-
-    Chunkstream stream(client);
-
-    while (running)
-    {
-        Event event = waitForEvent();
-
-        stream << "event: " << event.type << "\n";
-        stream << "data: " << event.data << "\n\n";
-        stream.flush();
-    }
-}
+HttpResponse res;
+client >> res;
 ```
 
 ---
 
 ## Best practices
 
-### Always flush
+### Flush once, at the end
 
 ```cpp
 Chunkstream stream(storage);
 
-// Write data
+// Write all the data
 stream << data;
 
-// Send immediately
+// Then send the final chunk
 stream.flush();
 ```
 
@@ -361,15 +334,14 @@ Chunkstream stream(base);
 
 ### Handle terminating chunk
 
-```cpp
-// Flush sends the terminating chunk
-stream.flush();
+Always call `flush()` after the last write: the destructor only sends the final chunk when unsent data remains in the buffer.
 
-// Or let destructor handle it
+```cpp
 {
     Chunkstream stream(base);
     stream << data;
-}  // Automatically sends terminating chunk
+    stream.flush();  // Final chunk
+}
 ```
 
 ---
@@ -378,38 +350,45 @@ stream.flush();
 
 ### With compression
 
-```cpp
-// Compression then chunking
-std::iostream& base = ...;
-Zstream compressed(base, Zstream::Gzip);
-Chunkstream chunked(compressed);
+To send compressed and chunked data, compress first, then chunk:
+the `Zstream` writes into the `Chunkstream`, which writes into the base stream.
 
-chunked << data;
-chunked.flush();
+```cpp
+std::iostream& base = ...;
+Chunkstream chunked(base);
+Zstream compressed(chunked, Zstream::Gzip);
+
+compressed << data;
+compressed.flush();  // Ends compression and sends the final chunk
 ```
 
-### With HttpClient
+### With HTTP client
 
 ```cpp
 // Client automatically handles chunked encoding
-HttpClient client("example.com");
+Http::Client client("example.com");
 
 HttpRequest req(HttpMethod::Post);
+req.path("/upload/data");
 req.header("Transfer-Encoding", "chunked");
 
 client << req;
 
 // Write body - automatically chunked
 client << data;
-client.flush();
+client.flush();  // Final chunk
+
+HttpResponse res;
+client >> res;
 ```
 
 ---
 
 ## Limitations
 
-- Maximum chunk size: 16 KB (default) or as configured
-- Chunks larger than configured size return error
+- Maximum chunk size when reading: 16 KB (default) or as configured
+- Received chunks larger than the configured size are rejected (`Errc::MessageTooLong`)
+- `flush()` always ends the chunked body
 - Binary safe (handles null bytes correctly)
 - Single stream (not thread-safe)
 

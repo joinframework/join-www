@@ -5,15 +5,15 @@ weight: 5
 
 # HTTP Client
 
-`HttpClient` provides a **simple HTTP/HTTPS client** for making web requests.
+`Http::Client` provides a **simple HTTP/HTTPS client** for making web requests.
 It handles connections, keep-alive, compression, and chunked encoding automatically.
 
-`HttpClient` is designed to be:
+`Http::Client` is designed to be:
 
 * **easy** — simple API for common tasks
 * **efficient** — supports HTTP keep-alive
 * **complete** — handles encoding and compression
-* **secure** — HTTPS support via `HttpsClient`
+* **secure** — HTTPS support via `Https::Client`
 
 ---
 
@@ -22,10 +22,16 @@ It handles connections, keep-alive, compression, and chunked encoding automatica
 ### Simple GET request
 
 ```cpp
+// libjoin.
 #include <join/httpclient.hpp>
 
+// C++.
+#include <iostream>
+
+using namespace join;
+
 // Create client
-HttpClient client("api.example.com", 80);
+Http::Client client("api.example.com", 80);
 
 // Create request
 HttpRequest req(HttpMethod::Get);
@@ -38,9 +44,8 @@ client << req;
 HttpResponse res;
 client >> res;
 
-// Read body
-std::string body;
-std::getline(client, body, '\0');
+// Read body (see "Reading body")
+std::string body = readBody(client, res);
 
 std::cout << res.status() << ": " << body << "\n";
 ```
@@ -49,7 +54,7 @@ std::cout << res.status() << ": " << body << "\n";
 
 ```cpp
 // HTTPS client (port 443 is default)
-HttpsClient client("api.example.com");
+Https::Client client("api.example.com");
 
 HttpRequest req(HttpMethod::Get);
 req.path("/secure/data");
@@ -58,6 +63,8 @@ client << req;
 
 HttpResponse res;
 client >> res;
+
+std::string body = readBody(client, res);
 ```
 
 ---
@@ -66,14 +73,53 @@ client >> res;
 
 ```cpp
 // HTTP client with defaults
-HttpClient client("example.com", 80);
+Http::Client client("example.com", 80);
 
 // HTTPS client
-HttpsClient client("example.com", 443);
+Https::Client client("example.com", 443);
 
 // Disable keep-alive
-HttpClient client("example.com", 80, false);
+Http::Client client("example.com", 80, false);
 ```
+
+---
+
+## Reading body
+
+The connection stays open between requests (keep-alive), so the body must be read
+**exactly**, up to its end and not further:
+
+* with a plain body, read the `Content-Length` bytes
+* with a chunked (`Transfer-Encoding`) or compressed (`Content-Encoding`) body, the decoded size is not known in advance:
+  read until the end of the decoded body, then reset the stream state
+
+This small helper handles these cases, text or binary, and works with `Http::Client` and `Https::Client`:
+
+```cpp
+std::string readBody(std::istream& client, const HttpResponse& res)
+{
+    std::string body;
+
+    if (res.hasHeader("Transfer-Encoding") || res.hasHeader("Content-Encoding"))
+    {
+        // read until the end of the decoded body
+        body.assign(std::istreambuf_iterator<char>(client), std::istreambuf_iterator<char>());
+        client.clear();  // ready for the next response
+    }
+    else
+    {
+        body.resize(res.contentLength());
+        client.read(&body[0], body.size());
+        body.resize(client.gcount());  // shorter if the connection dropped
+    }
+
+    return body;
+}
+```
+
+Always read the body before sending the next request on the same client.
+Responses to a `HEAD` request and `304 Not Modified` responses have no body: don't read one.
+After reading, `client.fail()` tells whether the body was received completely.
 
 ---
 
@@ -82,7 +128,7 @@ HttpClient client("example.com", 80, false);
 ### GET request
 
 ```cpp
-HttpClient client("api.example.com");
+Http::Client client("api.example.com");
 
 HttpRequest req(HttpMethod::Get);
 req.path("/api/v1/users");
@@ -94,18 +140,18 @@ client << req;
 HttpResponse res;
 client >> res;
 
+std::string data = readBody(client, res);
+
 if (res.status() == "200")
 {
-    std::string data;
-    std::getline(client, data, '\0');
-    processData(data);
+    std::cout << data << "\n";
 }
 ```
 
 ### POST request
 
 ```cpp
-HttpClient client("api.example.com");
+Http::Client client("api.example.com");
 
 HttpRequest req(HttpMethod::Post);
 req.path("/api/users");
@@ -122,6 +168,8 @@ client.flush();
 // Receive response
 HttpResponse res;
 client >> res;
+
+std::string body = readBody(client, res);
 ```
 
 ### PUT request
@@ -140,6 +188,8 @@ client.flush();
 
 HttpResponse res;
 client >> res;
+
+std::string body = readBody(client, res);
 ```
 
 ### DELETE request
@@ -152,6 +202,8 @@ client << req;
 
 HttpResponse res;
 client >> res;
+
+std::string body = readBody(client, res);
 ```
 
 ---
@@ -167,7 +219,7 @@ req.path("/api/data");
 // Add headers
 req.header("Accept", "application/json");
 req.header("User-Agent", "MyApp/1.0");
-req.header("X-API-Key", apiKey);
+req.header("X-API-Key", "my-api-key");
 
 client << req;
 ```
@@ -175,6 +227,8 @@ client << req;
 ### Bearer token authentication
 
 ```cpp
+std::string accessToken = "my-access-token";
+
 HttpRequest req(HttpMethod::Get);
 req.path("/api/protected");
 req.header("Authorization", "Bearer " + accessToken);
@@ -185,8 +239,17 @@ client << req;
 ### Basic authentication
 
 ```cpp
+// libjoin.
+#include <join/httpclient.hpp>
+#include <join/base64.hpp>
+
+using namespace join;
+
 // Encode credentials (username:password in base64)
-std::string credentials = base64Encode("user:pass");
+std::string credentials = Base64::encode("user:pass");
+
+HttpRequest req(HttpMethod::Get);
+req.path("/api/protected");
 req.header("Authorization", "Basic " + credentials);
 ```
 
@@ -198,7 +261,7 @@ req.header("Authorization", "Basic " + credentials);
 
 ```cpp
 // Enable keep-alive (default)
-HttpClient client("api.example.com", 80, true);
+Http::Client client("api.example.com", 80, true);
 
 // Multiple requests on same connection
 for (int i = 0; i < 10; ++i)
@@ -211,7 +274,8 @@ for (int i = 0; i < 10; ++i)
     HttpResponse res;
     client >> res;
 
-    // Process response...
+    // Read the body before the next request
+    std::string body = readBody(client, res);
 }
 // Connection automatically reused
 ```
@@ -219,9 +283,9 @@ for (int i = 0; i < 10; ++i)
 ### Connection management
 
 ```cpp
-HttpClient client("example.com");
+Http::Client client("example.com");
 
-// Check keep-alive settings
+// Keep-alive settings announced by the server (after a response)
 auto timeout = client.keepAliveTimeout();
 int maxRequests = client.keepAliveMax();
 
@@ -233,32 +297,13 @@ client.close();
 
 ## Response handling
 
-### Reading body
-
-```cpp
-client << req;
-
-HttpResponse res;
-client >> res;
-
-// Read entire body
-std::string body;
-std::getline(client, body, '\0');
-
-// Or read with Content-Length
-size_t length = res.contentLength();
-if (length > 0)
-{
-    std::string body(length, '\0');
-    client.read(&body[0], length);
-}
-```
-
 ### Checking status
 
 ```cpp
 HttpResponse res;
 client >> res;
+
+std::string body = readBody(client, res);
 
 if (res.status() == "200")
 {
@@ -287,6 +332,7 @@ The client automatically handles:
 ```cpp
 // Request compressed response
 HttpRequest req(HttpMethod::Get);
+req.path("/data");
 req.header("Accept-Encoding", "gzip, deflate");
 
 client << req;
@@ -295,41 +341,39 @@ HttpResponse res;
 client >> res;
 
 // Body is automatically decompressed
-std::string body;
-std::getline(client, body, '\0');
+std::string body = readBody(client, res);
 ```
 
 ---
 
 ## Error handling
 
+The client does not throw: check the stream state after sending and after receiving.
+
 ```cpp
-HttpClient client("api.example.com");
+Http::Client client("api.example.com");
 
-try
+HttpRequest req(HttpMethod::Get);
+req.path("/users");
+
+client << req;
+if (client.fail())
 {
-    client << req;
-
-    if (client.fail())
-    {
-        std::cerr << "Request failed\n";
-        return;
-    }
-
-    HttpResponse res;
-    client >> res;
-
-    if (client.fail())
-    {
-        std::cerr << "Response failed\n";
-        return;
-    }
-
+    std::cerr << "Request failed: " << lastError.message() << "\n";
+    client.clear();  // reset the stream state before the next attempt
+    return;
 }
-catch (const std::exception& e)
+
+HttpResponse res;
+client >> res;
+if (client.fail())
 {
-    std::cerr << "Error: " << e.what() << "\n";
+    std::cerr << "Response failed: " << lastError.message() << "\n";
+    client.clear();
+    return;
 }
+
+std::string body = readBody(client, res);
 ```
 
 ---
@@ -341,7 +385,7 @@ catch (const std::exception& e)
 ```cpp
 class ApiClient
 {
-    HttpsClient client;
+    Https::Client client;
     std::string token;
 
 public:
@@ -361,13 +405,19 @@ public:
         HttpResponse res;
         client >> res;
 
+        std::string body = readBody(client, res);
+
+        if (client.fail())
+        {
+            client.clear();  // keep the client usable for the next call
+            throw std::runtime_error("Connection failed");
+        }
+
         if (res.status() != "200")
         {
             throw std::runtime_error("Request failed: " + res.status());
         }
 
-        std::string body;
-        std::getline(client, body, '\0');
         return body;
     }
 
@@ -386,8 +436,14 @@ public:
         HttpResponse res;
         client >> res;
 
-        std::string body;
-        std::getline(client, body, '\0');
+        std::string body = readBody(client, res);
+
+        if (client.fail())
+        {
+            client.clear();
+            throw std::runtime_error("Connection failed");
+        }
+
         return body;
     }
 };
@@ -396,52 +452,62 @@ public:
 ### File download
 
 ```cpp
-void downloadFile(const std::string& url, const std::string& output)
+bool downloadFile(Http::Client& client, const std::string& path, const std::string& output)
 {
-    HttpClient client("example.com");
-
     HttpRequest req(HttpMethod::Get);
-    req.path("/files/document.pdf");
+    req.path(path);
 
     client << req;
 
     HttpResponse res;
     client >> res;
 
-    if (res.status() == "200")
+    std::string body = readBody(client, res);
+
+    if (client.fail() || res.status() != "200")
     {
-        std::ofstream file(output, std::ios::binary);
-        file << client.rdbuf();
+        client.clear();
+        return false;
     }
+
+    std::ofstream file(output, std::ios::binary);
+    file << body;
+    return file.good();
 }
+
+// Usage
+Http::Client client("example.com");
+downloadFile(client, "/files/document.pdf", "document.pdf");
 ```
 
 ### Retry logic
 
 ```cpp
-HttpResponse requestWithRetry(HttpClient& client, HttpRequest& req, int maxRetries = 3)
+HttpResponse requestWithRetry(Http::Client& client, HttpRequest& req, std::string& body, int maxRetries = 3)
 {
     for (int i = 0; i < maxRetries; ++i)
     {
-        try
-        {
-            client << req;
+        client << req;
 
-            HttpResponse res;
-            client >> res;
+        HttpResponse res;
+        client >> res;
+
+        if (client.good())
+        {
+            // Always read the body, even before a retry
+            body = readBody(client, res);
 
             if (res.status()[0] != '5')
             {
                 return res;  // Success or client error
             }
-
-            // Server error - retry
-            std::this_thread::sleep_for(std::chrono::seconds(1 << i));
-
         }
-        catch (...)
+
+        // Server error or connection failure: wait and retry
+        client.clear();
+        if (i + 1 < maxRetries)
         {
-            if (i == maxRetries - 1) throw;
+            std::this_thread::sleep_for(std::chrono::seconds(1 << i));
         }
     }
 
@@ -455,14 +521,15 @@ HttpResponse requestWithRetry(HttpClient& client, HttpRequest& req, int maxRetri
 
 ```cpp
 // HTTPS with default port (443)
-HttpsClient client("secure.example.com");
+Https::Client client("secure.example.com");
 
 // HTTPS with custom port
-HttpsClient client("secure.example.com", 8443);
+Https::Client client("secure.example.com", 8443);
 
 // Everything else works the same as HTTP
 client << req;
 client >> res;
+std::string body = readBody(client, res);
 ```
 
 ---
@@ -473,7 +540,7 @@ client >> res;
 
 ```cpp
 // Good: Reuse client for multiple requests
-HttpClient client("api.example.com");
+Http::Client client("api.example.com");
 for (const auto& endpoint : endpoints)
 {
     HttpRequest req(HttpMethod::Get);
@@ -485,7 +552,7 @@ for (const auto& endpoint : endpoints)
 // Avoid: Creating new client each time
 for (const auto& endpoint : endpoints)
 {
-    HttpClient client("api.example.com");  // Slow!
+    Http::Client client("api.example.com");  // Slow!
     // ...
 }
 ```
@@ -493,8 +560,7 @@ for (const auto& endpoint : endpoints)
 ### Set timeouts
 
 ```cpp
-// Connection timeout via socket buffer
-// (requires access to underlying socket)
+// Read/write timeout in milliseconds
 client.timeout(5000);  // 5 seconds
 ```
 
@@ -504,6 +570,8 @@ client.timeout(5000);  // 5 seconds
 client << req;
 HttpResponse res;
 client >> res;
+
+std::string body = readBody(client, res);
 
 if (res.status()[0] == '2')
 {

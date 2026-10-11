@@ -5,15 +5,15 @@ weight: 6
 
 # HTTP Server
 
-`HttpServer` provides a **multi-threaded HTTP/HTTPS web server** with routing, static file serving,
+`Http::Server` provides a **multi-threaded HTTP/HTTPS web server** with routing, static file serving,
 and dynamic content generation. It uses a thread pool to handle concurrent requests efficiently.
 
-`HttpServer` is designed to be:
+`Http::Server` is designed to be:
 
 * **fast** — multi-threaded request handling
 * **flexible** — route mapping and handlers
 * **complete** — static files, dynamic content, redirects
-* **secure** — HTTPS support via `HttpsServer`
+* **secure** — HTTPS support via `Https::Server`
 
 ---
 
@@ -22,33 +22,37 @@ and dynamic content generation. It uses a thread pool to handle concurrent reque
 ### Simple server
 
 ```cpp
+// libjoin.
 #include <join/httpserver.hpp>
 
+using namespace join;
+
 // Create server with 4 worker threads
-HttpServer server(4);
+Http::Server server(4);
 
 // Serve static files from /var/www
 server.baseLocation("/var/www");
 server.addDocumentRoot("/*", "*");
 
 // Start server on port 8080
-Tcp::Endpoint endpoint(Tcp::v4(), 8080);
+Http::Endpoint endpoint(Http::v4(), 8080);
 server.create(endpoint);
 
-// Server runs until closed
+// The server runs until close() is called:
+// always call close() before the server is destroyed (see "Close server gracefully")
 ```
 
 ### HTTPS server
 
 ```cpp
 // Create HTTPS server
-HttpsServer server(4);
+Https::Server server(4);
 
 // Set certificate and key
 server.setCertificate("/etc/ssl/cert.pem", "/etc/ssl/key.pem");
 
 // Start on port 443
-Tcp::Endpoint endpoint(Tcp::v4(), 443);
+Https::Endpoint endpoint(Https::v4(), 443);
 server.create(endpoint);
 ```
 
@@ -58,13 +62,36 @@ server.create(endpoint);
 
 ```cpp
 // Default: uses hardware concurrency
-HttpServer server();
+Http::Server server;
 
 // Specify worker threads
-HttpServer server(8);
+Http::Server server(8);
 
 // HTTPS server
-HttpsServer secureServer(4);
+Https::Server secureServer(4);
+```
+
+---
+
+## Routes
+
+Every route is made of a **directory** and a **file name**, both matched with `fnmatch` patterns.
+A request path is split at its last `/`: `/api/users` gives the directory `/api/` and the file name `users`.
+
+* Directories always **end with a `/`**: use `"/api/"`, not `"/api"`
+* A directory pattern only matches that exact directory: use `"/images/*"` to also match its subdirectories
+* Routes are checked **in registration order** and the first match wins:
+  register catch-all routes such as `addDocumentRoot("/*", "*")` **last**
+
+```cpp
+// /api/users
+server.addExecute(HttpMethod::Get, "/api/", "users", handler);
+
+// any .png file in /images/ and its subdirectories
+server.addDocumentRoot("/images/*", "*.png");
+
+// index.html in any directory
+server.addDocumentRoot("/*", "index.html");
 ```
 
 ---
@@ -83,17 +110,16 @@ server.addDocumentRoot("/*", "*");
 // Requests to /images/logo.png serve /var/www/images/logo.png
 ```
 
-### Path aliases
+### File aliases
+
+An alias serves **one given file** for the matching requests:
 
 ```cpp
-// Map /static to /opt/assets
-server.addAlias("/static", "*", "/opt/assets");
+// "/" serves the home page
+server.addAlias("/", "", "/var/www/index.html");
 
-// /static/logo.png serves /opt/assets/logo.png
-
-// Pattern matching
-server.addAlias("/images", "*.png", "/opt/images");
-server.addAlias("/docs", "*.pdf", "/opt/documents");
+// any request in /logo/ serves the same image
+server.addAlias("/logo/", "*", "/opt/assets/logo.png");
 ```
 
 ---
@@ -103,41 +129,41 @@ server.addAlias("/docs", "*.pdf", "/opt/documents");
 ### Route handlers
 
 ```cpp
-// GET endpoint
+// GET /api/users
 server.addExecute(
     HttpMethod::Get,
-    "/api",
+    "/api/",
     "users",
-    [](HttpServer::Worker* worker) {
-        worker->header("Content-Type", "application/json");
-
+    [](Http::Worker* worker) {
         std::string json = R"({"users":["Alice","Bob"]})";
-        worker->header("Content-Length", std::to_string(json.size()));
 
+        worker->header("Content-Type", "application/json");
+        worker->header("Content-Length", std::to_string(json.size()));
         worker->sendHeaders();
+
         *worker << json;
         worker->flush();
     }
 );
 
-// POST endpoint
+// POST /api/submit
 server.addExecute(
     HttpMethod::Post,
-    "/api",
+    "/api/",
     "submit",
-    [](HttpServer::Worker* worker) {
+    [](Http::Worker* worker) {
         // Read request body
-        size_t length = worker->contentLength();
-        std::string body(length, '\0');
-        worker->read(&body[0], length);
+        std::string body(worker->contentLength(), '\0');
+        worker->read(&body[0], body.size());
 
-        // Process data
-        processData(body);
+        // Send response: headers first, then the body
+        std::string json = R"({"status":"success"})";
 
-        // Send response
         worker->header("Content-Type", "application/json");
-        *worker << R"({"status":"success"})";
+        worker->header("Content-Length", std::to_string(json.size()));
         worker->sendHeaders();
+
+        *worker << json;
         worker->flush();
     }
 );
@@ -149,10 +175,16 @@ server.addExecute(
 // Handle GET and POST
 server.addExecute(
     HttpMethod::Get | HttpMethod::Post,
-    "/api",
+    "/api/",
     "endpoint",
-    [](HttpServer::Worker* worker) {
-        // Handler for both methods
+    [](Http::Worker* worker) {
+        // Read the request body (empty for GET)
+        std::string body(worker->contentLength(), '\0');
+        worker->read(&body[0], body.size());
+
+        worker->header("Content-Length", "0");
+        worker->sendHeaders();
+        worker->flush();
     }
 );
 ```
@@ -163,36 +195,53 @@ server.addExecute(
 
 ### Reading request data
 
+`hasHeader()` and `header(name)` read the **request** headers:
+
 ```cpp
-[](HttpServer::Worker* worker) {
+[](Http::Worker* worker) {
     // Check headers
     if (worker->hasHeader("Content-Type"))
     {
         std::string type = worker->header("Content-Type");
     }
 
-    // Get content length
-    size_t length = worker->contentLength();
-
     // Read body
-    std::string body(length, '\0');
-    worker->read(&body[0], length);
+    std::string body(worker->contentLength(), '\0');
+    worker->read(&body[0], body.size());
+}
+```
+
+Always read the whole request body before answering, even if you don't need it:
+on a keep-alive connection, unread bytes would be taken for the next request.
+
+A chunked or compressed request body (`Transfer-Encoding` or `Content-Encoding` header) has no
+`Content-Length`: read it until its end instead.
+
+```cpp
+[](Http::Worker* worker) {
+    std::string body(std::istreambuf_iterator<char>(*worker), {});
+    worker->clear();  // ready to send the response
 }
 ```
 
 ### Sending responses
 
+`header(name, value)` sets a **response** header. Headers must be sent before the body:
+
 ```cpp
-[](HttpServer::Worker* worker) {
+[](Http::Worker* worker) {
+    std::string html = "<html><body>Hello</body></html>";
+
     // Set response headers
     worker->header("Content-Type", "text/html");
+    worker->header("Content-Length", std::to_string(html.size()));
     worker->header("Cache-Control", "no-cache");
 
     // Write headers
     worker->sendHeaders();
 
     // Write body
-    *worker << "<html><body>Hello</body></html>";
+    *worker << html;
 
     // Flush
     worker->flush();
@@ -201,37 +250,17 @@ server.addExecute(
 
 ### Helper methods
 
-```cpp
-[](HttpServer::Worker* worker) {
-    // Send file
-    worker->sendFile("/var/www/index.html");
-
-    // Send error
-    worker->sendError("404", "Not Found");
-
-    // Send redirect
-    worker->sendRedirect("302", "Found", "https://example.com/new");
-}
-```
-
----
-
-## Routing
-
-### Pattern matching
+Each helper sends a complete response: call **one** of them per request.
 
 ```cpp
-// Exact match
-server.addExecute(Get, "/api", "users", handler);
+// Send a file
+worker->sendFile("/var/www/index.html");
 
-// Wildcard file name
-server.addDocumentRoot("/images", "*.png");
+// or send an error
+worker->sendError("404", "Not Found");
 
-// Wildcard directory
-server.addDocumentRoot("/*", "index.html");
-
-// Multiple wildcards (uses fnmatch)
-server.addAlias("/downloads", "*.{zip,tar.gz}", "/opt/files");
+// or send a redirect
+worker->sendRedirect("302", "Found", "https://example.com/new");
 ```
 
 ---
@@ -241,22 +270,18 @@ server.addAlias("/downloads", "*.{zip,tar.gz}", "/opt/files");
 ### Simple redirect
 
 ```cpp
-// Redirect /old to /new
-server.addRedirect("/old", "*", "/new");
+// Redirect every request in /old/ and its subdirectories to the /new/ page
+server.addRedirect("/old/*", "*", "/new/");
 
 // Redirect to external URL
-server.addRedirect("/external", "*", "https://example.com");
+server.addRedirect("/external/", "*", "https://example.com");
 ```
 
 ### Dynamic redirects
 
 ```cpp
-// Use variables in redirect
-server.addRedirect(
-    "/api/v1",
-    "*",
-    "$scheme://$host/api/v2$path$query"
-);
+// Redirect every HTTP request to HTTPS, keeping host, path and query
+server.addRedirect("/*", "*", "https://$host$urn");
 
 // Available variables:
 // $root, $scheme, $host, $port, $path, $query, $urn
@@ -268,6 +293,9 @@ server.addRedirect(
 
 ### Access control
 
+The access handler receives the authorization type and credentials of the request.
+When it refuses access, it must set `err` to `HttpErrc::Unauthorized` (401) or `HttpErrc::Forbidden` (403).
+
 ```cpp
 // Define access handler
 auto authHandler = [](const std::string& type,
@@ -275,13 +303,13 @@ auto authHandler = [](const std::string& type,
                       std::error_code& err) -> bool {
     if (type != "Bearer")
     {
-        err = HttpErrc::Unauthorized;
+        err = make_error_code(HttpErrc::Unauthorized);
         return false;
     }
 
-    if (!validateToken(credentials))
+    if (credentials != "my-secret-token")
     {
-        err = HttpErrc::Forbidden;
+        err = make_error_code(HttpErrc::Forbidden);
         return false;
     }
 
@@ -291,12 +319,14 @@ auto authHandler = [](const std::string& type,
 // Apply to route
 server.addExecute(
     HttpMethod::Get,
-    "/api",
+    "/api/",
     "protected",
     handler,
     authHandler  // Access control
 );
 ```
+
+Requests without an `Authorization` header are answered with `401 Unauthorized`.
 
 ---
 
@@ -333,7 +363,7 @@ std::string location = server.baseLocation();
 ### Certificates
 
 ```cpp
-HttpsServer server(4);
+Https::Server server(4);
 
 // Set server certificate and private key
 server.setCertificate(
@@ -368,91 +398,96 @@ server.setCurve("P-521:P-384:P-256");
 ### REST API server
 
 ```cpp
-HttpServer server(4);
+// libjoin.
+#include <join/httpserver.hpp>
 
-// GET /api/users
-server.addExecute(
-    HttpMethod::Get, "/api", "users",
-    [](auto* w) {
-        w->header("Content-Type", "application/json");
-        w->sendHeaders();
-        *w << getUsersJson();
-        w->flush();
-    }
-);
+using namespace join;
 
-// POST /api/users
-server.addExecute(
-    HttpMethod::Post, "/api", "users",
-    [](auto* w) {
-        std::string body(w->contentLength(), '\0');
-        w->read(&body[0], body.size());
+// Send a JSON body with its Content-Length
+void sendJson(Http::Worker* worker, const std::string& json)
+{
+    worker->header("Content-Type", "application/json");
+    worker->header("Content-Length", std::to_string(json.size()));
+    worker->sendHeaders();
+    *worker << json;
+    worker->flush();
+}
 
-        auto user = createUser(body);
+int main()
+{
+    Http::Server server(4);
 
-        w->header("Content-Type", "application/json");
-        w->sendHeaders();
-        *w << user.toJson();
-        w->flush();
-    }
-);
+    // GET /api/users
+    server.addExecute(HttpMethod::Get, "/api/", "users", [](Http::Worker* worker) {
+        sendJson(worker, R"({"users":["Alice","Bob"]})");
+    });
 
-// DELETE /api/users
-server.addExecute(
-    HttpMethod::Delete, "/api", "users",
-    [](auto* w) {
-        deleteUser();
-        w->sendError("204", "No Content");
-    }
-);
+    // POST /api/users
+    server.addExecute(HttpMethod::Post, "/api/", "users", [](Http::Worker* worker) {
+        std::string body(worker->contentLength(), '\0');
+        worker->read(&body[0], body.size());
 
-Tcp::Endpoint endpoint(Tcp::v4(), 8080);
-server.create(endpoint);
+        sendJson(worker, body);  // echo the created user
+    });
+
+    // DELETE /api/users
+    server.addExecute(HttpMethod::Delete, "/api/", "users", [](Http::Worker* worker) {
+        worker->sendError("204", "No Content");
+    });
+
+    Http::Endpoint endpoint(Http::v4(), 8080);
+    server.create(endpoint);
+
+    // ... keep running, then stop (see "Close server gracefully")
+    server.close();
+}
 ```
 
 ### Static + dynamic content
 
 ```cpp
-HttpServer server(4);
+Http::Server server(4);
 
-// Static files
+// API endpoints first...
+server.addExecute(HttpMethod::Get, "/api/", "*", [](Http::Worker* worker) {
+    std::string json = R"({"api":"v1"})";
+
+    worker->header("Content-Type", "application/json");
+    worker->header("Content-Length", std::to_string(json.size()));
+    worker->sendHeaders();
+    *worker << json;
+    worker->flush();
+});
+
+// ...then static files for everything else
 server.baseLocation("/var/www");
 server.addDocumentRoot("/*", "*");
 
-// API endpoints
-server.addExecute(
-    HttpMethod::Get, "/api", "*",
-    [](auto* w) {
-        w->header("Content-Type", "application/json");
-        w->sendHeaders();
-        *w << R"({"api":"v1"})";
-        w->flush();
-    }
-);
-
-Tcp::Endpoint endpoint(Tcp::v4(), 80);
+Http::Endpoint endpoint(Http::v4(), 80);
 server.create(endpoint);
 ```
 
 ### File server with auth
 
 ```cpp
-HttpServer server(4);
+Http::Server server(4);
 
 auto checkAuth = [](const std::string& type,
-                    const std::string& creds,
+                    const std::string& credentials,
                     std::error_code& err) -> bool {
-    return validateCredentials(type, creds);
+    if (type != "Bearer" || credentials != "my-secret-token")
+    {
+        err = make_error_code(HttpErrc::Forbidden);
+        return false;
+    }
+    return true;
 };
 
-// Protected downloads
-server.addDocumentRoot(
-    "/downloads",
-    "*",
-    checkAuth
-);
+// Protected downloads: /var/www/downloads/...
+server.baseLocation("/var/www");
+server.addDocumentRoot("/downloads/*", "*", checkAuth);
 
-Tcp::Endpoint endpoint(Tcp::v4(), 8080);
+Http::Endpoint endpoint(Http::v4(), 8080);
 server.create(endpoint);
 ```
 
@@ -464,28 +499,36 @@ server.create(endpoint);
 
 ```cpp
 // Use hardware concurrency
-HttpServer server(std::thread::hardware_concurrency());
+Http::Server server(std::thread::hardware_concurrency());
 
 // Or based on workload
-HttpServer cpuBound(std::thread::hardware_concurrency() * 2);
-HttpServer ioBound(std::thread::hardware_concurrency() * 4);
+Http::Server cpuBound(std::thread::hardware_concurrency() * 2);
+Http::Server ioBound(std::thread::hardware_concurrency() * 4);
 ```
 
 ### Always set Content-Length or use chunking
 
-```cpp
-[](auto* worker) {
-    std::string body = generateBody();
+The client needs to know where the body ends. Either announce its size:
 
-    // Option 1: Content-Length
+```cpp
+[](Http::Worker* worker) {
+    std::string body = "Hello, World!";
+
     worker->header("Content-Length", std::to_string(body.size()));
     worker->sendHeaders();
     *worker << body;
+    worker->flush();
+}
+```
 
-    // Option 2: Chunked transfer
+or send it in chunks when the size is not known in advance:
+
+```cpp
+[](Http::Worker* worker) {
     worker->header("Transfer-Encoding", "chunked");
     worker->sendHeaders();
-    *worker << body;
+    *worker << "Hello, ";
+    *worker << "World!";
     worker->flush();
 }
 ```
@@ -493,11 +536,13 @@ HttpServer ioBound(std::thread::hardware_concurrency() * 4);
 ### Error handling in handlers
 
 ```cpp
-[](auto* worker) {
-    try {
-        // Process request
-        processRequest(worker);
-    } catch (const std::exception& e) {
+[](Http::Worker* worker) {
+    try
+    {
+        // Process request (may throw)
+    }
+    catch (const std::exception& e)
+    {
         worker->sendError("500", "Internal Server Error");
     }
 }
@@ -505,20 +550,38 @@ HttpServer ioBound(std::thread::hardware_concurrency() * 4);
 
 ### Close server gracefully
 
+Block the termination signals **before** creating the server, so that the worker threads inherit
+the mask, then wait for a signal with `sigwait()` and close the server:
+
 ```cpp
-HttpServer server(4);
+// libjoin.
+#include <join/httpserver.hpp>
 
-// Start server
-server.create(endpoint);
+// C.
+#include <signal.h>
 
-// Handle shutdown signal
-signal(SIGINT, [](int)
+using namespace join;
+
+int main()
 {
-    server.close();
-});
+    sigset_t signals;
+    sigemptyset(&signals);
+    sigaddset(&signals, SIGINT);
+    sigaddset(&signals, SIGTERM);
+    pthread_sigmask(SIG_BLOCK, &signals, nullptr);
 
-// Wait for workers to finish
-// (destructor waits automatically)
+    Http::Server server(4);
+    server.baseLocation("/var/www");
+    server.addDocumentRoot("/*", "*");
+    server.create(Http::Endpoint(Http::v4(), 8080));
+
+    // Wait for Ctrl+C or kill
+    int sig;
+    sigwait(&signals, &sig);
+
+    // Stop accepting requests and wait for the workers
+    server.close();
+}
 ```
 
 ---
@@ -549,14 +612,27 @@ server.keepAlive(std::chrono::seconds(5), 100);
 
 ### Compression
 
-```cpp
-// Server automatically handles:
-// - gzip encoding
-// - deflate encoding
-// - chunked transfer
+The server compresses a response when the handler sets the `Content-Encoding` header (`gzip` or `deflate`).
+Check the client's `Accept-Encoding` first, and use chunked transfer since the compressed size is not known in advance:
 
-// Client requests with Accept-Encoding: gzip
-// Server responds with Content-Encoding: gzip (if applicable)
+```cpp
+[](Http::Worker* worker) {
+    std::string text = "Hello, World!";
+
+    if (worker->header("Accept-Encoding").find("gzip") != std::string::npos)
+    {
+        worker->header("Content-Encoding", "gzip");
+        worker->header("Transfer-Encoding", "chunked");
+    }
+    else
+    {
+        worker->header("Content-Length", std::to_string(text.size()));
+    }
+
+    worker->sendHeaders();
+    *worker << text;
+    worker->flush();
+}
 ```
 
 ---
@@ -574,9 +650,11 @@ The server automatically adds security headers:
 // - X-Frame-Options
 
 // Override if needed
-[](auto* worker) {
+[](Http::Worker* worker) {
     worker->header("X-Frame-Options", "DENY");
+    worker->header("Content-Length", "0");
     worker->sendHeaders();
+    worker->flush();
 }
 ```
 
