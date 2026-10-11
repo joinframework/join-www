@@ -75,26 +75,28 @@ sem.post();
 Process-shared semaphore using shared memory:
 
 ```cpp
-#include <join/shared.hpp>
+// libjoin.
+#include <join/semaphore.hpp>
+#include <join/memory.hpp>
+
+// C++.
+#include <new>
 
 using namespace join;
 
-// Create in shared memory
-SharedMemory shm("sem_data", sizeof(SharedSemaphore));
-shm.open();
-
+// Process A: create the shared memory segment and construct the semaphore in it
+ShmMem shm(sizeof(SharedSemaphore), "/sem_data");
 SharedSemaphore* sem = new (shm.get()) SharedSemaphore(1);
 
-// Process A
 sem->wait();
 // Critical section
 sem->post();
+```
 
-// Process B (opens same shared memory)
-SharedMemory shm("sem_data", sizeof(SharedSemaphore));
-shm.open();
-
-SharedSemaphore* sem = reinterpret_cast<SharedSemaphore*>(shm.get());
+```cpp
+// Process B: open the same segment and use the existing semaphore
+ShmMem shm(sizeof(SharedSemaphore), "/sem_data");
+SharedSemaphore* sem = static_cast<SharedSemaphore*>(shm.get());
 
 sem->wait();
 // Critical section

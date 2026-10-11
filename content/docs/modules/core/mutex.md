@@ -76,29 +76,28 @@ void recursiveFunction(int depth)
 Synchronizes access across different processes via shared memory:
 
 ```cpp
+// libjoin.
+#include <join/memory.hpp>
 #include <join/mutex.hpp>
-#include <join/shared.hpp>
+
+// C++.
+#include <new>
 
 using namespace join;
 
-// Create shared memory segment
-SharedMemory shm("my_mutex", sizeof(SharedMutex));
-shm.open();
-
-// Use placement new to construct mutex in shared memory
+// Process A: create the shared memory segment and construct the mutex in it
+ShmMem shm(sizeof(SharedMutex), "/my_mutex");
 SharedMutex* mutex = new (shm.get()) SharedMutex();
 
-// Process A
 mutex->lock();
 // Critical section
 mutex->unlock();
+```
 
-// Process B (opens same shared memory)
-SharedMemory shm("my_mutex", sizeof(SharedMutex));
-shm.open();
-
-// Reinterpret existing mutex in shared memory
-SharedMutex* mutex = reinterpret_cast<SharedMutex*>(shm.get());
+```cpp
+// Process B: open the same segment and use the existing mutex
+ShmMem shm(sizeof(SharedMutex), "/my_mutex");
+SharedMutex* mutex = static_cast<SharedMutex*>(shm.get());
 
 mutex->lock();
 // Critical section
@@ -274,44 +273,42 @@ void processElement(int index)
 
 ### Inter-process synchronization
 
+`ShmMem` creates the segment, or opens it if it already exists, and throws `std::system_error` on failure.
+The segment is unmapped when `ShmMem` is destroyed, but it is only removed by `ShmMem::unlink()`.
+
 ```cpp
-#include <join/shared.hpp>
+// libjoin.
+#include <join/memory.hpp>
 #include <join/mutex.hpp>
+
+// C++.
+#include <iostream>
+#include <new>
 
 using namespace join;
 
-// Process A (creates shared memory and mutex)
-SharedMemory shm("my_mutex", sizeof(SharedMutex));
-if (shm.open() == 0)
+try
 {
-    // Construct mutex using placement new
+    // creates the segment, or opens it if another process already did
+    ShmMem shm(sizeof(SharedMutex), "/my_mutex");
+
+    // Process A constructs the mutex (placement new)...
     SharedMutex* mutex = new (shm.get()) SharedMutex();
 
+    // ...Process B reuses it instead (no construction needed):
+    // SharedMutex* mutex = static_cast<SharedMutex*>(shm.get());
+
     mutex->lock();
     // Critical section
     mutex->unlock();
-
-    // Before closing, explicitly destroy
-    mutex->~SharedMutex();
-    shm.close();
 }
-
-// Process B (attaches to existing shared memory)
-SharedMemory shm("my_mutex", sizeof(SharedMutex));
-if (shm.open() == 0)
+catch (const std::system_error& e)
 {
-    // Reinterpret existing mutex (no construction needed)
-    SharedMutex* mutex = reinterpret_cast<SharedMutex*>(shm.get());
-
-    mutex->lock();
-    // Critical section
-    mutex->unlock();
-
-    shm.close();
+    std::cerr << "shared memory error: " << e.what() << "\n";
 }
 
-// Cleanup (after all processes are done)
-SharedMemory::unlink("my_mutex");
+// Cleanup (once all processes are done)
+ShmMem::unlink("/my_mutex");
 ```
 
 ---
