@@ -53,14 +53,18 @@ Typical use cases:
 ### HMAC‑SHA‑256 (hex)
 
 ```cpp
+// libjoin.
 #include <join/hmac.hpp>
+
+// C++.
+#include <iostream>
 
 using namespace join;
 
-std::string key  = "secret-key";
 std::string data = "Hello, World!";
+std::string key  = "secret-key";
 
-std::string mac = Hmac::sha256hex(key, data);
+std::string mac = Hmac::sha256hex(data, key);
 
 std::cout << mac << std::endl;
 ```
@@ -68,94 +72,92 @@ std::cout << mac << std::endl;
 ### HMAC‑SHA‑256 (binary)
 
 ```cpp
-BytesArray mac = Hmac::sha256bin(key, data);
+BytesArray mac = Hmac::sha256bin(data, key);
 ```
 
 ---
 
 ## Static methods
 
-Each algorithm provides binary and hexadecimal helpers.
+Each algorithm provides binary and hexadecimal helpers, taking the **message first** and the **key second**.
 
 ### HMAC‑MD5
 
 ```cpp
-BytesArray mac = Hmac::md5bin(key, data);
-std::string mac = Hmac::md5hex(key, data);
+BytesArray  bin = Hmac::md5bin(data, key);
+std::string hex = Hmac::md5hex(data, key);
 ```
 
 ### HMAC‑SHA‑1
 
 ```cpp
-BytesArray mac = Hmac::sha1bin(key, data);
-std::string mac = Hmac::sha1hex(key, data);
+BytesArray  bin = Hmac::sha1bin(data, key);
+std::string hex = Hmac::sha1hex(data, key);
 ```
 
 ### HMAC‑SHA‑224
 
 ```cpp
-BytesArray mac = Hmac::sha224bin(key, data);
-std::string mac = Hmac::sha224hex(key, data);
+BytesArray  bin = Hmac::sha224bin(data, key);
+std::string hex = Hmac::sha224hex(data, key);
 ```
 
 ### HMAC‑SHA‑256
 
 ```cpp
-BytesArray mac = Hmac::sha256bin(key, data);
-std::string mac = Hmac::sha256hex(key, data);
+BytesArray  bin = Hmac::sha256bin(data, key);
+std::string hex = Hmac::sha256hex(data, key);
 ```
 
 ### HMAC‑SHA‑384
 
 ```cpp
-BytesArray mac = Hmac::sha384bin(key, data);
-std::string mac = Hmac::sha384hex(key, data);
+BytesArray  bin = Hmac::sha384bin(data, key);
+std::string hex = Hmac::sha384hex(data, key);
 ```
 
 ### HMAC‑SHA‑512
 
 ```cpp
-BytesArray mac = Hmac::sha512bin(key, data);
-std::string mac = Hmac::sha512hex(key, data);
+BytesArray  bin = Hmac::sha512bin(data, key);
+std::string hex = Hmac::sha512hex(data, key);
 ```
 
 ### HMAC‑SM3
 
 ```cpp
-BytesArray mac = Hmac::sm3bin(key, data);
-std::string mac = Hmac::sm3hex(key, data);
+BytesArray  bin = Hmac::sm3bin(data, key);
+std::string hex = Hmac::sm3hex(data, key);
 ```
 
 ---
 
 ## Input types
 
-All static methods accept the same input variants.
+The message can be a `std::string`, a `BytesArray` or a raw buffer. The key is always a `std::string`.
 
 ### String input
 
 ```cpp
-std::string mac = Hmac::sha256hex("key", "message");
+std::string mac = Hmac::sha256hex("message", "key");
 ```
 
 ### Byte array input
 
 ```cpp
-BytesArray key  = {...};
-BytesArray data = {...};
+BytesArray data = {0x01, 0x02, 0x03};
+std::string key = "secret-key";
 
-BytesArray mac = Hmac::sha256bin(key, data);
+BytesArray mac = Hmac::sha256bin(data, key);
 ```
 
 ### Raw buffer input
 
 ```cpp
-const char* key  = "...";
-const char* data = "...";
-size_t keyLen  = ...;
-size_t dataLen = ...;
+const char* data = "Hello, World!";
+std::string key  = "secret-key";
 
-BytesArray mac = Hmac::sha256bin(key, keyLen, data, dataLen);
+BytesArray mac = Hmac::sha256bin(data, strlen(data), key);
 ```
 
 ---
@@ -165,7 +167,7 @@ BytesArray mac = Hmac::sha256bin(key, keyLen, data, dataLen);
 Use the `Hmac` stream for incremental processing.
 
 ```cpp
-Hmac hmac(Hmac::SHA256, key);
+Hmac hmac(Digest::SHA256, key);
 
 hmac << "chunk1";
 hmac << "chunk2";
@@ -178,7 +180,7 @@ std::string hex = bin2hex(mac);
 ### Error checking
 
 ```cpp
-Hmac hmac(Hmac::SHA256, key);
+Hmac hmac(Digest::SHA256, key);
 hmac << data;
 
 BytesArray mac = hmac.finalize();
@@ -212,7 +214,7 @@ bool verify(const BytesArray& a, const BytesArray& b)
 ### Verifying a message
 
 ```cpp
-BytesArray expected = Hmac::sha256bin(key, data);
+BytesArray expected = Hmac::sha256bin(data, key);
 BytesArray received = ...;
 
 if (verify(expected, received))
@@ -230,7 +232,7 @@ if (verify(expected, received))
 ```cpp
 std::string signRequest(const std::string& key, const std::string& payload)
 {
-    return Hmac::sha256hex(key, payload);
+    return Hmac::sha256hex(payload, key);
 }
 ```
 
@@ -241,8 +243,11 @@ bool verifyWebhook(const std::string& key,
                    const std::string& payload,
                    const std::string& signature)
 {
-    std::string computed = Hmac::sha256hex(key, payload);
-    return computed == signature;
+    std::string computed = Hmac::sha256hex(payload, key);
+
+    // constant-time comparison (see verify() above), never use ==
+    return verify(BytesArray(computed.begin(), computed.end()),
+                  BytesArray(signature.begin(), signature.end()));
 }
 ```
 
@@ -252,7 +257,7 @@ bool verifyWebhook(const std::string& key,
 std::string makeCookie(const std::string& key,
                        const std::string& data)
 {
-    std::string mac = Hmac::sha256hex(key, data);
+    std::string mac = Hmac::sha256hex(data, key);
     return data + "." + mac;
 }
 ```
@@ -263,32 +268,27 @@ std::string makeCookie(const std::string& key,
 
 ### Invalid algorithm
 
+With OpenSSL 3.0 or later, an unsupported algorithm is reported by the stream state:
+`finalize()` returns an empty result and `fail()` is set.
+With older OpenSSL versions, the constructor throws `std::system_error` (`DigestErrc::InvalidAlgorithm`).
+
 ```cpp
 try
 {
-    Hmac hmac(static_cast<Hmac::Algorithm>(999), key);
+    Hmac hmac(static_cast<Digest::Algorithm>(999), key);  // throws with OpenSSL < 3.0
+    hmac << data;
+
+    BytesArray mac = hmac.finalize();
+    if (hmac.fail())                                       // OpenSSL >= 3.0
+    {
+        std::cerr << "HMAC computation failed" << std::endl;
+    }
 }
 catch (const std::system_error& e)
 {
     if (e.code() == DigestErrc::InvalidAlgorithm)
     {
         std::cerr << "Unsupported HMAC algorithm" << std::endl;
-    }
-}
-```
-
-### Invalid key
-
-```cpp
-try
-{
-    Hmac hmac(Hmac::SHA256, "");
-}
-catch (const std::system_error& e)
-{
-    if (e.code() == DigestErrc::InvalidKey)
-    {
-        std::cerr << "Invalid HMAC key" << std::endl;
     }
 }
 ```
