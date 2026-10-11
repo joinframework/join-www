@@ -30,6 +30,7 @@ The base acceptor class for connection-oriented protocols such as TCP and Unix s
 ### Creating a TCP server
 
 ```cpp
+// libjoin.
 #include <join/acceptor.hpp>
 
 using namespace join;
@@ -78,6 +79,7 @@ Acceptor for encrypted TLS/SSL connections.
 ### Creating a secure server
 
 ```cpp
+// libjoin.
 #include <join/acceptor.hpp>
 
 using namespace join;
@@ -199,6 +201,7 @@ Acceptors inherit from `EventHandler` and integrate with the reactor via `Reacto
 The simplest approach — `ReactorThread` manages the event loop automatically:
 
 ```cpp
+// libjoin.
 #include <join/acceptor.hpp>
 
 using namespace join;
@@ -206,7 +209,7 @@ using namespace join;
 class Server : public Tcp::Acceptor
 {
 protected:
-    void onReceive() override
+    void onReceive(int fd) override
     {
         Tcp::Socket client = accept();
         if (client.connected())
@@ -220,7 +223,7 @@ Server server;
 Tcp::Endpoint endpoint("0.0.0.0", 9000);
 server.create(endpoint);
 
-ReactorThread::reactor()->addHandler(&server);
+ReactorThread::reactor()->addHandler(server.handle(), &server);
 // ReactorThread runs the event loop in a background thread automatically
 ```
 
@@ -229,8 +232,9 @@ ReactorThread::reactor()->addHandler(&server);
 When you need full control over the event loop thread — for example to set affinity or priority — use a standalone `Reactor` and register the acceptor manually:
 
 ```cpp
-#include <join/acceptor.hpp>
+// libjoin.
 #include <join/threadpool.hpp>
+#include <join/acceptor.hpp>
 
 using namespace join;
 
@@ -239,7 +243,7 @@ Reactor reactor;
 class Server : public Tcp::Acceptor
 {
 protected:
-    void onReceive() override
+    void onReceive(int fd) override
     {
         Tcp::Socket client = accept();
         if (client.connected())
@@ -253,7 +257,8 @@ Server server;
 Tcp::Endpoint endpoint("0.0.0.0", 9000);
 server.create(endpoint);
 
-reactor.addHandler(&server, false);
+// the reactor is not running yet: register asynchronously
+reactor.addHandler(server.handle(), &server, false);
 
 ThreadPool pool;
 pool.push([&reactor]() {
@@ -264,11 +269,11 @@ pool.push([&reactor]() {
 
 // ... application runs ...
 
+reactor.delHandler(server.handle());  // before stop(): the loop must still be running
 reactor.stop();
-reactor.delHandler(&server);
 ```
 
-The reactor calls `onReceive()` whenever a new connection is ready to accept.
+The reactor calls `onReceive(fd)` whenever a new connection is ready to accept.
 
 ---
 
