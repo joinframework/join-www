@@ -75,6 +75,7 @@ Calibration runs once globally via `std::call_once` at the first `Rdtsc` instanc
 ## Using clock policies with Statistics
 
 ```cpp
+// libjoin.
 #include <join/statistics.hpp>
 
 using namespace join;
@@ -98,6 +99,7 @@ stats.stop(t);
 ## Using clock policies with Timers
 
 ```cpp
+// libjoin.
 #include <join/timer.hpp>
 
 using namespace join;

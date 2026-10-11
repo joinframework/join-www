@@ -24,6 +24,7 @@ MAC address features:
 ### Default construction
 
 ```cpp
+// libjoin.
 #include <join/macaddress.hpp>
 
 using namespace join;

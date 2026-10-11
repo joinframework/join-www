@@ -25,6 +25,7 @@ Persistent pool of worker threads that process tasks from a shared queue.
 ### Creating a pool
 
 ```cpp
+// libjoin.
 #include <join/threadpool.hpp>
 
 using namespace join;
@@ -109,7 +110,10 @@ Splits an iterator range across threads and executes a function on each partitio
 Uses `CpuTopology` to determine the number of threads — capped to the number of elements.
 
 ```cpp
+// libjoin.
 #include <join/threadpool.hpp>
+
+// C++.
 #include <vector>
 
 using namespace join;

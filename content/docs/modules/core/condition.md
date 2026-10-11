@@ -24,6 +24,7 @@ Both use `CLOCK_MONOTONIC` for timeout operations, ensuring immunity to system c
 Standard condition variable for thread synchronization:
 
 ```cpp
+// libjoin.
 #include <join/condition.hpp>
 #include <join/mutex.hpp>
 
@@ -204,6 +205,7 @@ else
 ### Producer-consumer queue
 
 ```cpp
+// C++.
 #include <queue>
 
 Mutex mutex;

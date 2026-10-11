@@ -47,6 +47,7 @@ ShmMem mem(size, "/my_segment");
 ### Local memory
 
 ```cpp
+// libjoin.
 #include <join/memory.hpp>
 
 using namespace join;
@@ -62,6 +63,7 @@ The allocator first attempts to use **hugepages** for better TLB performance, an
 ### Shared memory
 
 ```cpp
+// libjoin.
 #include <join/memory.hpp>
 
 using namespace join;

@@ -56,6 +56,7 @@ NumaNode
 `CpuTopology` is a singleton — construction and detection happen once on first access.
 
 ```cpp
+// libjoin.
 #include <join/cpu.hpp>
 
 using namespace join;

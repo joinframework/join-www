@@ -25,6 +25,7 @@ MessagePack features:
 Serialize `Value` objects to MessagePack format:
 
 ```cpp
+// libjoin.
 #include <join/pack.hpp>
 
 using namespace join;
@@ -50,6 +51,7 @@ The output is a **binary MessagePack document** written directly to the stream.
 Parse MessagePack data into a `Value`:
 
 ```cpp
+// libjoin.
 #include <join/pack.hpp>
 
 using namespace join;
@@ -205,8 +207,9 @@ PackReader uses **on-the-fly parsing**:
 ### Complete round-trip
 
 ```cpp
-#include <join/pack.hpp>
+// libjoin.
 #include <join/value.hpp>
+#include <join/pack.hpp>
 
 using namespace join;
 

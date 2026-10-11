@@ -38,6 +38,7 @@ All callbacks have default no-op implementations — override only what you need
 Each callback receives the file descriptor that triggered the event.
 
 ```cpp
+// libjoin.
 #include <join/reactor.hpp>
 
 using namespace join;
@@ -73,6 +74,7 @@ It owns a `Reactor` and a background `Thread` that runs the event loop.
 The singleton is created on first access and destroyed on program exit.
 
 ```cpp
+// libjoin.
 #include <join/reactor.hpp>
 
 using namespace join;
@@ -182,8 +184,9 @@ Events are dispatched **after** all pending commands have been processed in the 
 This lets you configure affinity and priority from inside the lambda before handing control to the event loop.
 
 ```cpp
-#include <join/reactor.hpp>
+// libjoin.
 #include <join/threadpool.hpp>
+#include <join/reactor.hpp>
 
 using namespace join;
 

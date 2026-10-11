@@ -17,8 +17,9 @@ Routes are managed by `RouteManager` and are represented as shared pointers.
 Routes cannot be created directly. Use `RouteManager` to look them up or enumerate them:
 
 ```cpp
-#include <join/route.hpp>
+// libjoin.
 #include <join/routemanager.hpp>
+#include <join/route.hpp>
 
 using namespace join;
 

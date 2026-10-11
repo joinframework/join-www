@@ -34,6 +34,7 @@ Sockets can operate in blocking or non‑blocking mode.
 Operations return immediately with an error if they would block.
 
 ```cpp
+// libjoin.
 #include <join/socket.hpp>
 
 using namespace join;

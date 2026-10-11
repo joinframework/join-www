@@ -46,6 +46,7 @@ The spin hint is automatically selected at compile time:
 ## Basic usage
 
 ```cpp
+// libjoin.
 #include <join/backoff.hpp>
 
 using namespace join;

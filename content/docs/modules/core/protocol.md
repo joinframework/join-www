@@ -34,6 +34,7 @@ Unix domain sockets provide **local inter‑process communication** with filesys
 Connectionless datagram protocol using `AF_UNIX` and `SOCK_DGRAM`.
 
 ```cpp
+// libjoin.
 #include <join/protocol.hpp>
 
 using namespace join;

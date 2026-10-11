@@ -17,8 +17,9 @@ Neighbors are managed by `NeighborManager` and are represented as shared pointer
 Neighbors cannot be created directly. Use `NeighborManager` to look them up or enumerate them:
 
 ```cpp
-#include <join/neighbor.hpp>
+// libjoin.
 #include <join/neighbormanager.hpp>
+#include <join/neighbor.hpp>
 
 using namespace join;
 

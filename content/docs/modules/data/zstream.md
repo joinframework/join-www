@@ -35,6 +35,7 @@ multiple compression formats with a standard stream interface.
 ### Basic usage
 
 ```cpp
+// libjoin.
 #include <join/zstream.hpp>
 
 std::stringstream data;

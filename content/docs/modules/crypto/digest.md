@@ -48,6 +48,7 @@ Use cases include:
 ### SHA‑256 hash (hex)
 
 ```cpp
+// libjoin.
 #include <join/digest.hpp>
 
 using namespace join;
@@ -194,9 +195,12 @@ if (digest.fail())
 ### File checksum
 
 ```cpp
+// libjoin.
 #include <join/digest.hpp>
-#include <fstream>
+
+// C++.
 #include <iostream>
+#include <fstream>
 
 using namespace join;
 
@@ -230,6 +234,7 @@ int main()
 ### Password hashing
 
 ```cpp
+// libjoin.
 #include <join/digest.hpp>
 #include <join/utils.hpp>
 
@@ -285,6 +290,7 @@ bool verifyPassword(const std::string& password, const HashedPassword& stored)
 ### Content‑addressable storage
 
 ```cpp
+// libjoin.
 #include <join/digest.hpp>
 
 using namespace join;
@@ -317,6 +323,7 @@ private:
 ### Data integrity verification
 
 ```cpp
+// libjoin.
 #include <join/digest.hpp>
 
 using namespace join;
@@ -345,6 +352,7 @@ bool verifyPacket(const DataPacket& packet)
 ### Merkle tree node
 
 ```cpp
+// libjoin.
 #include <join/digest.hpp>
 
 using namespace join;
@@ -375,7 +383,10 @@ private:
 ### Git‑style object hashing
 
 ```cpp
+// libjoin.
 #include <join/digest.hpp>
+
+// C++.
 #include <sstream>
 
 using namespace join;
@@ -397,7 +408,10 @@ std::string commitHash = hashGitObject("commit", commitData);
 ### Deduplication
 
 ```cpp
+// libjoin.
 #include <join/digest.hpp>
+
+// C++.
 #include <set>
 
 using namespace join;
@@ -426,6 +440,7 @@ private:
 ### ETag generation
 
 ```cpp
+// libjoin.
 #include <join/digest.hpp>
 
 using namespace join;

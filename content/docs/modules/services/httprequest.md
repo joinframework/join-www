@@ -22,6 +22,7 @@ It provides a clean API for building and parsing HTTP requests for both client a
 ### Creating requests
 
 ```cpp
+// libjoin.
 #include <join/httpmessage.hpp>
 
 // Default GET request
