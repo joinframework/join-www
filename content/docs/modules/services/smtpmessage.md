@@ -22,7 +22,10 @@ It provides a simple interface for composing emails that can be sent via SMTP.
 ### Creating a message
 
 ```cpp
+// libjoin.
 #include <join/mailmessage.hpp>
+
+using namespace join;
 
 MailMessage mail;
 
@@ -48,12 +51,12 @@ mail.content("This is the email body.\n\nBest regards,\nJohn");
 MailSender sender("john@example.com");
 
 // With display name
-MailSender sender("john@example.com", "John Doe");
+MailSender named("john@example.com", "John Doe");
 
 // Set later
-MailSender sender;
-sender.address("john@example.com");
-sender.realName("John Doe");
+MailSender later;
+later.address("john@example.com");
+later.realName("John Doe");
 ```
 
 ### Setting sender
@@ -78,15 +81,15 @@ std::string name = from.realName();
 ```cpp
 // To: recipient (default)
 MailRecipient to("user@example.com");
-MailRecipient to("user@example.com", "User Name");
+MailRecipient namedTo("user@example.com", "User Name");
 
 // CC: carbon copy
 MailRecipient cc("cc@example.com", MailRecipient::CCRecipient);
-MailRecipient cc("cc@example.com", "CC User", MailRecipient::CCRecipient);
+MailRecipient namedCc("cc@example.com", "CC User", MailRecipient::CCRecipient);
 
 // BCC: blind carbon copy
 MailRecipient bcc("bcc@example.com", MailRecipient::BCCRecipient);
-MailRecipient bcc("bcc@example.com", "BCC User", MailRecipient::BCCRecipient);
+MailRecipient namedBcc("bcc@example.com", "BCC User", MailRecipient::BCCRecipient);
 ```
 
 ### Adding recipients
@@ -131,8 +134,6 @@ const MailRecipients& recipients = mail.recipients();
 MailMessage mail;
 
 mail.subject("Meeting reminder");
-mail.subject("Invoice #12345");
-mail.subject("Weekly report - January 2024");
 
 // Get subject
 std::string subj = mail.subject();
@@ -223,6 +224,14 @@ mail.content("Your support ticket has been resolved.");
 ### Writing to stream
 
 ```cpp
+// libjoin.
+#include <join/mailmessage.hpp>
+
+// C++.
+#include <sstream>
+
+using namespace join;
+
 MailMessage mail;
 // ... configure mail ...
 
@@ -257,10 +266,13 @@ John
 
 ---
 
-## Use with SmtpClient
+## Use with SMTP client
 
 ```cpp
+// libjoin.
 #include <join/smtpclient.hpp>
+
+using namespace join;
 
 // Create message
 MailMessage mail;
@@ -270,7 +282,7 @@ mail.subject("Test");
 mail.content("Hello!");
 
 // Send via SMTP
-SmtpClient client("smtp.example.com", 587);
+Smtp::Client client("smtp.example.com", 587);
 client.credentials("username", "password");
 client.send(mail);
 ```
@@ -281,34 +293,43 @@ client.send(mail);
 
 ### Newsletter
 
+Subscribers are added as **BCC** recipients, so that they don't see each other's address.
+The visible `To:` must be a deliverable address, here the newsletter's own mailbox:
+
 ```cpp
+std::vector<std::string> subscribers = {
+    "alice@example.com",
+    "bob@example.com",
+};
+
 MailMessage newsletter;
 
 newsletter.sender(MailSender("news@company.com", "Company Newsletter"));
+newsletter.addRecipient(MailRecipient("news@company.com"));  // visible To:
 
-// Add multiple recipients
-for (const auto& subscriber : subscribers)
+for (const auto& email : subscribers)
 {
-    newsletter.addRecipient(
-        MailRecipient(subscriber.email, subscriber.name)
-    );
+    newsletter.addRecipient(MailRecipient(email, MailRecipient::BCCRecipient));
 }
 
 newsletter.subject("Monthly Newsletter - January 2025");
-newsletter.content(generateNewsletterContent());
+newsletter.content("Here is what happened this month...\n");
 ```
 
 ### Notification email
 
 ```cpp
+std::string name  = "Alice";
+std::string email = "alice@example.com";
+
 MailMessage notification;
 
 notification.sender(MailSender("noreply@app.com", "App Notifications"));
-notification.addRecipient(MailRecipient(user.email, user.name));
+notification.addRecipient(MailRecipient(email, name));
 notification.subject("New activity on your account");
 
 notification.content(
-    "Hello " + user.name + ",\n"
+    "Hello " + name + ",\n"
     "\n"
     "There was new activity on your account.\n"
     "\n"
@@ -341,7 +362,10 @@ report.addRecipient(
 );
 
 report.subject("Daily Sales Report");
-report.content(generateReport());
+report.content(
+    "Sales today: 42 orders\n"
+    "Revenue: $4,200\n"
+);
 ```
 
 ---
@@ -407,6 +431,8 @@ bool isValidEmail(const std::string& email)
     return email.find('@') != std::string::npos &&
            email.find('.') != std::string::npos;
 }
+
+std::string userEmail = "jane@example.com";
 
 if (isValidEmail(userEmail))
 {

@@ -5,10 +5,10 @@ weight: 8
 
 # SMTP Client
 
-`SmtpClient` provides an **SMTP email client** for sending email messages.
+`Smtp::Client` provides an **SMTP email client** for sending email messages.
 It supports authentication, STARTTLS encryption, and both SMTP and SMTPS protocols.
 
-`SmtpClient` is designed to be:
+`Smtp::Client` is designed to be:
 
 * **easy** — simple API for sending emails
 * **secure** — supports TLS/SSL encryption
@@ -22,7 +22,13 @@ It supports authentication, STARTTLS encryption, and both SMTP and SMTPS protoco
 ### Sending an email
 
 ```cpp
+// libjoin.
 #include <join/smtpclient.hpp>
+
+// C++.
+#include <iostream>
+
+using namespace join;
 
 // Create message
 MailMessage mail;
@@ -32,7 +38,7 @@ mail.subject("Test Email");
 mail.content("Hello, World!");
 
 // Create client
-SmtpClient client("smtp.example.com", 587);
+Smtp::Client client("smtp.example.com", 587);
 
 // Set credentials
 client.credentials("username", "password");
@@ -56,20 +62,20 @@ else
 
 ```cpp
 // Port 25 (default)
-SmtpClient client("smtp.example.com");
+Smtp::Client relay("smtp.example.com");
 
 // Port 587 (submission with STARTTLS)
-SmtpClient client("smtp.example.com", 587);
+Smtp::Client submission("smtp.example.com", 587);
 ```
 
 ### SMTPS (encrypted)
 
 ```cpp
 // Port 465 (default for SMTPS)
-SmtpsClient client("smtp.example.com");
+Smtps::Client client("smtp.example.com");
 
 // Custom port
-SmtpsClient client("smtp.example.com", 465);
+Smtps::Client custom("smtp.example.com", 2465);
 ```
 
 ---
@@ -79,7 +85,7 @@ SmtpsClient client("smtp.example.com", 465);
 ### Setting credentials
 
 ```cpp
-SmtpClient client("smtp.example.com", 587);
+Smtp::Client client("smtp.example.com", 587);
 
 // Set username and password
 client.credentials("myusername", "mypassword");
@@ -109,7 +115,7 @@ client.send(mail);
 
 ```cpp
 // Connects unencrypted, upgrades to TLS
-SmtpClient client("smtp.example.com", 587);
+Smtp::Client client("smtp.example.com", 587);
 client.credentials("user", "password");
 
 // Client automatically uses STARTTLS if available
@@ -120,7 +126,7 @@ client.send(mail);
 
 ```cpp
 // Encrypted from the start
-SmtpsClient client("smtp.example.com", 465);
+Smtps::Client client("smtp.example.com", 465);
 client.credentials("user", "password");
 client.send(mail);
 ```
@@ -132,7 +138,7 @@ client.send(mail);
 ### Certificate verification
 
 ```cpp
-SmtpClient client("smtp.example.com", 587);
+Smtp::Client client("smtp.example.com", 587);
 
 // Set CA certificate for verification
 client.setCaFile("/etc/ssl/certs/ca-bundle.crt");
@@ -147,7 +153,7 @@ client.setCaPath("/etc/ssl/certs/");
 ### Client certificate
 
 ```cpp
-SmtpClient client("smtp.example.com", 587);
+Smtp::Client client("smtp.example.com", 587);
 
 // Set client certificate and key
 client.setCertificate("/path/to/cert.pem", "/path/to/key.pem");
@@ -156,7 +162,7 @@ client.setCertificate("/path/to/cert.pem", "/path/to/key.pem");
 ### Cipher configuration
 
 ```cpp
-SmtpClient client("smtp.example.com", 587);
+Smtp::Client client("smtp.example.com", 587);
 
 // TLS 1.2 and below
 client.setCipher("ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256");
@@ -172,7 +178,7 @@ client.setCipher_1_3("TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256");
 ### Gmail
 
 ```cpp
-SmtpClient client("smtp.gmail.com", 587);
+Smtp::Client client("smtp.gmail.com", 587);
 client.credentials("your-email@gmail.com", "app-password");
 client.send(mail);
 
@@ -182,7 +188,7 @@ client.send(mail);
 ### Outlook/Office 365
 
 ```cpp
-SmtpClient client("smtp.office365.com", 587);
+Smtp::Client client("smtp.office365.com", 587);
 client.credentials("your-email@outlook.com", "password");
 client.send(mail);
 ```
@@ -190,7 +196,7 @@ client.send(mail);
 ### Yahoo
 
 ```cpp
-SmtpClient client("smtp.mail.yahoo.com", 587);
+Smtp::Client client("smtp.mail.yahoo.com", 587);
 client.credentials("your-email@yahoo.com", "app-password");
 client.send(mail);
 ```
@@ -198,7 +204,7 @@ client.send(mail);
 ### Custom server
 
 ```cpp
-SmtpClient client("mail.company.com", 25);
+Smtp::Client client("mail.company.com", 25);
 // No authentication needed for internal server
 client.send(mail);
 ```
@@ -218,7 +224,7 @@ void sendNotification(const std::string& to, const std::string& message)
     mail.subject("Notification");
     mail.content(message);
 
-    SmtpClient client("smtp.example.com", 587);
+    Smtp::Client client("smtp.example.com", 587);
     client.credentials("app-email@example.com", "password");
 
     if (client.send(mail) != 0)
@@ -231,6 +237,12 @@ void sendNotification(const std::string& to, const std::string& message)
 ### Welcome email
 
 ```cpp
+struct User
+{
+    std::string name;
+    std::string email;
+};
+
 void sendWelcomeEmail(const User& user)
 {
     MailMessage mail;
@@ -251,9 +263,13 @@ void sendWelcomeEmail(const User& user)
 
     mail.content(content);
 
-    SmtpClient client("smtp.company.com", 587);
+    Smtp::Client client("smtp.company.com", 587);
     client.credentials("noreply@company.com", "password");
-    client.send(mail);
+
+    if (client.send(mail) != 0)
+    {
+        std::cerr << "Failed to send welcome email\n";
+    }
 }
 ```
 
@@ -278,9 +294,13 @@ void sendReportLink(const std::string& to, const std::string& reportUrl)
         "This link will expire in 24 hours.\n"
     );
 
-    SmtpClient client("smtp.company.com", 587);
+    Smtp::Client client("smtp.company.com", 587);
     client.credentials("reports@company.com", "password");
-    client.send(mail);
+
+    if (client.send(mail) != 0)
+    {
+        std::cerr << "Failed to send report link\n";
+    }
 }
 ```
 
@@ -291,7 +311,7 @@ void sendReportLink(const std::string& to, const std::string& reportUrl)
 ### Checking send result
 
 ```cpp
-SmtpClient client("smtp.example.com", 587);
+Smtp::Client client("smtp.example.com", 587);
 client.credentials("user", "password");
 
 if (client.send(mail) == 0)
@@ -307,22 +327,18 @@ else
 
 ### Common errors
 
-```cpp
-int result = client.send(mail);
+`send()` returns `-1` when any step of the SMTP conversation fails, for example:
 
-if (result != 0)
-{
-    // Check specific errors
-    std::error_code ec = join::lastError;
+* the host name could not be resolved, or the connection or the TLS handshake failed
+* the authentication was refused
+* a recipient was rejected: the message is then sent to **nobody**, not even to the valid recipients
+* the server refused the message
 
-    // Connection failed
-    // Authentication failed
-    // Invalid recipient
-    // Server rejected message
+`send()` opens a new connection for each message and closes it afterwards,
+so the same client can be reused after a failure.
 
-    std::cerr << "Error: " << ec.message() << "\n";
-}
-```
+⚠️ A failure while closing the conversation (`QUIT`) also returns `-1`, although the message
+was already accepted: blindly retrying can deliver it twice.
 
 ---
 
@@ -332,13 +348,13 @@ if (result != 0)
 
 ```cpp
 // Good: Use TLS (port 587 with STARTTLS)
-SmtpClient client("smtp.example.com", 587);
+Smtp::Client submission("smtp.example.com", 587);
 
 // Good: Use SMTPS (port 465)
-SmtpsClient client("smtp.example.com", 465);
+Smtps::Client secure("smtp.example.com", 465);
 
 // Avoid: Unencrypted (port 25)
-SmtpClient client("smtp.example.com", 25);
+Smtp::Client relay("smtp.example.com", 25);
 ```
 
 ### Validate before sending
@@ -370,9 +386,17 @@ if (validateMail(mail))
 ### Handle credentials securely
 
 ```cpp
-// Good: Read from secure config
-std::string user = config.getSmtpUser();
-std::string pass = config.getSmtpPassword();
+// C.
+#include <cstdlib>
+
+// Good: Read the credentials from the environment
+const char* user = std::getenv("SMTP_USER");
+const char* pass = std::getenv("SMTP_PASSWORD");
+if (user == nullptr || pass == nullptr)
+{
+    std::cerr << "SMTP_USER and SMTP_PASSWORD must be set\n";
+    return;
+}
 client.credentials(user, pass);
 
 // Bad: Hardcoded credentials
@@ -381,8 +405,15 @@ client.credentials("hardcoded@example.com", "password123");
 
 ### Retry on failure
 
+Retrying only helps with temporary failures (network, busy server): a rejected recipient or
+a wrong password fails again, and repeated failed logins can lock the account.
+
 ```cpp
-bool sendWithRetry(SmtpClient& client, const MailMessage& mail, int maxRetries = 3)
+// C++.
+#include <thread>
+#include <chrono>
+
+bool sendWithRetry(Smtp::Client& client, const MailMessage& mail, int maxRetries = 3)
 {
     for (int i = 0; i < maxRetries; ++i)
     {
@@ -391,8 +422,11 @@ bool sendWithRetry(SmtpClient& client, const MailMessage& mail, int maxRetries =
             return true;
         }
 
-        // Wait before retry
-        std::this_thread::sleep_for(std::chrono::seconds(5));
+        // Wait before the next attempt
+        if (i + 1 < maxRetries)
+        {
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+        }
     }
     return false;
 }
