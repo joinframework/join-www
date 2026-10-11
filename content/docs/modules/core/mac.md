@@ -26,7 +26,7 @@ MAC address features:
 ```cpp
 #include <join/macaddress.hpp>
 
-using join;
+using namespace join;
 
 MacAddress mac;  // Wildcard (00:00:00:00:00:00)
 ```

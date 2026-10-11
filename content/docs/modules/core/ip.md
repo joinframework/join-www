@@ -25,7 +25,7 @@ IP address features:
 ```cpp
 #include <join/ipaddress.hpp>
 
-using join;
+using namespace join;
 
 IpAddress addr;  // IPv4 wildcard (0.0.0.0)
 ```
