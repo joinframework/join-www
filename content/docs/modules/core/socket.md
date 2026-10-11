@@ -368,14 +368,14 @@ socket.setCipher_1_3("TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256");
 `BasicTlsSocket` takes a `SslCtxPtr` by move. To share a context across multiple sockets, increment the reference count with `SSL_CTX_up_ref` before passing:
 
 ```cpp
-join::SslCtxPtr ctx(SSL_CTX_new(TLS_client_method()));
+SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
 
-// socket1 takes ownership
-Tls::Socket socket1(std::move(ctx));
+// each socket releases one reference when destroyed:
+// take one extra reference for the second socket
+SSL_CTX_up_ref(ctx);
 
-// to create socket2 from the same context, use SSL_CTX_up_ref first
-SSL_CTX_up_ref(socket1_ctx_ptr);  // keep a raw pointer before the move
-Tls::Socket socket2(join::SslCtxPtr(raw_ctx_ptr));
+Tls::Socket socket1(join::SslCtxPtr{ctx});
+Tls::Socket socket2(join::SslCtxPtr{ctx});
 ```
 
 In practice it is simpler to create each socket with its own context from the same configuration.
@@ -486,9 +486,12 @@ uint16_t sum = Icmp::Socket::checksum(
 ### UDP echo server
 
 ```cpp
+// libjoin.
+#include <join/socket.hpp>
+
 using namespace join;
 
-Udp::Socket server;
+Udp::Socket server(Udp::Socket::Mode::Blocking);
 server.bind(Udp::Endpoint("0.0.0.0", 9000));
 
 char buffer[1024];
@@ -505,12 +508,17 @@ while (true)
 ### TCP echo server
 
 ```cpp
+// libjoin.
+#include <join/acceptor.hpp>
+
 using namespace join;
 
 Tcp::Acceptor acceptor;
 acceptor.create(Tcp::Endpoint("0.0.0.0", 9000));
 
-Tcp::Socket client = acceptor.accept();
+Tcp::Socket client = acceptor.accept();      // waits for a client
+client.setMode(Tcp::Socket::Mode::Blocking); // accepted sockets are non-blocking
+
 char buffer[1024];
 
 while (true)
