@@ -65,9 +65,13 @@ void signaler()
 Condition variable for inter-process synchronization:
 
 ```cpp
+// libjoin.
 #include <join/condition.hpp>
+#include <join/memory.hpp>
 #include <join/mutex.hpp>
-#include <join/shared.hpp>
+
+// C++.
+#include <new>
 
 using namespace join;
 
@@ -75,13 +79,11 @@ struct SyncData
 {
     SharedMutex mutex;
     SharedCondition cond;
-    bool ready;
+    bool ready = false;
 };
 
 // Create in shared memory
-SharedMemory shm("sync_data", sizeof(SyncData));
-shm.open();
-
+ShmMem shm(sizeof(SyncData), "/sync_data");
 SyncData* data = new (shm.get()) SyncData();
 
 // Process A: Wait
@@ -351,25 +353,21 @@ private:
 ### Inter-process semaphore
 
 ```cpp
-struct Semaphore
+struct SemaphoreData
 {
     SharedMutex mutex;
     SharedCondition cond;
-    int count;
+    int count = 0;
 };
 
 // Create in shared memory
-SharedMemory shm("semaphore", sizeof(Semaphore));
-shm.open();
+ShmMem shm(sizeof(SemaphoreData), "/semaphore");
 
-Semaphore* sem = new (shm.get()) Semaphore {
-    SharedMutex(),
-    SharedCondition(),
-    3  // Initial count
-};
+SemaphoreData* sem = new (shm.get()) SemaphoreData();
+sem->count = 3;  // Initial count
 
 // Wait (P operation)
-void wait(Semaphore* sem)
+void wait(SemaphoreData* sem)
 {
     ScopedLock<SharedMutex> lock(sem->mutex);
 
@@ -381,7 +379,7 @@ void wait(Semaphore* sem)
 }
 
 // Signal (V operation)
-void signal(Semaphore* sem)
+void signal(SemaphoreData* sem)
 {
     {
         ScopedLock<SharedMutex> lock(sem->mutex);
