@@ -53,6 +53,7 @@ The signature class supports various digest algorithms:
 ### Signing data
 
 ```cpp
+// libjoin.
 #include <join/signature.hpp>
 
 using join::Digest;
@@ -60,7 +61,7 @@ using join::Signature;
 using join::BytesArray;
 
 // Create signature instance
-Signature sig(Digest::Sha256);
+Signature sig(Digest::SHA256);
 
 // Add data to sign
 sig << "Message to sign";
@@ -78,7 +79,7 @@ if (!signature.empty())
 ### Verifying signature
 
 ```cpp
-Signature sig(Digest::Sha256);
+Signature sig(Digest::SHA256);
 
 // Add data to verify
 sig << "Message to sign";
@@ -104,7 +105,7 @@ else
 ### Incremental signing
 
 ```cpp
-Signature sig(Digest::Sha256);
+Signature sig(Digest::SHA256);
 
 // Add data incrementally
 sig << "Part 1\n";
@@ -118,7 +119,7 @@ BytesArray signature = sig.sign("private.pem");
 ### Signing large data
 
 ```cpp
-Signature sig(Digest::Sha512);
+Signature sig(Digest::SHA512);
 
 // Read and sign file incrementally
 std::ifstream file("large_file.dat", std::ios::binary);
@@ -135,7 +136,7 @@ BytesArray signature = sig.sign("private.pem");
 ### Binary data
 
 ```cpp
-Signature sig(Digest::Sha256);
+Signature sig(Digest::SHA256);
 
 // Sign binary data
 std::vector<uint8_t> data = {0x01, 0x02, 0x03, 0x04};
@@ -158,7 +159,7 @@ std::string message = "Important message";
 BytesArray sig1 = Signature::sign(
     message,
     "private.pem",
-    Digest::Sha256
+    Digest::SHA256
 );
 
 // Sign binary data
@@ -166,7 +167,7 @@ BytesArray data = {0x01, 0x02, 0x03};
 BytesArray sig2 = Signature::sign(
     data,
     "private.pem",
-    Digest::Sha256
+    Digest::SHA256
 );
 
 // Sign buffer
@@ -175,7 +176,7 @@ BytesArray sig3 = Signature::sign(
     buffer,
     strlen(buffer),
     "private.pem",
-    Digest::Sha256
+    Digest::SHA256
 );
 ```
 
@@ -187,7 +188,7 @@ bool valid1 = Signature::verify(
     message,
     signature,
     "public.pem",
-    Digest::Sha256
+    Digest::SHA256
 );
 
 // Verify binary data
@@ -195,7 +196,7 @@ bool valid2 = Signature::verify(
     data,
     signature,
     "public.pem",
-    Digest::Sha256
+    Digest::SHA256
 );
 
 // Verify buffer
@@ -204,7 +205,7 @@ bool valid3 = Signature::verify(
     strlen(buffer),
     signature,
     "public.pem",
-    Digest::Sha256
+    Digest::SHA256
 );
 ```
 
@@ -240,14 +241,14 @@ Signature supports PEM-encoded keys:
 BytesArray sig = Signature::sign(
     data,
     "/path/to/private_key.pem",  // Private key file
-    Digest::Sha256
+    Digest::SHA256
 );
 
 bool valid = Signature::verify(
     data,
     signature,
     "/path/to/public_key.pem",   // Public key file
-    Digest::Sha256
+    Digest::SHA256
 );
 ```
 
@@ -266,7 +267,7 @@ Supports various key types:
 ### Checking results
 
 ```cpp
-Signature sig(Digest::Sha256);
+Signature sig(Digest::SHA256);
 sig << data;
 
 BytesArray signature = sig.sign("private.pem");
@@ -329,7 +330,7 @@ public:
         BytesArray sig = Signature::sign(
             canonical,
             privateKey,
-            Digest::Sha256
+            Digest::SHA256
         );
 
         // Return base64-encoded signature
@@ -350,7 +351,7 @@ public:
         std::ifstream doc(docPath, std::ios::binary);
 
         // Create signature
-        Signature sig(Digest::Sha256);
+        Signature sig(Digest::SHA256);
         sig << doc.rdbuf();
 
         // Generate signature
@@ -386,7 +387,7 @@ public:
             licenseData,
             signature,
             "vendor_public.pem",
-            Digest::Sha256
+            Digest::SHA256
         );
 
         if (!valid)
@@ -410,7 +411,7 @@ public:
     {
         // Read update file
         std::ifstream update(updateFile, std::ios::binary);
-        Signature sig(Digest::Sha512);
+        Signature sig(Digest::SHA512);
         sig << update.rdbuf();
 
         // Read signature file
@@ -434,7 +435,7 @@ public:
 
 // Good: Store keys securely
 const std::string keyPath = getSecureKeyPath();
-BytesArray sig = Signature::sign(data, keyPath, Digest::Sha256);
+BytesArray sig = Signature::sign(data, keyPath, Digest::SHA256);
 
 // Bad: Hardcoded keys in source code
 const std::string key = "-----BEGIN PRIVATE KEY-----...";
@@ -444,12 +445,12 @@ const std::string key = "-----BEGIN PRIVATE KEY-----...";
 
 ```cpp
 // Good: Use strong algorithms
-Signature sig(Digest::Sha256);  // Recommended
-Signature sig(Digest::Sha512);  // More secure
+Signature sig(Digest::SHA256);  // Recommended
+Signature sig(Digest::SHA512);  // More secure
 
 // Avoid: Weak algorithms
-Signature sig(Digest::Sha1);    // Deprecated
-Signature sig(Digest::Md5);     // Broken
+Signature sig(Digest::SHA1);    // Deprecated
+Signature sig(Digest::MD5);     // Broken
 ```
 
 ### Signature verification
@@ -484,17 +485,17 @@ sig.verify(signature, pubKey);
 
 ```cpp
 // Modern applications
-Signature sig(Digest::Sha256);    // Good balance
+Signature sig(Digest::SHA256);    // Good balance
 
 // High security requirements
-Signature sig(Digest::Sha512);
+Signature sig(Digest::SHA512);
 ```
 
 ### Verify signatures immediately
 
 ```cpp
 // Good: Verify before processing
-bool valid = Signature::verify(data, sig, pubKey, Digest::Sha256);
+bool valid = Signature::verify(data, sig, pubKey, Digest::SHA256);
 if (valid)
 {
     processData(data);
@@ -502,7 +503,7 @@ if (valid)
 
 // Bad: Process then verify
 processData(data);
-if (!Signature::verify(data, sig, pubKey, Digest::Sha256))
+if (!Signature::verify(data, sig, pubKey, Digest::SHA256))
 {
     // Too late!
 }
@@ -518,7 +519,7 @@ std::string toSign =
     userId + "\n" +
     actualData;
 
-BytesArray sig = Signature::sign(toSign, key, Digest::Sha256);
+BytesArray sig = Signature::sign(toSign, key, Digest::SHA256);
 
 // Prevents signature reuse across contexts
 ```
@@ -526,7 +527,7 @@ BytesArray sig = Signature::sign(toSign, key, Digest::Sha256);
 ### Handle errors properly
 
 ```cpp
-BytesArray signature = Signature::sign(data, key, Digest::Sha256);
+BytesArray signature = Signature::sign(data, key, Digest::SHA256);
 
 if (signature.empty())
 {
