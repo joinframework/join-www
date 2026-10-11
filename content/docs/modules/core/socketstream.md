@@ -29,13 +29,25 @@ Standard iostream wrapper for stream sockets.
 
 ### Creating a TCP stream
 
+Endpoints take an IP address: to connect to a host name, resolve it first with
+`Dns::Resolver::lookupAddress()` (see [Endpoint]({{< ref "endpoint" >}})).
+
 ```cpp
+// libjoin.
 #include <join/socketstream.hpp>
+#include <join/resolver.hpp>
 
 using namespace join;
 
 Tcp::Stream stream;
-Tcp::Endpoint server("example.com", 80);
+
+IpAddress ip = Dns::Resolver::lookupAddress("example.com");
+if (ip.isWildcard())
+{
+    // resolution failed
+}
+
+Tcp::Endpoint server(ip, 80);
 
 stream.connect(server);
 ```
@@ -100,7 +112,9 @@ Encrypted iostream wrapper for TLS/SSL connections.
 ### Creating a secure stream
 
 ```cpp
+// libjoin.
 #include <join/socketstream.hpp>
+#include <join/resolver.hpp>
 
 using namespace join;
 
@@ -110,7 +124,14 @@ Tls::Stream stream;
 stream.setVerify(true);
 stream.setCaFile("/etc/ssl/certs/ca-bundle.crt");
 
-Tls::Endpoint server("example.com", 443);
+IpAddress ip = Dns::Resolver::lookupAddress("example.com");
+if (ip.isWildcard())
+{
+    // resolution failed
+}
+
+Tls::Endpoint server(ip, 443);
+server.hostname("example.com");  // SNI and certificate verification
 stream.connectEncrypted(server);
 ```
 
@@ -123,7 +144,15 @@ The `connectEncrypted()` method:
 
 ```cpp
 Tls::Stream stream;
-Tls::Endpoint server("mail.example.com", 587);
+
+IpAddress ip = Dns::Resolver::lookupAddress("mail.example.com");
+if (ip.isWildcard())
+{
+    // resolution failed
+}
+
+Tls::Endpoint server(ip, 587);
+server.hostname("mail.example.com");
 
 // Connect without encryption
 stream.connect(server);
@@ -214,7 +243,7 @@ if (stream.fail())
 ```cpp
 Tcp::Stream stream;
 stream.bind(Tcp::Endpoint("0.0.0.0", 5000));
-stream.connect(Tcp::Endpoint("example.com", 80));
+stream.connect(Tcp::Endpoint("192.168.1.100", 80));
 ```
 
 ### Disconnecting
@@ -259,13 +288,24 @@ Automatic flushing occurs when the buffer is full, `std::endl` is used, `flush()
 ### HTTP client
 
 ```cpp
+// libjoin.
 #include <join/socketstream.hpp>
+#include <join/resolver.hpp>
+
+// C++.
 #include <iostream>
 
 using namespace join;
 
 Tcp::Stream stream;
-stream.connect(Tcp::Endpoint("example.com", 80));
+
+IpAddress ip = Dns::Resolver::lookupAddress("example.com");
+if (ip.isWildcard())
+{
+    // resolution failed
+}
+
+stream.connect(Tcp::Endpoint(ip, 80));
 
 stream << "GET / HTTP/1.1\r\n"
        << "Host: example.com\r\n"
@@ -283,15 +323,28 @@ while (std::getline(stream, line))
 ### HTTPS client
 
 ```cpp
+// libjoin.
 #include <join/socketstream.hpp>
+#include <join/resolver.hpp>
+
+// C++.
 #include <iostream>
 
 using namespace join;
 
+IpAddress ip = Dns::Resolver::lookupAddress("example.com");
+if (ip.isWildcard())
+{
+    // resolution failed
+}
+
+Tls::Endpoint server(ip, 443);
+server.hostname("example.com");
+
 Tls::Stream stream;
 stream.setVerify(true);
 stream.setCaFile("/etc/ssl/certs/ca-bundle.crt");
-stream.connectEncrypted(Tls::Endpoint("example.com", 443));
+stream.connectEncrypted(server);
 
 stream << "GET / HTTP/1.1\r\n"
        << "Host: example.com\r\n"
@@ -315,7 +368,7 @@ while (std::getline(stream, line))
 using namespace join;
 
 Tcp::Stream stream;
-stream.connect(Tcp::Endpoint("localhost", 9000));
+stream.connect(Tcp::Endpoint("127.0.0.1", 9000));
 stream.timeout(5000);
 
 std::string message;
