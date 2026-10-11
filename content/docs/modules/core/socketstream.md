@@ -421,8 +421,8 @@ auto remote = stream.remoteEndpoint();
 ```cpp
 Tcp::Socket& sock = stream.socket();
 
-sock.setOption(BasicSocket<Tcp>::Option::NoDelay, 1);
-sock.setOption(BasicSocket<Tcp>::Option::KeepAlive, 1);
+sock.setOption(Tcp::Socket::Option::NoDelay, 1);
+sock.setOption(Tcp::Socket::Option::KeepAlive, 1);
 ```
 
 ---

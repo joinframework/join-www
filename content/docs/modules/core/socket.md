@@ -46,13 +46,13 @@ Tcp::Socket socket;  // non-blocking by default
 Operations wait until they complete or timeout.
 
 ```cpp
-Tcp::Socket socket(BasicSocket<Tcp>::Mode::Blocking);
+Tcp::Socket socket(Tcp::Socket::Mode::Blocking);
 ```
 
 You can change the mode at runtime:
 
 ```cpp
-socket.setMode(BasicSocket<Tcp>::Mode::NonBlocking);
+socket.setMode(Tcp::Socket::Mode::NonBlocking);
 ```
 
 ---
@@ -170,8 +170,8 @@ int ttl = socket.ttl();
 ### Multicast options
 
 ```cpp
-socket.setOption(BasicSocket<Udp>::Option::MulticastTtl, 10);
-socket.setOption(BasicSocket<Udp>::Option::MulticastLoop, 1);
+socket.setOption(Udp::Socket::Option::MulticastTtl, 10);
+socket.setOption(Udp::Socket::Option::MulticastLoop, 1);
 ```
 
 ---
@@ -239,11 +239,11 @@ if (socket.waitDisconnected(5000))
 ### TCP options
 
 ```cpp
-socket.setOption(BasicSocket<Tcp>::Option::NoDelay, 1);    // disable Nagle
-socket.setOption(BasicSocket<Tcp>::Option::KeepAlive, 1);  // enable keepalive
-socket.setOption(BasicSocket<Tcp>::Option::KeepIdle, 60);
-socket.setOption(BasicSocket<Tcp>::Option::KeepIntvl, 10);
-socket.setOption(BasicSocket<Tcp>::Option::KeepCount, 5);
+socket.setOption(Tcp::Socket::Option::NoDelay, 1);    // disable Nagle
+socket.setOption(Tcp::Socket::Option::KeepAlive, 1);  // enable keepalive
+socket.setOption(Tcp::Socket::Option::KeepIdle, 60);
+socket.setOption(Tcp::Socket::Option::KeepIntvl, 10);
+socket.setOption(Tcp::Socket::Option::KeepCount, 5);
 ```
 
 ---
@@ -351,7 +351,7 @@ In practice it is simpler to create each socket with its own context from the sa
 ## Socket options
 
 ```cpp
-using Option = BasicSocket<Protocol>::Option;
+using Option = Tcp::Socket::Option;  // use your socket's own type: Udp::Socket::Option, Raw::Socket::Option...
 
 // socket-level (all sockets)
 socket.setOption(Option::ReuseAddr,  1);
@@ -439,7 +439,7 @@ if (socket.connect(endpoint) == -1)
 Static utility for computing the standard 1s-complement checksum (useful for ICMP):
 
 ```cpp
-uint16_t sum = BasicSocket<Protocol>::checksum(
+uint16_t sum = Icmp::Socket::checksum(
     reinterpret_cast<const uint16_t*>(data),
     length
 );
