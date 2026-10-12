@@ -1,0 +1,36 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+
+    permissions:
+      contents: read
+
+    with:
+      pack: true
+
+  release:
+    needs: [build]
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download package from GitHub
+        uses: actions/download-artifact@v7.0.0
+        with:
+          name: join-www-package
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2.4.1
+        with:
+          files: 'join-www-*.tar.gz'
+          generate_release_notes: true

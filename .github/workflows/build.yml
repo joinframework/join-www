@@ -9,6 +9,9 @@ on:
       dry_run:
         type: boolean
         default: false
+      pack:
+        type: boolean
+        default: false
 
     secrets:
       JOIN_DEPLOY_KNOWN_HOST:
@@ -26,6 +29,9 @@ on:
         type: boolean
         default: false
       dry_run:
+        type: boolean
+        default: false
+      pack:
         type: boolean
         default: false
 
@@ -57,6 +63,22 @@ jobs:
         with:
           name: join-www
           path: public/
+
+      - name: Package
+        if: inputs.pack && github.ref_type == 'tag'
+        env:
+          HUGO_PARAMS_VERSION: ${{ github.ref_name }}
+        run: |
+          hugo --minify --baseURL "https://joinframework.net/$GITHUB_REF_NAME/" --destination "package/$GITHUB_REF_NAME"
+          tar -czf "join-www-$GITHUB_REF_NAME.tar.gz" -C package "$GITHUB_REF_NAME"
+
+      - name: Upload package to GitHub
+        if: inputs.pack && github.ref_type == 'tag'
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: join-www-package
+          path: join-www-*.tar.gz
+          if-no-files-found: error
 
       - name: Deploy
         if: inputs.deploy

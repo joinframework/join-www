@@ -196,10 +196,12 @@ The site is built and deployed by GitHub Actions:
 
 * **CI** (`.github/workflows/ci.yml`) — every pull request to `main` is built with `hugo --minify`
 * **CD** (`.github/workflows/cd.yml`) — every push to `main` is built and deployed to the web server with `rsync`
+* **Release** (`.github/workflows/release.yml`) — every `vX.Y.Z` tag is built for `https://joinframework.net/vX.Y.Z/`
+  and attached to its GitHub release as `join-www-vX.Y.Z.tar.gz`
 
 The deployment target and SSH key are provided by the repository secrets
 (`JOIN_DEPLOY_DEST`, `JOIN_DEPLOY_PORT`, `JOIN_DEPLOY_KEY`, `JOIN_DEPLOY_KNOWN_HOST`).
-Both workflows rely on the reusable `.github/workflows/build.yml` and can also be started manually
+These workflows rely on the reusable `.github/workflows/build.yml`. **CI** and **CD** can also be started manually
 (`workflow_dispatch`). Starting **CD** manually always deploys for real. To check a deployment without
 changing the server, start `build.yml` directly with `deploy` and `dry_run` both enabled
 (`rsync --dry-run`).
