@@ -1,4 +1,4 @@
 baseURL = "https://joinframework.net/"
-languageCode = "en-us"
+locale = "en-us"
 title = "Join Framework"
 theme = "hugo-book"

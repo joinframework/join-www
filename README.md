@@ -4,14 +4,15 @@ Join Framework static documentation powered by Hugo and the Hugo Book theme.
 
 ## Prerequisites
 
-- Hugo Extended version 0.146.0 or higher
+- Hugo version 0.158.0 or higher (standard or extended)
 - Git
 
 ### Install Hugo
 
 **Ubuntu/Debian:**
 ```bash
-sudo apt install hugo
+wget https://github.com/gohugoio/hugo/releases/download/v0.167.0/hugo_0.167.0_linux-amd64.deb
+sudo dpkg -i hugo_0.167.0_linux-amd64.deb
 ```
 
 **Windows:**
@@ -24,7 +25,7 @@ choco install hugo-extended
 brew install hugo
 ```
 
-> **Warning:** If your package manager provides an older version of Hugo (< 0.146.0), you may need to install manually from the [Hugo releases page](https://github.com/gohugoio/hugo/releases).
+> **Warning:** If your package manager provides an older version of Hugo (< 0.158.0), you may need to install manually from the [Hugo releases page](https://github.com/gohugoio/hugo/releases).
 
 ## Installation
 
