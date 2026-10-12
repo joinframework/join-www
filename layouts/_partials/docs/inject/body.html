@@ -1,0 +1,3 @@
+{{ with resources.Get "versions.js" | resources.Minify }}
+  <script data-version="{{ site.Params.version }}" data-base="{{ site.Home.RelPermalink }}">{{ .Content | safeJS }}</script>
+{{ end }}
