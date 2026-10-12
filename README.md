@@ -190,14 +190,35 @@ hugo
 
 ## Deployment
 
+### Versions
+
+The site serves several versions of the documentation:
+
+* `main` at the site root, as the default version
+* each release at `/vX.Y.Z/`, frozen as it was built from its tag
+
+A menu lists the versions and a banner warns readers of `main` and of old releases.
+The list is read at runtime from `/versions.json`, so old releases also show the newer ones.
+
 ### Automatic deployment
 
 The site is built and deployed by GitHub Actions:
 
 * **CI** (`.github/workflows/ci.yml`) — every pull request to `main` is built with `hugo --minify`
 * **CD** (`.github/workflows/cd.yml`) — every push to `main` is built and deployed to the web server with `rsync`
-* **Release** (`.github/workflows/release.yml`) — every `vX.Y.Z` tag is built for `https://joinframework.net/vX.Y.Z/`
-  and attached to its GitHub release as `join-www-vX.Y.Z.tar.gz`
+* **Release** (`.github/workflows/release.yml`) — every `vX.Y.Z` tag is built for `https://joinframework.net/vX.Y.Z/`,
+  attached to its GitHub release as `join-www-vX.Y.Z.tar.gz`, then the site is deployed again to add it
+
+Each deployment builds `main`, extracts the `join-www-vX.Y.Z.tar.gz` archive of every published release
+into its directory, generates `/versions.json` (the newest release is the latest), and copies the whole site
+with `rsync --delete`. Draft releases, pre-releases and tags not named `vX.Y.Z` are left out.
+
+To publish the documentation of a new version, tag `main` and push the tag:
+
+```bash
+git tag v5.0.0
+git push origin v5.0.0
+```
 
 The deployment target and SSH key are provided by the repository secrets
 (`JOIN_DEPLOY_DEST`, `JOIN_DEPLOY_PORT`, `JOIN_DEPLOY_KEY`, `JOIN_DEPLOY_KNOWN_HOST`).
@@ -208,13 +229,8 @@ changing the server, start `build.yml` directly with `deploy` and `dry_run` both
 
 ### Manual deployment
 
-```bash
-# Generate the site
-hugo
-
-# Copy to web server
-rsync -avz --delete public/ user@server:/var/www/join-www/
-```
+Deploy with the **CD** workflow rather than by hand: a manual `rsync --delete` of `public/` would remove
+the released versions and `/versions.json` from the server.
 
 ## Editing with VS Code
 
