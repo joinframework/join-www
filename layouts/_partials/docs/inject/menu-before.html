@@ -1,0 +1,14 @@
+<ul class="book-languages version-menu hidden">
+  <li>
+    <input type="checkbox" id="version-menu" class="toggle" />
+    <label for="version-menu" class="flex">
+      <a role="button">
+        <img src="{{ partial "docs/icon" "tag" }}" class="book-icon" alt="{{ partial "docs/text/i18n" "Version" }}" />
+        {{ site.Params.version -}}
+      </a>
+      <img src="{{ partial "docs/icon" "chevron-right" }}" class="book-icon" alt="{{ partial "docs/text/i18n" "Expand" }}" />
+    </label>
+
+    <ul id="version-list"></ul>
+  </li>
+</ul>

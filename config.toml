@@ -2,3 +2,7 @@ baseURL = "https://joinframework.net/"
 locale = "en-us"
 title = "Join Framework"
 theme = "hugo-book"
+
+[params]
+  # Documentation version: "main" for the main branch, the tag (vX.Y.Z) for a release, set with HUGO_PARAMS_VERSION
+  version = "main"

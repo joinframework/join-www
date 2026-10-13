@@ -9,6 +9,12 @@ on:
       dry_run:
         type: boolean
         default: false
+      pack:
+        type: boolean
+        default: false
+      ref:
+        type: string
+        default: ''
 
     secrets:
       JOIN_DEPLOY_KNOWN_HOST:
@@ -28,10 +34,16 @@ on:
       dry_run:
         type: boolean
         default: false
+      pack:
+        type: boolean
+        default: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    concurrency:
+      group: ${{ inputs.deploy && 'deploy' || github.run_id }}
 
     container:
       image: joinframework/join-ci:latest
@@ -47,16 +59,77 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6.0.2
         with:
+          ref: ${{ inputs.ref }}
           submodules: recursive
 
       - name: Build
         run: hugo --minify
 
+      - name: Add releases
+        if: inputs.deploy
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl -fsSL -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/releases?per_page=100" > releases.json
+          if [ "$(jq length releases.json)" -ge 100 ]; then
+            echo "::error::100 releases or more, only the first page was read"
+            exit 1
+          fi
+          # published releases vX.Y.Z only, newest first
+          tags=$(jq -r '.[] | select(.draft | not) | select(.prerelease | not) | .tag_name' releases.json \
+            | { grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || true; } | sort -V -r)
+          versions=(main)
+          for tag in $tags; do
+            url=$(jq -r --arg tag "$tag" --arg name "join-www-$tag.tar.gz" \
+              '.[] | select(.tag_name == $tag) | .assets[] | select(.name == $name) | .browser_download_url' releases.json)
+            if [ -z "$url" ]; then
+              echo "::warning::release $tag has no join-www-$tag.tar.gz, skipped"
+              continue
+            fi
+            curl -fsSL -o package.tar.gz "$url"
+            # only regular files and directories, all inside $tag/
+            if tar -tvzf package.tar.gz | cut -c1 | grep -v '[-d]' \
+              || tar -tzf package.tar.gz | awk -v dir="$tag/" 'index($0, dir) != 1 || /(^|\/)\.\.(\/|$)/' | grep .; then
+              echo "::error::join-www-$tag.tar.gz has links or files outside $tag/"
+              exit 1
+            fi
+            tar -xzf package.tar.gz -C public
+            if [ ! -f "public/$tag/index.html" ]; then
+              echo "::error::join-www-$tag.tar.gz has no $tag/index.html"
+              exit 1
+            fi
+            versions+=("$tag")
+          done
+          # main first, then the releases; the newest release is the latest
+          printf '%s\n' "${versions[@]}" \
+            | jq -R '{version: ., title: ., aliases: []}' \
+            | jq -s 'if length > 1 then .[1].aliases = ["latest"] else . end' > public/versions.json
+          cat public/versions.json
+
       - name: Upload to GitHub
+        if: ${{ !inputs.pack }}
         uses: actions/upload-artifact@v7.0.0
         with:
           name: join-www
           path: public/
+
+      - name: Package
+        if: inputs.pack && github.ref_type == 'tag'
+        env:
+          HUGO_PARAMS_VERSION: ${{ github.ref_name }}
+        run: |
+          hugo --minify --baseURL "https://joinframework.net/$GITHUB_REF_NAME/" --destination "package/$GITHUB_REF_NAME"
+          tar -czf "join-www-$GITHUB_REF_NAME.tar.gz" -C package "$GITHUB_REF_NAME"
+
+      - name: Upload package to GitHub
+        if: inputs.pack && github.ref_type == 'tag'
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: join-www-package
+          path: join-www-*.tar.gz
+          if-no-files-found: error
 
       - name: Deploy
         if: inputs.deploy
